@@ -1,0 +1,1763 @@
+{
+  "legal": {
+    "privacy": {
+      "seo": {
+        "title": "Privacy Policy",
+        "description": "Learn how we collect, use, and protect your personal data. Transparency and GDPR compliance.",
+        "home": "Home",
+        "privacy": "Privacy Policy"
+      },
+      "hero": {
+        "title": "Privacy Policy",
+        "subtitle": "We protect your data and only use it to serve you better.",
+        "lastUpdated": "Last updated: {date}"
+      },
+      "blocks": {
+        "collect": {
+          "title": "Data we collect",
+          "p1": "We collect the information you share via our forms (e.g., <b>Name</b>, <b>Email</b>, <b>Phone</b>, <b>Subject</b>, <b>Message</b>, and details useful for a <b>quote</b>: part/spring type, dimensions, quantities, materials).",
+          "p2": "Non-identifying browsing data (e.g., pages visited, device, browser) may also be collected to improve the experience."
+        },
+        "usage": {
+          "title": "How we use data",
+          "li1": "Reply to your contact requests and prepare <b>quotes</b>.",
+          "li2": "Ensure <b>sales follow-up</b> and after-sales service.",
+          "li3": "Improve our website and services (anonymized statistics)."
+        },
+        "legal": {
+          "title": "Legal basis & retention",
+          "p1": "Processing relies, as applicable, on <b>pre-contractual measures</b> (quotes), our <b>legitimate interest</b> (improvement, security) and/or your <b>consent</b>.",
+          "p2": "Data is retained for as long as needed for the purposes above, then archived or deleted in line with legal obligations."
+        },
+        "security": {
+          "title": "Sharing & security",
+          "p1": "We do not sell or rent your data. It may be shared with <b>service providers</b> (hosting, emailing, analytics) strictly for the intended purposes and under confidentiality obligations.",
+          "p2": "We implement <b>technical and organizational measures</b> to protect your information against unauthorized access, loss, or alteration."
+        },
+        "cookies": {
+          "title": "Cookies",
+          "p1": "Cookies may be used to ensure proper site operation and measure audience in aggregate. You can manage preferences in your browser settings.",
+          "p2": "If a consent banner is shown, your choice will be honored and can be changed anytime."
+        },
+        "rights": {
+          "title": "Your rights",
+          "li1": "<b>Access</b> to your data and a <b>copy</b> of it.",
+          "li2": "<b>Rectification</b> if inaccurate or incomplete.",
+          "li3": "<b>Erasure</b> where applicable.",
+          "li4": "<b>Objection</b> or <b>restriction</b> to certain processing.",
+          "li5": "<b>Withdraw consent</b> at any time for consent-based processing."
+        },
+        "contact": {
+          "title": "Contact",
+          "p": "For any question or request about your data, contact us at <email>contact@mtr.tn</email>. You can also use our <help>help desk</help>."
+        }
+      },
+      "cta": {
+        "question": "Questions about your data? Our team replies quickly.",
+        "helpCenter": "Help desk",
+        "writeEmail": "Write an email"
+      }
+    },
+    "setPassword": {
+      "title": "Set a password",
+      "linkInvalid": "Invalid or incomplete link.",
+      "passwordLabel": "New password",
+      "confirmLabel": "Confirm password",
+      "show": "Show",
+      "hide": "Hide",
+      "button": {
+        "submit": "Submit",
+        "submitting": "Submitting…"
+      },
+      "errors": {
+        "invalidLink": "Invalid or incomplete link.",
+        "minLength": "Password must be at least {min} characters.",
+        "mismatch": "Passwords do not match.",
+        "network": "Network error"
+      },
+      "success": "Password set successfully. Redirecting…",
+      "strength": {
+        "weak": "Weak",
+        "medium": "Medium",
+        "good": "Good",
+        "veryGood": "Very good"
+      },
+      "aria": {
+        "showPw": "Show password",
+        "hidePw": "Hide password"
+      }
+    },
+    "setPasswordPage": {
+      "seo": {
+        "title": "Set my password | MTR Industry",
+        "description": "Create your password using the secure link you received by email.",
+        "ogAlt": "Set my password – MTR Industry"
+      }
+    },
+    "resetPasswordPage": {
+      "seo": {
+        "title": "Reset password | MTR Industry",
+        "description": "Enter your email, the code you received, then a new password.",
+        "ogAlt": "Reset my password – MTR Industry"
+      }
+    },
+    "articles": {
+      "title": "Articles management",
+      "searchPlaceholder": "Search (reference, designation, quote no.)",
+      "searchAria": "Search an article",
+      "clearSearch": "Clear search",
+      "addButton": "Add",
+      "noData": "No article.",
+      "loading": "Loading…",
+      "loadingQuotes": "Loading quote numbers…",
+      "table": {
+        "type": "Type",
+        "reference": "Reference",
+        "designation": "Designation",
+        "priceHT": "Price ex VAT",
+        "priceTTC": "Price inc. VAT",
+        "quoteNumber": "Quote no.",
+        "actions": "Actions"
+      },
+      "labels": {
+        "type": "Type",
+        "reference": "Reference",
+        "designation": "Designation",
+        "priceHT": "Price ex VAT",
+        "quoteNumber": "Quote no."
+      },
+      "placeholders": {
+        "type": "-- Select a type --",
+        "refExample": "E.g.: ART-001",
+        "designationExample": "E.g.: Compression spring Ø10",
+        "priceExample": "E.g.: 100.00",
+        "selectType": "— Select a type —"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "form": {
+        "addTitle": "Add article",
+        "editTitle": "Edit article",
+        "cancel": "Cancel",
+        "create": "Add",
+        "update": "Update",
+        "creating": "Creating…",
+        "updating": "Updating…"
+      },
+      "delete": {
+        "title": "Delete article",
+        "confirm": "Do you really want to delete",
+        "delete": "Delete",
+        "deleting": "Deleting…"
+      },
+      "errors": {
+        "requiredReference": "Reference is required",
+        "requiredDesignation": "Designation is required",
+        "requiredType": "Type is required.",
+        "invalidHT": "Invalid ex-VAT price"
+      },
+      "misc": {
+        "none": "—"
+      }
+    }
+  },
+  "auth": {
+    "usersAdmin": {
+      "title": "Users management",
+      "searchPlaceholder": "Search (name, email, phone, type, role, address, date...)",
+      "searchAria": "Search a user",
+      "clearSearch": "Clear search",
+      "addButton": "Add",
+      "loading": "Loading…",
+      "noData": "No users.",
+      "errors": {
+        "network": "Network error",
+        "send": "Sending error"
+      },
+      "roles": {
+        "admin": "admin",
+        "client": "client"
+      },
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "accountType": "Account type",
+        "role": "Role",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "actions": {
+        "details": "Details"
+      },
+      "details": {
+        "title": "User details"
+      },
+      "fields": {
+        "lastName": "Last name",
+        "firstName": "First name",
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Address",
+        "accountType": "Account type",
+        "role": "Role",
+        "createdAt": "Created",
+        "personal": {
+          "cin": "National ID",
+          "currentPosition": "Current position"
+        },
+        "company": {
+          "name": "Company",
+          "taxId": "Tax ID",
+          "currentPosition": "Current position"
+        }
+      },
+      "common": {
+        "close": "Close",
+        "cancel": "Cancel",
+        "copy": "Copy"
+      },
+      "invite": {
+        "title": "Add a user",
+        "accountType": "Account type",
+        "personal": "Personal",
+        "company": "Company",
+        "submit": "Add & send the invitation",
+        "sending": "Sending…"
+      }
+    },
+    "reclamationsAdmin": {
+      "title": "Claims management",
+      "searchPlaceholder": "Search (client, doc type, no., date, PDF, attachments…)",
+      "searchAria": "Search a claim",
+      "clearSearch": "Clear search",
+      "loading": "Loading…",
+      "noData": "No claims.",
+      "table": {
+        "number": "No.",
+        "client": "Client",
+        "typeDoc": "Doc type",
+        "date": "Date",
+        "pdf": "PDF",
+        "attachments": "Attachments"
+      },
+      "pdf": {
+        "none": "PDF: None",
+        "noneShort": "None"
+      },
+      "attachments": {
+        "none": "Attachments: —"
+      },
+      "actions": {
+        "openPdf": "Open PDF",
+        "open": "Open",
+        "opening": "Opening…",
+        "openingPdf": "Opening…"
+      },
+      "errors": {
+        "attachmentUnavailable": "Attachment unavailable",
+        "openPdf": "Error while opening PDF",
+        "openAttachment": "Error while opening attachment"
+      }
+    },
+    "products": {
+      "title": "Product management",
+      "searchPlaceholder": "Search by FR / EN",
+      "searchAria": "Search a product",
+      "clearSearch": "Clear search",
+      "addButton": "Add",
+      "noData": "No products.",
+      "table": {
+        "category": "Category",
+        "name": "Name",
+        "description": "Description",
+        "images": "Images",
+        "actions": "Actions"
+      },
+      "actions": {
+        "expand": "Show more",
+        "collapse": "Show less",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "form": {
+        "addTitle": "Add a product",
+        "editTitle": "Edit product",
+        "addHint": "Fill in the information below",
+        "editHint": "Update the information below",
+        "labelFR": "Label (FR)",
+        "labelEN": "Translation (EN)",
+        "descFR": "Description (FR)",
+        "descEN": "Description (EN)",
+        "category": "Category",
+        "images": "Images",
+        "replaceAll": "Replace all images",
+        "cancel": "Cancel",
+        "create": "Save",
+        "update": "Save",
+        "creating": "Creating…",
+        "updating": "Saving…",
+        "dropTextAdd": "Drag & drop here, or click to select (add)",
+        "dropTextReplace": "Select the new images (they will replace all previous ones).",
+        "removeThis": "Remove this image",
+        "undoRemove": "Undo removal"
+      },
+      "placeholders": {
+        "nameFr": "e.g., Springs",
+        "nameEn": "e.g., Springs",
+        "descFr": "Short description in French",
+        "descEn": "Short description in English",
+        "selectCategory": "Choose a category"
+      },
+      "delete": {
+        "title": "Delete this product?",
+        "confirm": "This action is ",
+        "irreversible": "irreversible",
+        "delete": "Delete",
+        "deleting": "Deleting…"
+      },
+      "gallery": {
+        "title": "Image gallery",
+        "open": "Open images",
+        "prev": "Previous image",
+        "next": "Next image",
+        "goto": "Go to image",
+        "image": "Image",
+        "imageAlt": "image"
+      },
+      "errors": {
+        "network": "Network error",
+        "createFailed": "Creation failed",
+        "updateFailed": "Update failed"
+      },
+      "misc": {
+        "category": "Category"
+      }
+    },
+    "categories": {
+      "image": {
+        "field": "Image",
+        "clickToAdd": "Click here to add an image",
+        "clickToChange": "Click here to change the image",
+        "pick": "Choose an image",
+        "altFr": "Alt (FR)",
+        "altEn": "Alt (EN)",
+        "altFrPlaceholder": "Alternative text FR",
+        "altEnPlaceholder": "Alternative text EN",
+        "previewAlt": "Preview",
+        "remove": "Remove image",
+        "categoryAlt": "Category image"
+      },
+      "title": "Category management",
+      "searchPlaceholder": "Search by FR / EN",
+      "searchAria": "Search a category",
+      "clearSearch": "Clear search",
+      "addButton": "Add",
+      "noData": "No categories.",
+      "errorLoad": "Load error",
+      "errorServer": "Server error",
+      "errorRequiredFR": "FR label is required.",
+      "errorCreate": "Creation failed",
+      "errorUpdate": "Update failed",
+      "errorDelete": "Deletion failed",
+      "table": {
+        "fr": "FR",
+        "en": "EN",
+        "actions": "Actions",
+        "image": "Image"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "common": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "id": "ID"
+      },
+      "placeholders": {
+        "frExample": "e.g., Springs (FR)",
+        "enExample": "e.g., Springs"
+      },
+      "add": {
+        "title": "Add a category",
+        "labelFR": "Label (FR)",
+        "labelEN": "Translation (EN)",
+        "saving": "Adding..."
+      },
+      "edit": {
+        "title": "Edit category",
+        "saving": "Saving..."
+      },
+      "delete": {
+        "title": "Delete category?",
+        "confirm": "Do you really want to delete this category?",
+        "irreversible": "This action is irreversible",
+        "deleting": "Deleting...",
+        "delete": "Delete"
+      }
+    },
+    "admin": {
+      "quotesListPage": {
+        "title": "Quotes list (by request)",
+        "filters": {
+          "type": {
+            "title": "Request type",
+            "all": "All types"
+          }
+        },
+        "types": {
+          "compression": "Compression",
+          "torsion": "Torsion",
+          "traction": "Extension",
+          "filDresse": "Straight cut wire",
+          "grille": "Wire mesh",
+          "autre": "Other item"
+        },
+        "search": {
+          "placeholder": "Search: quote, request, client, type, date…",
+          "aria": "Search quotes",
+          "clear": "Clear search"
+        },
+        "table": {
+          "headers": {
+            "devis": "Quote No.",
+            "demandes": "Request No(s).",
+            "types": "Type(s)",
+            "client": "Client",
+            "date": "Date",
+            "pdf": "PDF"
+          }
+        },
+        "actions": {
+          "openPdf": "Open PDF"
+        },
+        "messages": {
+          "noData": "No quotes found."
+        },
+        "mobile": {
+          "labels": {
+            "devis": "Quote No.",
+            "demandes": "Request(s)",
+            "types": "Type(s)",
+            "client": "Client",
+            "date": "Date"
+          }
+        }
+      },
+      "devisMulti": {
+        "header": {
+          "title": "Create a quote",
+          "multi": "(multiple requests)",
+          "selectedDemands": "Selected requests ({count})"
+        },
+        "picker": {
+          "addBtn": "Add a request",
+          "addFromList": "Add a request from the available list",
+          "searchPlaceholder": "Search by No., date or type…",
+          "searchAria": "Search in the requests list",
+          "empty": "No request available.",
+          "addOne": "Add this request"
+        },
+        "table": {
+          "ddv": "DDV",
+          "article": "Item",
+          "puht": "Unit ex-VAT",
+          "qty": "Qty",
+          "remisePct": "Discount %",
+          "tvaPct": "VAT %",
+          "totalHT": "Line ex-VAT total",
+          "actions": "Actions"
+        },
+        "selects": {
+          "articlePlaceholder": "— Select an item —"
+        },
+        "inputs": {
+          "qty": "Quantity",
+          "remise": "Discount (%)",
+          "tva": "VAT (%)"
+        },
+        "actions": {
+          "remove": "Remove",
+          "removeLine": "Remove line",
+          "cancel": "Cancel",
+          "createAndSend": "Create & send",
+          "creating": "Creating…"
+        },
+        "totals": {
+          "ht": "Ex-VAT total",
+          "ttc": "Grand total (incl. 1% FODEC)"
+        },
+        "common": {
+          "loading": "Loading…"
+        },
+        "aria": {
+          "close": "Close"
+        },
+        "errors": {
+          "create": "Quote creation error",
+          "network": "Network error"
+        }
+      },
+      "dashboardPage": {
+        "header": {
+          "title": "Dashboard",
+          "subtitle": "Activity overview & trends"
+        },
+        "loader": {
+          "dashboard": "Loading dashboard…"
+        },
+        "accessDenied": {
+          "title": "Access denied",
+          "body": "This dashboard is restricted to administrators (current role: {role})."
+        },
+        "filters": {
+          "from": "From",
+          "to": "To",
+          "minOrders": "Min orders (loyal)",
+          "refresh": "Refresh",
+          "quick": {
+            "7d": "7d",
+            "30d": "30d",
+            "90d": "90d"
+          }
+        },
+        "common": {
+          "loading": "Loading…"
+        },
+        "errors": {
+          "unauth": {
+            "title": "Not authenticated",
+            "body": "Please sign in first, then try again."
+          },
+          "forbidden": {
+            "title": "Access denied",
+            "body": "This dashboard is for administrators only. Check your account has the role admin and sign in again to refresh the token."
+          },
+          "generic": {
+            "title": "Error"
+          }
+        },
+        "kpi": {
+          "totalClients": "Total Clients",
+          "totalOrders": "Total Orders",
+          "claims": "Claims",
+          "plusDuringPeriod": "+{count} during the period"
+        },
+        "charts": {
+          "ordersPerDay": "Orders / day",
+          "newClientsPerDay": "New clients / day",
+          "mixInPeriod": "Mix over the period",
+          "claimsPerDay": "Claims / day"
+        },
+        "labels": {
+          "orders": "Orders",
+          "ordersShort": "Orders",
+          "clients": "Clients",
+          "claims": "Claims",
+          "claimsShort": "Claims",
+          "total": "Total"
+        },
+        "loyal": {
+          "title": "Loyal clients (≥ {min} orders)",
+          "exportCsv": "Export CSV",
+          "csv": {
+            "header": {
+              "clientId": "clientId",
+              "name": "name",
+              "accountType": "accountType",
+              "orders": "orders",
+              "lastOrder": "lastOrder"
+            }
+          },
+          "table": {
+            "client": "Client",
+            "accountType": "Account type",
+            "orders": "Orders",
+            "lastOrder": "Last order"
+          },
+          "accountTypes": {
+            "company": "Company",
+            "person": "Personal"
+          },
+          "none": "No loyal clients over the period"
+        }
+      },
+      "title": "Admin Panel",
+      "dashboard": "Dashboard",
+      "orders": "Orders",
+      "articles": "Articles",
+      "categories": "Categories",
+      "products": "Products",
+      "quotesList": "Quotes List",
+      "users": "Users",
+      "logout": "Log out",
+      "welcomeDashboard": "Welcome to the Admin Dashboard",
+      "dashboardSubtitle": "Manage your users, orders and settings.",
+      "number": "No.",
+      "client": "Client",
+      "email": "Email",
+      "date": "Date",
+      "open": "Open",
+      "noOrders": "No quotes",
+      "error": "Error",
+      "notAuthenticated": "Not authenticated",
+      "pdfError": "PDF Error",
+      "networkPdfError": "Network error while opening PDF",
+      "tractionOrders": " Quotes requests"
+    },
+    "changePasswordPage": {
+      "seo": {
+        "title": "Change my password | MTR Industry",
+        "description": "Update your password from your client area.",
+        "ogAlt": "Change password – MTR Industry"
+      }
+    },
+    "client": {
+      "reclamationForm": {
+        "title": "Submit a claim",
+        "subtitle": "Please specify your document and the reason. You can attach photos or a PDF.",
+        "selectPlaceholder": "-- Select --",
+        "sections": {
+          "docInfo": "Document information",
+          "claim": "Claim",
+          "attachments": "Attachments"
+        },
+        "fields": {
+          "typeDoc": "Document type",
+          "numero": "Document No.",
+          "dateLivraison": "Delivery date",
+          "referenceProduit": "Product reference",
+          "quantite": "Quantity",
+          "nature": "Nature of the claim",
+          "natureOther": "Specify the nature",
+          "attente": "Your expectation",
+          "attenteOther": "Specify your expectation"
+        },
+        "placeholders": {
+          "numero": "e.g. DV2500016",
+          "referenceProduit": "e.g. ART-001",
+          "quantite": "e.g. 10"
+        },
+        "typeDocOptions": [
+          {
+            "value": "devis",
+            "label": "Quote"
+          },
+          {
+            "value": "bon_commande",
+            "label": "Purchase order"
+          },
+          {
+            "value": "bon_livraison",
+            "label": "Delivery note"
+          },
+          {
+            "value": "facture",
+            "label": "Invoice"
+          }
+        ],
+        "natureOptions": [
+          {
+            "value": "produit_non_conforme",
+            "label": "Non-conforming product"
+          },
+          {
+            "value": "deterioration_transport",
+            "label": "Damage during transport"
+          },
+          {
+            "value": "erreur_quantite",
+            "label": "Quantity error"
+          },
+          {
+            "value": "retard_livraison",
+            "label": "Late delivery"
+          },
+          {
+            "value": "defaut_fonctionnel",
+            "label": "Functional defect"
+          },
+          {
+            "value": "autre",
+            "label": "Other"
+          }
+        ],
+        "attenteOptions": [
+          {
+            "value": "remplacement",
+            "label": "Replacement"
+          },
+          {
+            "value": "reparation",
+            "label": "Repair"
+          },
+          {
+            "value": "remboursement",
+            "label": "Refund"
+          },
+          {
+            "value": "autre",
+            "label": "Other"
+          }
+        ],
+        "files": {
+          "formats": "Formats: images or PDF.",
+          "drop": "Drop your files here or click to select",
+          "selected": "{count, plural, one {# file selected:} other {# files selected:}}",
+          "total": "{kb} KB total"
+        },
+        "button": {
+          "loginToSend": "Sign in to send",
+          "clientOnly": "Client access only",
+          "send": "Send claim",
+          "sending": "Sending…"
+        },
+        "errors": {
+          "clientOnly": "This action is reserved for clients.",
+          "documentNumberRequired": "The document number is required.",
+          "natureOtherRequired": "Please specify the nature of the claim.",
+          "attenteOtherRequired": "Please specify your expectation.",
+          "futureDate": "Delivery date cannot be in the future.",
+          "unknown": "Unknown error"
+        },
+        "success": {
+          "submitted": "Claim sent successfully."
+        },
+        "datepicker": {
+          "open": "Open date picker",
+          "placeholder": "dd/mm/yyyy",
+          "prevMonth": "Previous month",
+          "nextMonth": "Next month",
+          "today": "Today",
+          "clear": "Clear",
+          "daysShort": [
+            "Mo",
+            "Tu",
+            "We",
+            "Th",
+            "Fr",
+            "Sa",
+            "Su"
+          ]
+        },
+        "aria": {
+          "dropzone": "Upload files",
+          "submit": "Submit claim"
+        },
+        "tooltips": {
+          "mustLogin": "Sign in to send",
+          "clientOnly": "Client-only access"
+        }
+      },
+      "reclamationsPage": {
+        "seo": {
+          "title": "Submit a claim | MTR Industry",
+          "description": "Customer claim form.",
+          "ogAlt": "Submit a claim – MTR Industry"
+        }
+      },
+      "layout": {
+        "seo": {
+          "title": "Client area | MTR Industry",
+          "description": "Access your MTR Industry client area.",
+          "ogAlt": "MTR Industry client area"
+        }
+      },
+      "claimsPage": {
+        "seo": {
+          "title": "My claims – Client area | MTR Industry",
+          "description": "View, filter and download your claims (PDF, details, status).",
+          "ogAlt": "Preview of the My claims page – MTR Industry"
+        },
+        "title": "My Claims",
+        "subtitle": "Track your claims and download their PDFs.",
+        "searchPlaceholder": "Search (number, type, nature, expectation, date…)",
+        "clear": "Clear",
+        "loading": "Loading…",
+        "noData": "No claims.",
+        "table": {
+          "document": "Document",
+          "nature": "Nature",
+          "attente": "Expectation",
+          "createdAt": "Created",
+          "pdf": "PDF",
+          "quoteNumber": "Quote No."
+        },
+        "actions": {
+          "open": "Open"
+        },
+        "notYet": "Not yet",
+        "errors": {
+          "fileNotFound": "File not found",
+          "cannotOpen": "Unable to open this file."
+        },
+        "aria": {
+          "openPdf": "Open PDF",
+          "clear": "Clear"
+        }
+      },
+      "welcome": "Welcome {name}",
+      "home": "Home",
+      "profile": "My Profile",
+      "orders": "My Orders",
+      "logout": "Log out",
+      "dashboardTitle": "Welcome to your client area",
+      "dashboardSubtitle": "Track your orders and update your information.",
+      "quotes": "Request a Quote",
+      "submitClaim": "Submit a claim",
+      "top": {
+        "about": "About Us",
+        "refund": "Refund Policy",
+        "help": "Help Desk"
+      },
+      "services": {
+        "menu": "My Services",
+        "orders": "My Orders",
+        "quotes": "My Quote Requests",
+        "claims": "My Claims"
+      },
+      "quoteRequest": "Request a Quote",
+      "quotesPage": {
+        "seo": {
+          "title": "My quotes – Client area | MTR Industry",
+          "description": "View your quote requests, open PDFs, and confirm your orders in your client area.",
+          "ogAlt": "Preview of the My quotes page – MTR Industry"
+        },
+        "title": "My Quote Requests",
+        "subtitle": "All requests you have submitted, newest first.",
+        "searchPlaceholder": "Search by quote no., type…",
+        "clear": "Clear",
+        "loading": "Loading…",
+        "noData": "No requests found.",
+        "table": {
+          "number": "Quote request N°",
+          "type": "Quote request type",
+          "files": "Attachments",
+          "createdAt": "Sent at",
+          "order": "Order"
+        },
+        "actions": {
+          "open": "Open",
+          "order": "Order",
+          "sending": "Sending…"
+        },
+        "labels": {
+          "ddv": "Quote request",
+          "devis": "Quote"
+        },
+        "status": {
+          "ordered": "Order confirmed",
+          "notOrdered": "Order not confirmed"
+        },
+        "notYet": "Not yet",
+        "errors": {
+          "network": "Network error, please try again.",
+          "fileNotFound": "File not found",
+          "cannotOpen": "Unable to open this file.",
+          "notAuthenticated": "Not authenticated. Please sign in again.",
+          "forbidden": "Access denied: this request does not belong to you.",
+          "cannotPlace": "Unable to place the order."
+        },
+        "aria": {
+          "openPdf": "Open PDF",
+          "quoteNumber": "Quote {number}"
+        },
+        "labelsShort": {
+          "yes": "Yes",
+          "no": "No"
+        }
+      }
+    },
+    "tractionForm": {
+      "title": "Extension Springs",
+      "schema": "Schema",
+      "selectPosition": "Select a position",
+      "selectType": "Select a type",
+      "schemaAlt": "Traction spring schema",
+      "maindim": "Main specifications",
+      "diameterWire": "Wire diameter (d)",
+      "diameterExt": "Outer diameter (De)",
+      "freeLength": "Free length (Lo)",
+      "totalCoils": "Total coils",
+      "quantity": "Quantity",
+      "material": "Material",
+      "materialOptions": [
+        "Black spring wire SM",
+        "Black spring wire SH",
+        "Galvanized spring wire",
+        "Stainless steel spring wire"
+      ],
+      "windingDirection": "Winding direction",
+      "windingOptions": [
+        "Left winding",
+        "Right winding"
+      ],
+      "ringPosition": "Ring position",
+      "ringOptions": [
+        "0°",
+        "90°",
+        "180°",
+        "270°"
+      ],
+      "ringPositionsAlt": "Ring positions",
+      "hookType": "Hook type",
+      "hookOptions": [
+        "German hook",
+        "Double German hook",
+        "Tangent hook",
+        "Extended hook",
+        "English loop",
+        "Swivel hook",
+        "Conical with screw"
+      ],
+      "hookTypesAlt": "Hook types",
+      "docs": "Associated documents",
+      "specialReq": "Special requirements",
+      "otherRemarks": "Other remarks",
+      "acceptedTypes": "Accepted types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif, .txt",
+      "dropHere": "Click or drag and drop your files here",
+      "4files": "Maximum 4 files",
+      "limit": "Limit exceeded, maximum 4 files.",
+      "selectPlaceholder": "-- Select --",
+      "selectPositionPlaceholder": "Select a position…",
+      "selectTypePlaceholder": "Select a type…",
+      "files": {
+        "summary": "{count, plural, one {# file selected:} other {# files selected:}}",
+        "total": "{kb} KB total"
+      },
+      "mustBeLogged": "You must be logged in to send a quote.",
+      "clientOnly": "Only clients can send a quote request.",
+      "reservedClients": "Reserved for clients",
+      "loginToSend": "Login to send",
+      "sendRequest": "Send request",
+      "btn": {
+        "loading": "Sending…"
+      },
+      "sending": "Your request is being sent, please wait...",
+      "alert": {
+        "loading": "Your quote request is being sent, please wait…"
+      },
+      "sendSuccess": "Request sent successfully!",
+      "success": {
+        "ok": "Request submitted. Thank you!"
+      },
+      "sendError": "Error while sending.",
+      "errors": {
+        "mustLogin": "You must be signed in to submit a quote request.",
+        "onlyClients": "Only clients can submit a quote request.",
+        "httpError": "Error while sending. (HTTP {status})",
+        "timeout": "Request timed out, please try again.",
+        "network": "Network error."
+      },
+      "networkError": "Network error."
+    },
+    "compressionForm": {
+      "title": " Compression Springs",
+      "schemaAlt": "Compression spring diagram",
+      "schema": "Schema",
+      "4files": "Maximum 4 files",
+      "limit": "Limit exceeded, maximum 4 files.",
+      "acceptedTypes": "Accepted types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif, .txt",
+      "dropHere": "Click or drag and drop your files here",
+      "maindim": "Main specifications",
+      "diameterWire": "Wire diameter (d)",
+      "diameterExt": "Outer diameter (DE)",
+      "boreDiameter": "Bore diameter (H)",
+      "guideDiameter": "Guide diameter (S)",
+      "diameterInt": "Inner diameter (DI)",
+      "freeLength": "Free length (Lo)",
+      "totalCoils": "Total coils",
+      "pitch": "Pitch",
+      "quantity": "Quantity",
+      "material": "Material",
+      "loginToSend": "Login to send",
+      "materialOptions": [
+        "Black spring wire (SM)",
+        "Black spring wire (SH)",
+        "Galvanized spring wire",
+        "Stainless steel spring wire"
+      ],
+      "windingDirection": "Winding direction",
+      "windingOptions": [
+        "Left winding",
+        "Right winding"
+      ],
+      "extremityType": "Spring end type",
+      "extremityOptions": [
+        "ERM",
+        "EL",
+        "ELM",
+        "ERNM"
+      ],
+      "extremityAlt": "Spring ends",
+      "docs": "Associated documents",
+      "specialReq": "Special requirements",
+      "otherRemarks": "Other remarks",
+      "selectPlaceholder": "-- Select --",
+      "sendSuccess": "Request sent successfully!",
+      "sendError": "Error while sending.",
+      "networkError": "Network error.",
+      "sending": "Your request is being sent, please wait...",
+      "sendRequest": "Send request"
+    },
+    "torsionForm": {
+      "title": " Torsion Springs",
+      "schemaAlt": "Torsion spring diagram",
+      "4files": "Maximum 4 files",
+      "limit": "Limit exceeded, maximum 4 files.",
+      "acceptedTypes": "Accepted types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif, .txt",
+      "dropHere": "Click or drag and drop your files here",
+      "diameterWire": "Wire diameter (d)",
+      "maindim": "Main specifications",
+      "schema": "Schema",
+      "diameterExt": "Outer diameter (De)",
+      "diameterInt": "Inner diameter (Di)",
+      "bodyLength": "Body length (Lc)",
+      "loginToSend": "Login to send",
+      "angle": "Torsion angle (°)",
+      "totalCoils": "Total coils",
+      "L1": "Leg length 1 (L1)",
+      "L2": "Leg length 2 (L2)",
+      "orientation": "Leg orientation",
+      "orientationOptions": [
+        "Symmetrical",
+        "Asymmetrical"
+      ],
+      "windingDirection": "Winding direction",
+      "windingOptions": [
+        "Left winding",
+        "Right winding"
+      ],
+      "quantity": "Quantity",
+      "material": "Material",
+      "materialOptions": [
+        "Black spring wire (SM)",
+        "Black spring wire (SH)",
+        "Galvanized spring wire",
+        "Stainless steel spring wire"
+      ],
+      "docs": "Associated documents",
+      "specialReq": "Special requirements",
+      "otherRemarks": "Other remarks",
+      "selectPlaceholder": "-- Select --",
+      "sendSuccess": "Request sent successfully!",
+      "sendError": "Error while sending.",
+      "networkError": "Network error.",
+      "sending": "Your request is being sent, please wait...",
+      "sendRequest": "Send request"
+    },
+    "filForm": {
+      "title": " Straightened  Cut Wire",
+      "schemaAlt": "Metal wire bundle",
+      "4files": "Maximum 4 files",
+      "schema": "Schema",
+      "limit": "Limit exceeded, maximum 4 files.",
+      "acceptedTypes": "Accepted types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif, .txt",
+      "dropHere": "Click or drag and drop your files here",
+      "maindim": "Main specifications",
+      "length": "Straightened wire length (mm or m)",
+      "diameter": "Wire diameter (mm)",
+      "loginToSend": "Login to send",
+      "unit": "Quantity unit",
+      "unitLong": "Length unit",
+      "unitOptions": [
+        "Pieces",
+        "Kg"
+      ],
+      "quantityWanted": "Desired quantity",
+      "material": "Material",
+      "materialChecks": [
+        "Galvanized steel",
+        "Black steel",
+        "Spring steel",
+        "Stainless steel"
+      ],
+      "docs": "Associated document (any file type)",
+      "specialReq": "Special requirements",
+      "otherRemarks": "Other remarks",
+      "selectPlaceholder": "-- Select --",
+      "sendSuccess": "Request sent successfully!",
+      "sendError": "Error while sending.",
+      "networkError": "Network error.",
+      "sending": "Your request is being sent, please wait...",
+      "sendRequest": "Send request"
+    },
+    "grilleForm": {
+      "title": " Metal Grid",
+      "schemaAlt": "Metal grid with zoom",
+      "4files": "Maximum 4 files",
+      "schema": "Schema",
+      "limit": "Limit exceeded, maximum 4 files.",
+      "acceptedTypes": "Accepted types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif, .txt",
+      "dropHere": "Click or drag and drop your files here",
+      "maindim": "Main specifications",
+      "L": "Length (L)",
+      "loginToSend": "Login to send",
+      "l": "Width (l)",
+      "nbLong": "Number of longitudinal bars",
+      "nbTrans": "Number of transverse bars",
+      "pas1": "Longitudinal spacing (Pitch 1)",
+      "pas2": "Transverse spacing (Pitch 2)",
+      "D2": "Wire diameter of bars (D₂)",
+      "D1": "Wire diameter of frame (D₁)",
+      "selectPlaceholder": "-- Select --",
+      "quantity": "Quantity",
+      "material": "Material",
+      "materialChecks": [
+        "Galvanized steel",
+        "Black steel",
+        "Stainless steel"
+      ],
+      "finish": "Finish / treatment",
+      "finishChecks_en": [
+        "Painting",
+        "Chrome plating",
+        "Galvanization",
+        "Other"
+      ],
+      "docs": "Documents (drawing, sketch)",
+      "specialReq": "Special requirements",
+      "otherRemarks": "Other remarks",
+      "sendSuccess": "Request sent successfully!",
+      "sendError": "Error while sending.",
+      "networkError": "Network error.",
+      "sending": "Your request is being sent, please wait...",
+      "sendRequest": "Send request"
+    },
+    "autreForm": {
+      "title": " Other Metal Wire Product",
+      "designation": "Designation / Reference",
+      "4files": "Maximum 4 files",
+      "limit": "Limit exceeded, maximum 4 files.",
+      "acceptedTypes": "Accepted types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png, .gif, .txt",
+      "dropHere": "Click or drag and drop your files here",
+      "dimensions": "Wire diameter in mm",
+      "mainInfo": "Main information",
+      "loginToSend": "Login to send",
+      "quantity": "Quantity",
+      "material": "Material",
+      "materialOptions": [
+        "Steel",
+        "Galvanized steel",
+        "Stainless steel",
+        "Other"
+      ],
+      "docs": "Documents (drawing, sketch, photo)",
+      "specialReq": "Special requirements",
+      "otherRemarks": "Other remarks",
+      "selectPlaceholder": "-- Select --",
+      "sendSuccess": "Request sent successfully!",
+      "sendError": "Error while sending.",
+      "networkError": "Network error.",
+      "sending": "Your request is being sent, please wait...",
+      "sendRequest": "Send request",
+      "description": "Description"
+    },
+    "devis": {
+      "title": "Technical Specifications Form",
+      "subtitle": "Choose a product type to display the corresponding form.",
+      "seo": {
+        "title": "Request a Quote – Compression, Extension & Torsion Springs | MTR Industry",
+        "description": "Get a fast quote for compression, extension, torsion springs, straightened wire and wire mesh. Custom service for industry.",
+        "ogAlt": "MTR Industry quote request"
+      },
+      "types": {
+        "compression": " Compression Spring",
+        "traction": " Extension Spring",
+        "torsion": "Torsion Spring",
+        "fil": " Straightened Cut Wire",
+        "grille": " Metal Grid",
+        "autre": " Other Metal Wire Product"
+      }
+    },
+    "forgotPage": {
+      "seo": {
+        "title": "Forgot password | MTR Industry",
+        "description": "Enter your email to receive a password reset code.",
+        "ogAlt": "Reset my password – MTR Industry"
+      }
+    },
+    "forgot": "Forgot password?",
+    "forgotTitle": "Forgot password?",
+    "code": "Code",
+    "confirmReset": "Confirm reset",
+    "forgotHintCode": "Enter your email: we will send you a reset code.",
+    "sendResetCode": "Send code",
+    "forgotSentCode": "If an account exists, a code has been sent to your email.",
+    "resetByCodeTitle": "Reset with a code",
+    "resetByCodeHint": "Enter the code received by email along with your new password.",
+    "forgotHint": "Enter your email, we will send you a reset code.",
+    "sendReset": "Send reset link",
+    "forgotSent": "If an account exists, an email has been sent.",
+    "resetTitle": "Reset password",
+    "resetHint": "Choose a new password.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "resetSubmit": "Reset",
+    "resetSuccess": "Password successfully reset! Redirecting...",
+    "backToLogin": "← Back to login",
+    "loginTitle": "Sign in",
+    "registerTitle": "Create account",
+    "lastName": "Last name",
+    "firstName": "First name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "accountType": "Account type",
+    "personal": "Personal",
+    "company": "Company",
+    "cin": "National ID",
+    "currentPosition": "Current position",
+    "companyName": "Company name",
+    "taxId": "Tax ID",
+    "password": "Password",
+    "registerBtn": "Register",
+    "haveAccount": "Already have an account?",
+    "goLogin": "Sign in",
+    "joinClientSpace": "Join our client space",
+    "promoText": "Request quotes, track your orders, and manage your industrial interventions.",
+    "rememberMe": "Remember me",
+    "noAccount": "No account?",
+    "goRegister": "Register",
+    "loginBtn": "Sign in",
+    "changePasswordTitle": "Change my password",
+    "changePasswordHint": "Enter your current password, then your new password.",
+    "currentPassword": "Current password",
+    "confirmChange": "Confirm",
+    "passwordChanged": "Password updated.",
+    "placeholders": {
+      "lastName": "Smith",
+      "firstName": "John",
+      "email": "example@email.com",
+      "phone": "+216 xx xxx xxx",
+      "address": "Street / City / Postal code",
+      "cin": "Ex: 01234567",
+      "currentPosition": "Ex: Quality Engineer",
+      "companyName": "Ex: Tunisian Spring Manufacturer",
+      "taxId": "Ex: MF1234567",
+      "password": "******"
+    },
+    "loading": "Loading...",
+    "errors": {
+      "network": "Network error, please try again.",
+      "loginFailed": "Incorrect credentials.",
+      "accountTypeRequired": "Please choose an account type.",
+      "noAccountForEmail": "No account is associated with this email.",
+      "changePassword": "Unable to change the password."
+    },
+    "messages": {
+      "registerSuccess": "Account created successfully!",
+      "registerFailed": "Account creation failed!"
+    },
+    "support": {
+      "seo": {
+        "title": "Help & Support | MTR Industry",
+        "description": "Need help? Check our FAQ or contact our team.",
+        "ogAlt": "Help Center — MTR Industry"
+      },
+      "helpDesk": {
+        "seo": {
+          "title": "Help Desk – Support & Quotes",
+          "description": "Contact our support, request a quote or check the FAQ. Quick response.",
+          "home": "Home",
+          "helpdesk": "Help Desk"
+        },
+        "hero": {
+          "alt": "Springs — Help Desk hero image",
+          "title": "MTR Help Desk",
+          "subtitle": "Need a quote, technical advice or order follow-up? We’re here to help."
+        },
+        "cards": {
+          "call": {
+            "title": "Call us",
+            "line1": "+216 00 000 000",
+            "line2": "Mon–Fri, 8am–5pm",
+            "cta": "Call",
+            "href": "tel:+21600000000"
+          },
+          "email": {
+            "title": "Write an email",
+            "line1": "contact@mtr.tn",
+            "line2": "Reply within 24h (business days)",
+            "cta": "Write",
+            "href": "mailto:contact@mtr.tn"
+          },
+          "quote": {
+            "title": "Request a quote",
+            "line1": "Specifications, quantities, material…",
+            "line2": "Prototyping available",
+            "cta": "Go to Quote page"
+          }
+        },
+        "faq": {
+          "title": "Frequently asked questions",
+          "subtitle": "Everything you need to know before contacting us.",
+          "checkline": "Can’t find your answer? Write to us below.",
+          "q1": {
+            "t": "How do I request a quote?",
+            "a": "Go to the Quote page (button in the top bar or footer). Fill in your specs (spring type, material, dimensions, quantities). We reply within 24–48 business hours."
+          },
+          "q2": {
+            "t": "What types of springs do you make?",
+            "a": "Compression, extension, torsion and wire-formed parts. Wire 0.1–10 mm, small to large series, with finishes (galvanizing, painting, heat treatment…)."
+          },
+          "q3": {
+            "t": "Do you make prototypes?",
+            "a": "Yes. We offer study, co-design and fast prototyping before mass production."
+          },
+          "q4": {
+            "t": "What are the lead times?",
+            "a": "Depending on complexity and quantity: from a few days to a few weeks. Urgent jobs are possible depending on workshop load."
+          },
+          "q5": {
+            "t": "Do you accept small production runs?",
+            "a": "Yes, we produce prototypes, small runs and large industrial series."
+          }
+        },
+        "form": {
+          "title": "Write to us",
+          "subtitle": "Describe your need: spring type, dimensions, quantity, material, deadlines…",
+          "name": "Full name",
+          "email": "Email",
+          "subject": "Subject",
+          "message": "Message",
+          "ok": "Your message has been sent!",
+          "errPrefix": "❌ ",
+          "errUnknown": "Unable to send your message",
+          "sla": "Reply within 24h (business days)",
+          "send": "Send",
+          "sending": "Sending..."
+        },
+        "visit": {
+          "title": "Visit us",
+          "address": "Industrial Zone Sfax, Tunisia",
+          "mapTitle": "MTR location",
+          "openInMaps": "Open in Google Maps"
+        }
+      },
+      "title": "Help & Support",
+      "intro": "Need help? Check our FAQ or contact our team.",
+      "faq": {
+        "title": "Frequently Asked Questions",
+        "q1": {
+          "t": "How do I change my password?",
+          "a": "Go to Profile > Shortcuts, then click “Change my password”."
+        },
+        "q2": {
+          "t": "I can't sign in, what should I do?",
+          "a": "Check your email and password. If it still fails, use “Forgot password”."
+        },
+        "q3": {
+          "t": "How can I contact support?",
+          "a": "You can reach us by email or phone."
+        }
+      },
+      "contact": {
+        "title": "Contact us",
+        "email": "support@mtr.com",
+        "phone": "+216 71 234 567",
+        "chat": "Live chat (9am–6pm)"
+      },
+      "resources": {
+        "title": "Useful resources",
+        "guide": "User guide",
+        "faq": "Full FAQ center",
+        "privacy": "Privacy policy"
+      }
+    },
+    "catalog": {
+      "home": "Home",
+      "seeDetail": "View details →",
+      "noProducts": "No products",
+      "noProductsMsg": "No products found for this category."
+    },
+    "footer": {
+      "brandLine": "Tunisian Spring Manufacturer.",
+      "column": {
+        "company": "Company",
+        "resources": "Resources"
+      },
+      "links": {
+        "about": "About",
+        "products": "Products",
+        "quote": "Request a quote",
+        "helpdesk": "Help Desk",
+        "catalog": "Catalog",
+        "contact": "Contact",
+        "privacy": "Privacy Policy"
+      },
+      "copyright": "© {year} MTR. All rights reserved.",
+      "backToTop": "Back to top"
+    },
+    "header": {
+      "topbar": {
+        "about": "About",
+        "helpdesk": "Help Desk",
+        "presentation": "Overview"
+      },
+      "nav": {
+        "home": "Home",
+        "company": "Company",
+        "products": "Products",
+        "contact": "Contact",
+        "location": "Location"
+      },
+      "client": {
+        "claim": "Make a claim",
+        "myServices": "My services",
+        "myQuotes": "My quote requests",
+        "myClaims": "My claims",
+        "askQuote": "Request a quote"
+      },
+      "actions": {
+        "login": "Sign in",
+        "askQuote": "Request a quote",
+        "openMenu": "Open menu"
+      },
+      "userMenu": {
+        "aria": "User menu",
+        "profile": "Profile",
+        "logout": "Sign out"
+      },
+      "aria": {
+        "facebook": "Facebook",
+        "linkedin": "LinkedIn",
+        "langFR": "French",
+        "langEN": "English"
+      },
+      "logoAlt": "MTR logo"
+    },
+    "cookies": {
+      "banner": {
+        "title": "This site uses cookies",
+        "text": "We use cookies to improve your experience. You can choose which ones to enable."
+      },
+      "btn": {
+        "acceptAll": "Accept all",
+        "rejectAll": "Reject all",
+        "customize": "Customize",
+        "save": "Save"
+      },
+      "modal": {
+        "title": "Privacy preferences"
+      },
+      "rows": {
+        "necessary": {
+          "title": "Necessary",
+          "desc": "Essential for the website to function."
+        },
+        "analytics": {
+          "title": "Analytics",
+          "desc": "Audience measurement (e.g., Google Analytics)."
+        },
+        "marketing": {
+          "title": "Marketing",
+          "desc": "Advertising personalization and cross-site tracking."
+        }
+      }
+    }
+  },
+  "home": {
+    "seo": {
+      "title": "MTR — Manufacturer of Springs & Wireforms",
+      "description": "Since 1994, MTR designs and manufactures compression, extension and torsion springs, plus 2D/3D wireforms. Industrial quality with fast lead times.",
+      "home": "Home"
+    },
+    "hero": {
+      "title": "Industrial springs & traction solutions",
+      "subtitle": "Quality, precision, reliability — MTR designs and manufactures your custom springs.",
+      "ctaContact": "Quick contact",
+      "ctaSpecialties": "Our specialties"
+    },
+    "presentation": {
+      "years": "Years",
+      "wireRange": "Wire (mm)",
+      "grids": "Grids",
+      "punch": "Quality in every spring, reliability at every step.",
+      "card1Title": "Founding & activity",
+      "card1Text1": "Founded in 1994 by <strong>Mr. Hbaieb Chokri</strong>, the <strong>Manufacture Tunisienne des Ressorts (MTR)</strong> is a Tunisian LLC specialized for over 30 years in designing and manufacturing springs: <strong>compression</strong>, <strong>extension</strong>, <strong>torsion</strong> and <strong>shaped</strong> springs.",
+      "card2Title": "Expertise & quality",
+      "card2Text1": "With proven expertise and recognized technical mastery, MTR delivers <strong>custom solutions</strong> for demanding needs.",
+      "card2Text2": "We produce springs from <strong>0.1 mm to 10 mm</strong> wire, in <strong>small or large series</strong>, to standards or by specification.",
+      "card3Title": "Wire processing & industrial applications",
+      "card3Text1": "Straightening & cutting (1–12 mm), 2D/3D bending, welded grids/frames, technical or decorative parts.",
+      "bullets": [
+        "Wire 0.1–10 mm",
+        "Small to large series",
+        "Studies & fast prototyping",
+        "In-house quality control"
+      ],
+      "ctaProducts": "See our products",
+      "ctaAbout": "About us"
+    },
+    "specialties": {
+      "title": "Our specialties",
+      "subtitle": "MTR markets a wide, high-quality range of industrial products.",
+      "none": "No category yet.",
+      "viewDetail": "View detail →"
+    },
+    "about": {
+      "title": "About MTR",
+      "subtitle": "Three essentials : capabilities, quality and wire working.",
+      "card1Title": "Founding & activity",
+      "li1": "<strong>Since 1994, </strong>over 30 years of experience",
+      "li2": "<strong>Custom springs : </strong>compression, tension, torsion, shape",
+      "li3": "Manufactured from<strong> 0.1–10 mm metal wire </strong> according to plans or specifications",
+      "li4": "Extensive expertise : <strong>straightened wire, 2D/3D bent wire, and welded mesh</strong>",
+      "card2Title": "Expertise & quality",
+      "li5": "<strong>Research & co-design,</strong> rapid prototyping",
+      "li6": "<strong>Precision & reliability : </strong>controlled tolerances, monitored testing",
+      "li7": "<strong>Full traceability</strong> of materials and processes",
+      "li8": "<strong>Agile production: </strong>from prototypes to large-scale production, optimized lead times",
+      "card3Title": "Wire processing & industrial applications",
+      "li9": "<strong>Straightening & cutting 1–12 mm,</strong> 2D/3D bending",
+      "li10": "Custom-made <strong>grids, frames, shapes, and welded assemblies</strong>",
+      "li11": "<strong>Finishes: </strong>painting, chrome plating, galvanization, etc.",
+      "li12": "Present in many fields: <strong>automotive, household appliances, agriculture, electricity, construction, sports & leisure</strong>"
+    },
+    "contact": {
+      "title": "Let’s discuss your project",
+      "subtitle": "Technical question, quotation or prototype to start? Our team answers quickly.",
+      "name": "Full name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "ok": "Your message has been sent!",
+      "errPrefix": "❌ ",
+      "sla": "Reply within 24h (business days)",
+      "sending": "Sending...",
+      "send": "Send",
+      "tel": "Phone",
+      "telBtn": "Call",
+      "mail": "Email",
+      "mailBtn": "Write",
+      "address": "Address",
+      "addrValue": "Industrial Zone Sfax, Tunisia",
+      "mapBtn": "View on map"
+    },
+    "map": {
+      "title": "Where to find us",
+      "subtitle": "MTR plant — Sfax, Tunisia",
+      "openGmaps": "Open in Google Maps"
+    }
+  },
+  "seo": {
+    "category": {
+      "title": "{name} – Products | MTR Industry",
+      "description": "Explore our {name}: photos, specifications and variants. Browse all items in the {name} category.",
+      "keywords": "{name}, MTR Industry, products, category, catalog",
+      "ogAlt": "{name} – MTR Industry"
+    },
+    "product": {
+      "title": "{name} | MTR Industry",
+      "descriptionFallback": "Explore {name}: high-quality photos and detailed specifications.",
+      "keywords": "{name}, MTR Industry, product, specifications, photos, price",
+      "ogAlt": "{name} – MTR Industry"
+    }
+  },
+  "pagination": {
+    "showing": "Showing",
+    "of": "of",
+    "perPage": "Per page",
+    "prev": "Previous page",
+    "next": "Next page"
+  },
+  "profile": {
+    "seo": {
+      "title": "My Account – Client Area | MTR Industry",
+      "description": "Access your account details, contact information and quick actions (claims, support, password).",
+      "ogAlt": "MTR Industry client area"
+    },
+    "userFallback": "User",
+    "lang": {
+      "fr": "French",
+      "en": "English"
+    },
+    "account": {
+      "title": "Account",
+      "unknownEmail": "unknown email",
+      "personalInfo": "Personal details",
+      "companyInfo": "Company details",
+      "fields": {
+        "lastName": "Last name",
+        "firstName": "First name",
+        "phone": "Phone",
+        "address": "Address",
+        "accountType": "Account type",
+        "loginEmail": "Email",
+        "cin": "National ID",
+        "currentPosition": "Current position",
+        "matriculeFiscal": "Tax ID",
+        "companyName": "Company name"
+      },
+      "types": {
+        "personal": "Personal",
+        "company": "Company",
+        "undefined": "Undefined"
+      }
+    },
+    "shortcuts": {
+      "title": "Shortcuts",
+      "home": "Home",
+      "homeHint": "Back to home",
+      "claimsHint": "My claims",
+      "claims": "My Claims",
+      "orders": "My orders",
+      "ordersHint": "History & tracking",
+      "help": "Help",
+      "helpHint": "FAQ, contact",
+      "security": "Security",
+      "securityHint": "Read-only account info",
+      "changePassword": "Change password",
+      "changePasswordHint": "Update your password"
+    },
+    "settings": {
+      "title": "App settings",
+      "language": "Language",
+      "languageHint": "Change site language"
+    },
+    "about": {
+      "title": "About",
+      "text": "MTR Industry — Client space. Version 1.0"
+    },
+    "loading": "Loading…"
+  },
+  "devisCompression": {
+    "createDevis": "Create Quote",
+    "title": "Quote Request – Compression Spring",
+    "searchPlaceholder": "Search by No., client or date…",
+    "searchAria": "Search a quote request",
+    "clearSearch": "Clear search",
+    "noData": "No quote request",
+    "columns": {
+      "number": "No.",
+      "client": "Client",
+      "date": "Date",
+      "pdf": "Quote PDF",
+      "attachments": "Attachments"
+    },
+    "open": "Open",
+    "errors": {
+      "pdfUnavailable": "PDF not available.",
+      "pdfOpenError": "Unable to open PDF.",
+      "docUnavailable": "Document not available.",
+      "docOpenError": "Unable to open document."
+    }
+  },
+  "devisFil": {
+    "createDevis": "Create Quote",
+    "title": "Quote Request – Straight Cut Wire",
+    "searchPlaceholder": "Search by No., client or date…",
+    "searchAria": "Search a quote request",
+    "clearSearch": "Clear search",
+    "noData": "No quote request",
+    "columns": {
+      "number": "No.",
+      "client": "Client",
+      "date": "Date",
+      "pdf": "Quote PDF",
+      "attachments": "Attachments"
+    },
+    "open": "Open",
+    "errors": {
+      "pdfUnavailable": "PDF not available.",
+      "pdfOpenError": "Unable to open PDF.",
+      "docUnavailable": "Document not available.",
+      "docOpenError": "Unable to open document."
+    }
+  },
+  "devisGrille": {
+    "createDevis": "Create Quote",
+    "title": "Quote Request – Wire Mesh",
+    "searchPlaceholder": "Search by No., client or date…",
+    "searchAria": "Search a quote request",
+    "clearSearch": "Clear search",
+    "noData": "No quote request",
+    "columns": {
+      "number": "No.",
+      "client": "Client",
+      "date": "Date",
+      "pdf": "Quote PDF",
+      "attachments": "Attachments"
+    },
+    "open": "Open",
+    "errors": {
+      "pdfUnavailable": "PDF not available.",
+      "pdfOpenError": "Unable to open PDF.",
+      "docUnavailable": "Document not available.",
+      "docOpenError": "Unable to open document."
+    }
+  },
+  "devisTorsion": {
+    "createDevis": "Create Quote",
+    "title": "Quote Request – Torsion Spring",
+    "searchPlaceholder": "Search by No., client or date…",
+    "searchAria": "Search a quote request",
+    "clearSearch": "Clear search",
+    "noData": "No quote request",
+    "columns": {
+      "number": "No.",
+      "client": "Client",
+      "date": "Date",
+      "pdf": "Quote PDF",
+      "attachments": "Attachments"
+    },
+    "open": "Open",
+    "attachmentsOpenAria": "Open file {index}",
+    "errors": {
+      "pdfUnavailable": "PDF not available.",
+      "pdfOpenError": "Unable to open PDF.",
+      "docUnavailable": "Document not available.",
+      "docOpenError": "Unable to open document."
+    }
+  },
+  "devisTraction": {
+    "createDevis": "Create Quote",
+    "title": "Quote Request – Extension Spring",
+    "searchPlaceholder": "Search by No., client or date…",
+    "searchAria": "Search a quote request",
+    "clearSearch": "Clear search",
+    "noData": "No quote request",
+    "columns": {
+      "number": "No.",
+      "client": "Client",
+      "date": "Date",
+      "pdf": "Quote PDF",
+      "attachments": "Attachments"
+    },
+    "open": "Open",
+    "attachmentsOpenAria": "Open file {index}",
+    "errors": {
+      "pdfUnavailable": "PDF not available.",
+      "pdfOpenError": "Unable to open PDF.",
+      "docUnavailable": "Document not available.",
+      "docOpenError": "Unable to open document.",
+      "network": "Network error"
+    }
+  },
+  "devisAutre": {
+    "createDevis": "Create Quote",
+    "title": "Quote Request – Other Types",
+    "searchPlaceholder": "Search by No., client or date…",
+    "searchAria": "Search a quote request",
+    "clearSearch": "Clear search",
+    "noData": "No quote request",
+    "columns": {
+      "number": "No.",
+      "client": "Client",
+      "date": "Date",
+      "pdf": "Quote PDF",
+      "attachments": "Attachments"
+    },
+    "open": "Open",
+    "errors": {
+      "pdfUnavailable": "PDF not available.",
+      "pdfOpenError": "Unable to open PDF.",
+      "docUnavailable": "Document not available.",
+      "docOpenError": "Unable to open document."
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "site-hbaeib",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "cookies-next": "^6.1.0",
+    "framer-motion": "^12.23.12",
+    "lucide-react": "^0.539.0",
+    "next": "15.4.6",
+    "next-intl": "^4.3.4",
+    "react": "19.1.0",
+    "react-circle-flags": "^0.0.23",
+    "react-cookie-consent": "^9.0.0",
+    "react-dom": "19.1.0",
+    "react-icons": "^5.5.0",
+    "react-window": "^2.0.0",
+    "recharts": "^3.1.2",
+    "swr": "^2.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "24.2.0",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "5.9.2"
+  }
+}
