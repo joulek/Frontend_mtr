@@ -102,7 +102,7 @@ export default function AdminUsersPage() {
       <div className="mx-auto w-full max-w-6xl space-y-6">
         {/* ======= Titre centré ======= */}
         <header className="space-y-4 text-center">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B1E3A]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1F3C5D]">
             {t("title")}
           </h1>
           {err && <p className="text-sm text-red-600">{err}</p>}
