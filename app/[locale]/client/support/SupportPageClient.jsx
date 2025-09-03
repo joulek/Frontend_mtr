@@ -5,7 +5,7 @@ import { Mail, Phone, HelpCircle, MessageCircle } from "lucide-react";
 
 
 export default function SupportPageClient() {
-  const t = useTranslations("support");
+  const t = useTranslations("auth.support");
 
   return (
     <div className="min-h-screen bg-white text-gray-800">

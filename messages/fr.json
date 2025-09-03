@@ -88,10 +88,10 @@
         "cards": {
           "call": {
             "title": "Appel direct",
-            "line1": "+216 98 333 883",
+            "line1": "+216 98 333 896",
             "line2": "Lun–Ven, 8h–17h",
             "cta": "Appeler",
-            "href": "tel:+21698333883"
+            "href": "tel:+21600000000"
           },
           "email": {
             "title": "Écrire un e-mail",
@@ -175,12 +175,6 @@
         "email": "support@mtr.com",
         "phone": "+216 71 234 567",
         "chat": "Chat en direct (9h–18h)"
-      },
-      "resources": {
-        "title": "Ressources utiles",
-        "guide": "Guide d’utilisation",
-        "faq": "Centre de FAQ complet",
-        "privacy": "Politique de confidentialité"
       }
     },
     "cookies": {

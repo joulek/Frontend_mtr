@@ -10,7 +10,7 @@ export async function generateMetadata(props) {
   const { locale } = await props.params;
 
   // Namespace à ajouter dans tes JSON de traductions
-  const t = await getTranslations({ locale, namespace: "resetPasswordPage.seo" });
+  const t = await getTranslations({ locale, namespace: "auth.resetPasswordPage.seo" });
 
   const title = t("title", { default: "Réinitialiser le mot de passe | MTR Industry" });
   const description = t("description", {

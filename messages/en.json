@@ -93,16 +93,16 @@
         "description": "Create your password using the secure link you received by email.",
         "ogAlt": "Set my password – MTR Industry"
       }
-    },
+    }
+  },
+  "auth": {
     "resetPasswordPage": {
       "seo": {
         "title": "Reset password | MTR Industry",
         "description": "Enter your email, the code you received, then a new password.",
         "ogAlt": "Reset my password – MTR Industry"
       }
-    }
-  },
-  "auth": {
+    },
     "articles": {
       "title": "Articles management",
       "searchPlaceholder": "Search (reference, designation, quote no.)",
@@ -1360,12 +1360,6 @@
         "email": "support@mtr.com",
         "phone": "+216 71 234 567",
         "chat": "Live chat (9am–6pm)"
-      },
-      "resources": {
-        "title": "Useful resources",
-        "guide": "User guide",
-        "faq": "Full FAQ center",
-        "privacy": "Privacy policy"
       }
     },
     "catalog": {

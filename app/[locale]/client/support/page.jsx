@@ -8,10 +8,10 @@ export async function generateMetadata(props) {
   // ✅ Next 15 : params est une Promise
   const { locale } = await props.params;
 
-  const t = await getTranslations({ locale, namespace: "support.seo" });
+  const t = await getTranslations({ locale, namespace: "auth.support" });
 
   const title = t("title", { default: "Réclamations – Espace client | MTR Industry" });
-  const description = t("description", {
+  const description = t("seo.description", {
     default: "Déposez et suivez vos réclamations client (PDF, détails, statut).",
   });
 

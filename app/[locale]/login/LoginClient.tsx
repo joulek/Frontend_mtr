@@ -70,15 +70,15 @@ export default function LoginPage() {
           {/* Pane gauche (visuel + logo) */}
           <div className="relative hidden min-h-[560px] lg:block">
             <Image
-              src="/about1.png"
-              alt=""
+              src="/about.jpg"
+              alt="Ressorts"
               fill
-              sizes="50vw"
-              className="object-cover"
+              sizes="(min-width:1024px) 50vw, 100vw"
+              className="object-cover opacity-40"
               priority
             />
+            <div className="absolute inset-0 bg-[#002147]/40" />
             {/* overlay aux couleurs du site */}
-            <div className="absolute inset-0 bg-[#0B2239]/35 backdrop-blur-[0.5px]" />
             {/* bloc centré */}
             <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
               {/* ✅ Logo corrigé : position centré, responsive, sans marges négatives */}
@@ -99,7 +99,7 @@ export default function LoginPage() {
               </h2>
 
               <p
-                className="mt-4 max-w-md text-sm font-medium text-[#002147]/80 md:text-base"
+                className="mt-4 max-w-md text-sm font-bold  text-[#002147]/80 md:text-base"
                 style={{ fontFamily: "'Lora', serif" }}
               >
                 {t("promoText")}
@@ -165,7 +165,7 @@ export default function LoginPage() {
                       className={`absolute inset-y-0 my-auto px-3 text-[#7a8599] ${locale === "ar" ? "left-3" : "right-3"
                         }`}
                       aria-label="Afficher / masquer le mot de passe"
-                        style={{ fontFamily: "'Lora', serif" }}
+                      style={{ fontFamily: "'Lora', serif" }}
                     >
                       {showPwd ? <FaEyeSlash /> : <FaEye />}
                     </button>
@@ -187,14 +187,14 @@ export default function LoginPage() {
                       className="accent-[#0B2239]"
                       checked={remember}
                       onChange={(e) => setRemember(e.target.checked)}
-                        style={{ fontFamily: "'Lora', serif" }}
+                      style={{ fontFamily: "'Lora', serif" }}
                     />
                     {t("rememberMe")}
                   </label>
                   <a
                     href={`/${locale}/forgot-password`}
                     className="font-semibold text-[#0B2239] hover:underline"
-                      style={{ fontFamily: "'Lora', serif" }}
+                    style={{ fontFamily: "'Lora', serif" }}
                   >
                     {t("forgot")}
                   </a>
@@ -209,12 +209,12 @@ export default function LoginPage() {
                   {loading ? t("loading") : t("loginBtn")}
                 </button>
 
-                <p className="text-center text-sm text-[#6b7280]"   style={{ fontFamily: "'Lora', serif" }}>
+                <p className="text-center text-sm text-[#6b7280]" style={{ fontFamily: "'Lora', serif" }}>
                   {t("noAccount")}{" "}
                   <Link
                     href={`/${locale}/register`}
                     className="font-semibold text-[#0B2239] hover:underline"
-                      style={{ fontFamily: "'Lora', serif" }}
+                    style={{ fontFamily: "'Lora', serif" }}
                   >
                     {t("goRegister")}
                   </Link>
