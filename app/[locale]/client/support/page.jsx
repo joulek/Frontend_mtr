@@ -10,7 +10,7 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "auth.support" });
 
-  const title = t("title", { default: "Réclamations – Espace client | MTR Industry" });
+  const title = t("title", { default: "Réclamations – Espace client | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("seo.description", {
     default: "Déposez et suivez vos réclamations client (PDF, détails, statut).",
   });
@@ -29,7 +29,7 @@ export async function generateMetadata(props) {
       title,
       description,
       url,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       type: "website",
       images: [{ url: ogImage, width: 1200, height: 630 }],
       // (optionnel) locale OG : "fr_FR" / "en_US"

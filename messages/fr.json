@@ -1,9 +1,9 @@
 {
   "reclamationsPage": {
     "seo": {
-      "title": "Submit a claim | MTR Industry",
+      "title": "Submit a claim | MTR Manufacture Tunisienne des Ressorts",
       "description": "Customer claim form.",
-      "ogAlt": "Submit a claim – MTR Industry"
+      "ogAlt": "Submit a claim – MTR Manufacture Tunisienne des Ressorts"
     }
   },
   "legal": {
@@ -69,9 +69,9 @@
   "auth": {
     "support": {
       "seo": {
-        "title": "Aide & Support | MTR Industry",
+        "title": "Aide & Support | MTR Manufacture Tunisienne des Ressorts",
         "description": "Besoin d’aide ? Consultez notre FAQ ou contactez notre équipe.",
-        "ogAlt": "Centre d’aide — MTR Industry"
+        "ogAlt": "Centre d’aide — MTR Manufacture Tunisienne des Ressorts"
       },
       "helpDesk": {
         "seo": {
@@ -388,30 +388,30 @@
     },
     "setPasswordPage": {
       "seo": {
-        "title": "Définir mon mot de passe | MTR Industry",
+        "title": "Définir mon mot de passe | MTR Manufacture Tunisienne des Ressorts",
         "description": "Créez votre mot de passe à partir du lien sécurisé reçu par email.",
-        "ogAlt": "Définir mon mot de passe – MTR Industry"
+        "ogAlt": "Définir mon mot de passe – MTR Manufacture Tunisienne des Ressorts"
       }
     },
     "changePasswordPage": {
       "seo": {
-        "title": "Changer mon mot de passe | MTR Industry",
+        "title": "Changer mon mot de passe | MTR Manufacture Tunisienne des Ressorts",
         "description": "Mettez à jour votre mot de passe depuis votre espace client.",
-        "ogAlt": "Changer le mot de passe – MTR Industry"
+        "ogAlt": "Changer le mot de passe – MTR Manufacture Tunisienne des Ressorts"
       }
     },
     "resetPasswordPage": {
       "seo": {
-        "title": "Réinitialiser le mot de passe | MTR Industry",
+        "title": "Réinitialiser le mot de passe | MTR Manufacture Tunisienne des Ressorts",
         "description": "Saisissez votre email, le code reçu puis un nouveau mot de passe.",
-        "ogAlt": "Réinitialiser mon mot de passe – MTR Industry"
+        "ogAlt": "Réinitialiser mon mot de passe – MTR Manufacture Tunisienne des Ressorts"
       }
     },
     "forgotPage": {
       "seo": {
-        "title": "Mot de passe oublié | MTR Industry",
+        "title": "Mot de passe oublié | MTR Manufacture Tunisienne des Ressorts",
         "description": "Saisissez votre email pour recevoir un code de réinitialisation de mot de passe.",
-        "ogAlt": "Réinitialiser mon mot de passe – MTR Industry"
+        "ogAlt": "Réinitialiser mon mot de passe – MTR Manufacture Tunisienne des Ressorts"
       }
     },
     "confirmReset": "Confirmer la réinitialisation",
@@ -617,23 +617,23 @@
       },
       "reclamationsPage": {
         "seo": {
-          "title": "Passer une réclamation | MTR Industry",
+          "title": "Passer une réclamation | MTR Manufacture Tunisienne des Ressorts",
           "description": "Formulaire de réclamation client.",
-          "ogAlt": "Passer une réclamation – MTR Industry"
+          "ogAlt": "Passer une réclamation – MTR Manufacture Tunisienne des Ressorts"
         }
       },
       "layout": {
         "seo": {
-          "title": "Espace client | MTR Industry",
-          "description": "Accédez à votre espace client MTR Industry.",
-          "ogAlt": "Espace client MTR Industry"
+          "title": "Espace client | MTR Manufacture Tunisienne des Ressorts",
+          "description": "Accédez à votre espace client MTR Manufacture Tunisienne des Ressorts.",
+          "ogAlt": "Espace client MTR Manufacture Tunisienne des Ressorts"
         }
       },
       "claimsPage": {
         "seo": {
-          "title": "Mes réclamations – Espace client | MTR Industry",
+          "title": "Mes réclamations – Espace client | MTR Manufacture Tunisienne des Ressorts",
           "description": "Consultez, filtrez et téléchargez vos réclamations client (PDF, détails, statut).",
-          "ogAlt": "Aperçu de la page Mes réclamations – MTR Industry"
+          "ogAlt": "Aperçu de la page Mes réclamations – MTR Manufacture Tunisienne des Ressorts"
         },
         "title": "Mes réclamations",
         "subtitle": "Suivez vos réclamations et téléchargez leurs PDF.",
@@ -686,9 +686,9 @@
       "logout": "Se déconnecter",
       "quotesPage": {
         "seo": {
-          "title": "Mes devis – Espace client | MTR Industry",
+          "title": "Mes devis – Espace client | MTR Manufacture Tunisienne des Ressorts",
           "description": "Consultez vos demandes de devis, ouvrez les PDF et confirmez vos commandes dans votre espace client.",
-          "ogAlt": "Aperçu de la page Mes devis – MTR Industry"
+          "ogAlt": "Aperçu de la page Mes devis – MTR Manufacture Tunisienne des Ressorts"
         },
         "title": "Mes demandes de devis",
         "subtitle": "Toutes vos demandes envoyées, triées du plus récent au plus ancien.",
@@ -736,6 +736,17 @@
       }
     },
     "admin": {
+      "devisAdmin": {
+        "title": "Gestion des demandes devis",
+        "types": {
+          "compression": "Compression",
+          "traction": "Traction",
+          "torsion": "Torsion",
+          "fill": "Fil dressé coupé",
+          "grille": "Grille métallique",
+          "autre": "Autre article"
+        }
+      },
       "quotesListPage": {
         "title": "Liste des devis (par demande)",
         "filters": {
@@ -948,9 +959,9 @@
       "title": "Formulaire de Spécifications Techniques",
       "subtitle": "Choisissez un type de produit pour afficher le formulaire correspondant.",
       "seo": {
-        "title": "Demander un devis – Ressorts compression, traction, torsion | MTR Industry",
+        "title": "Demander un devis – Ressorts compression, traction, torsion | MTR Manufacture Tunisienne des Ressorts",
         "description": "Obtenez un devis rapide pour vos ressorts de compression, traction, torsion, fils dressés et grilles métalliques. Service sur mesure pour l’industrie.",
-        "ogAlt": "Demande de devis MTR Industry"
+        "ogAlt": "Demande de devis MTR Manufacture Tunisienne des Ressorts"
       },
       "types": {
         "compression": " Ressort de Compression",
@@ -1448,9 +1459,9 @@
   },
   "profile": {
     "seo": {
-      "title": "Mon compte – Espace client | MTR Industry",
+      "title": "Mon compte – Espace client | MTR Manufacture Tunisienne des Ressorts",
       "description": "Accédez à vos informations de compte, vos coordonnées et vos raccourcis (réclamations, support, mot de passe).",
-      "ogAlt": "Espace client MTR Industry"
+      "ogAlt": "Espace client MTR Manufacture Tunisienne des Ressorts"
     },
     "userFallback": "Utilisateur",
     "lang": {
@@ -1502,7 +1513,7 @@
     },
     "about": {
       "title": "À propos",
-      "text": "MTR Industry — Espace client. Version 1.0"
+      "text": "MTR Manufacture Tunisienne des Ressorts — Espace client. Version 1.0"
     },
     "loading": "Chargement…"
   },
@@ -1650,16 +1661,16 @@
   },
   "seo": {
     "category": {
-      "title": "{name} – Produits | MTR Industry",
+      "title": "{name} – Produits | MTR Manufacture Tunisienne des Ressorts",
       "description": "Découvrez nos {name} : photos, caractéristiques et variantes. Parcourez tous les produits de la catégorie {name}.",
-      "keywords": "{name}, MTR Industry, produits, catégorie, catalogue",
-      "ogAlt": "{name} – MTR Industry"
+      "keywords": "{name}, MTR Manufacture Tunisienne des Ressorts, produits, catégorie, catalogue",
+      "ogAlt": "{name} – MTR Manufacture Tunisienne des Ressorts"
     },
     "product": {
-      "title": "{name} | MTR Industry",
+      "title": "{name} | MTR Manufacture Tunisienne des Ressorts",
       "descriptionFallback": "Découvrez {name} : photos en haute qualité et caractéristiques détaillées.",
-      "keywords": "{name}, MTR Industry, produit, caractéristiques, photos, prix",
-      "ogAlt": "{name} – MTR Industry"
+      "keywords": "{name}, MTR Manufacture Tunisienne des Ressorts, produit, caractéristiques, photos, prix",
+      "ogAlt": "{name} – MTR Manufacture Tunisienne des Ressorts"
     }
   },
   "catalog": {

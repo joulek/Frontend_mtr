@@ -11,7 +11,7 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "auth.client.quotesPage" });
 
-  const title = t("seo.title", { default: "Mes devis – Espace client | MTR Industry" });
+  const title = t("seo.title", { default: "Mes devis – Espace client | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("seo.description", {
     default: "Espace client : consultez vos demandes de devis, ouvrez les PDF et confirmez vos commandes.",
   });
@@ -22,7 +22,7 @@ export async function generateMetadata(props) {
       url: `${APP_URL}/og/mes-devis.jpg`,
       width: 1200,
       height: 630,
-      alt: t("seo.ogAlt", { default: "Mes devis MTR Industry" }),
+      alt: t("seo.ogAlt", { default: "Mes devis MTR Manufacture Tunisienne des Ressorts" }),
     },
   ];
 
@@ -39,7 +39,7 @@ export async function generateMetadata(props) {
       url,
       title,
       description,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       images,
       // (optionnel) locale OG : "fr_FR" / "en_US"
       // locale: locale === "fr" ? "fr_FR" : "en_US",
@@ -59,11 +59,11 @@ export default async function Page(props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: isFr ? "Mes devis – MTR Industry" : "My quotes – MTR Industry",
+    name: isFr ? "Mes devis – MTR Manufacture Tunisienne des Ressorts" : "My quotes – MTR Manufacture Tunisienne des Ressorts",
     description: isFr
       ? "Espace client : liste de vos demandes de devis et devis associés."
       : "Client area: list of your quote requests and related quotes.",
-    isPartOf: { "@type": "WebSite", name: "MTR Industry", url: APP_URL },
+    isPartOf: { "@type": "WebSite", name: "MTR Manufacture Tunisienne des Ressorts", url: APP_URL },
     breadcrumb: {
       "@type": "BreadcrumbList",
       itemListElement: [

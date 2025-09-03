@@ -2,7 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'MTR | Industry',
+  title: 'MTR | Manufacture Tunisienne des ressorts',
   description: 'Espace client – MTR',
   icons: {
     icon: 'public/favicon.ico',          // public/favicon.ico

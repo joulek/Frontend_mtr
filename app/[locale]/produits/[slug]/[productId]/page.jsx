@@ -74,7 +74,7 @@ export async function generateMetadata({ params }) {
       title,
       description,
       url,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       type: "website",
       images: [
         {
@@ -121,7 +121,7 @@ export default async function Page({ params }) {
     description: desc || undefined,
     sku: productId,
     image: imgList,
-    brand: { "@type": "Brand", name: data?.brand || "MTR Industry" },
+    brand: { "@type": "Brand", name: data?.brand || "MTR Manufacture Tunisienne des Ressorts" },
     category: String(slug || "").replace(/-/g, " "),
     ...(price
       ? {

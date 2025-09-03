@@ -12,7 +12,7 @@ export async function generateMetadata({ params }) {
 
   const title = t("title", {
     default:
-      "Demander un devis – Ressorts de compression, traction & torsion | MTR Industry",
+      "Demander un devis – Ressorts de compression, traction & torsion | MTR Manufacture Tunisienne des Ressorts",
   });
   const description = t("description", {
     default:
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }) {
       url: `${APP_URL}/og/devis.jpg`,
       width: 1200,
       height: 630,
-      alt: t("ogAlt", { default: "Demande de devis MTR Industry" }),
+      alt: t("ogAlt", { default: "Demande de devis MTR Manufacture Tunisienne des Ressorts" }),
     },
   ];
 
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: "website", // ✅ pas 'product'
       url,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       title,
       description,
       images,
@@ -95,8 +95,8 @@ export default async function Page({ params }) {
     "@type": "WebPage",
     name:
       locale === "fr"
-        ? "Demander un devis – MTR Industry"
-        : "Request a quote – MTR Industry",
+        ? "Demander un devis – MTR Manufacture Tunisienne des Ressorts"
+        : "Request a quote – MTR Manufacture Tunisienne des Ressorts",
     description:
       locale === "fr"
         ? "Formulaire multi-produits pour obtenir un devis sur ressorts et articles en fil métallique."

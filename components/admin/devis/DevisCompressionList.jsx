@@ -134,7 +134,7 @@ export default function DevisCompressionList() {
       {/* Toolbar */}
       <div className={WRAP}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h1 className="text-1xl lg:text-2xl font-extrabold tracking-tight text-[#0B1E3A]">
+          <h1 className="text-1xl lg:text-2xl font-extrabold tracking-tight text-[#002147]">
             {t("title")}
           </h1>
 

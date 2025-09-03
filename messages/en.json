@@ -89,18 +89,18 @@
     },
     "setPasswordPage": {
       "seo": {
-        "title": "Set my password | MTR Industry",
+        "title": "Set my password | MTR Manufacturer of Springs & Wireforms",
         "description": "Create your password using the secure link you received by email.",
-        "ogAlt": "Set my password – MTR Industry"
+        "ogAlt": "Set my password – MTR Manufacturer of Springs & Wireforms"
       }
     }
   },
   "auth": {
     "resetPasswordPage": {
       "seo": {
-        "title": "Reset password | MTR Industry",
+        "title": "Reset password | MTR Manufacturer of Springs & Wireforms",
         "description": "Enter your email, the code you received, then a new password.",
-        "ogAlt": "Reset my password – MTR Industry"
+        "ogAlt": "Reset my password – MTR Manufacturer of Springs & Wireforms"
       }
     },
     "articles": {
@@ -400,6 +400,17 @@
       }
     },
     "admin": {
+      "devisAdmin": {
+        "title": "Quote requests management",
+        "types": {
+          "compression": "Compression",
+          "traction": "Extension",
+          "torsion": "Torsion",
+          "fill": "Straight cut wire",
+          "grille": "Wire mesh",
+          "autre": "Other item"
+        }
+      },
       "quotesListPage": {
         "title": "Quotes list (by request)",
         "filters": {
@@ -610,9 +621,9 @@
     },
     "changePasswordPage": {
       "seo": {
-        "title": "Change my password | MTR Industry",
+        "title": "Change my password | MTR Manufacturer of Springs & Wireforms",
         "description": "Update your password from your client area.",
-        "ogAlt": "Change password – MTR Industry"
+        "ogAlt": "Change password – MTR Manufacturer of Springs & Wireforms"
       }
     },
     "client": {
@@ -754,23 +765,23 @@
       },
       "reclamationsPage": {
         "seo": {
-          "title": "Submit a claim | MTR Industry",
+          "title": "Submit a claim | MTR Manufacturer of Springs & Wireforms",
           "description": "Customer claim form.",
-          "ogAlt": "Submit a claim – MTR Industry"
+          "ogAlt": "Submit a claim – MTR Manufacturer of Springs & Wireforms"
         }
       },
       "layout": {
         "seo": {
-          "title": "Client area | MTR Industry",
-          "description": "Access your MTR Industry client area.",
-          "ogAlt": "MTR Industry client area"
+          "title": "Client area | MTR Manufacturer of Springs & Wireforms",
+          "description": "Access your MTR Manufacturer of Springs & Wireforms client area.",
+          "ogAlt": "MTR Manufacturer of Springs & Wireforms client area"
         }
       },
       "claimsPage": {
         "seo": {
-          "title": "My claims – Client area | MTR Industry",
+          "title": "My claims – Client area | MTR Manufacturer of Springs & Wireforms",
           "description": "View, filter and download your claims (PDF, details, status).",
-          "ogAlt": "Preview of the My claims page – MTR Industry"
+          "ogAlt": "Preview of the My claims page – MTR Manufacturer of Springs & Wireforms"
         },
         "title": "My Claims",
         "subtitle": "Track your claims and download their PDFs.",
@@ -1160,7 +1171,7 @@
       "title": "Technical Specifications Form",
       "subtitle": "Choose a product type to display the corresponding form.",
       "seo": {
-        "title": "Request a Quote – Compression, Extension & Torsion Springs | MTR Industry",
+        "title": "Request a Quote – Compression, Extension & Torsion Springs | MTR Manufacturer of Springs & Wireforms",
         "description": "Get a fast quote for compression, extension, torsion springs, straightened wire and wire mesh. Custom service for industry.",
         "ogAlt": "MTR Industry quote request"
       },
@@ -1175,9 +1186,9 @@
     },
     "forgotPage": {
       "seo": {
-        "title": "Forgot password | MTR Industry",
+        "title": "Forgot password | MTR Manufacturer of Springs & Wireforms",
         "description": "Enter your email to receive a password reset code.",
-        "ogAlt": "Reset my password – MTR Industry"
+        "ogAlt": "Reset my password – MTR Manufacturer of Springs & Wireforms"
       }
     },
     "forgot": "Forgot password?",
@@ -1254,9 +1265,9 @@
     },
     "support": {
       "seo": {
-        "title": "Help & Support | MTR Industry",
+        "title": "Help & Support | MTR Manufacturer of Springs & Wireforms",
         "description": "Need help? Check our FAQ or contact our team.",
-        "ogAlt": "Help Center — MTR Industry"
+        "ogAlt": "Help Center — MTR Manufacturer of Springs & Wireforms"
       },
       "helpDesk": {
         "seo": {
@@ -1473,7 +1484,7 @@
       "grids": "Grids",
       "punch": "Quality in every spring, reliability at every step.",
       "card1Title": "Founding & activity",
-      "card1Text1": "Founded in 1994 by <strong>Mr. Hbaieb Chokri</strong>, the <strong>Manufacture Tunisienne des Ressorts (MTR)</strong> is a Tunisian LLC specialized for over 30 years in designing and manufacturing springs: <strong>compression</strong>, <strong>extension</strong>, <strong>torsion</strong> and <strong>shaped</strong> springs.",
+      "card1Text1": "Founded in 1994 by <strong>Mr. Hbaieb Chokri</strong>, the <strong>Manufacturer of Springs & Wireforms (MTR)</strong> is a Tunisian LLC specialized for over 30 years in designing and manufacturing springs: <strong>compression</strong>, <strong>extension</strong>, <strong>torsion</strong> and <strong>shaped</strong> springs.",
       "card2Title": "Expertise & quality",
       "card2Text1": "With proven expertise and recognized technical mastery, MTR delivers <strong>custom solutions</strong> for demanding needs.",
       "card2Text2": "We produce springs from <strong>0.1 mm to 10 mm</strong> wire, in <strong>small or large series</strong>, to standards or by specification.",
@@ -1541,16 +1552,16 @@
   },
   "seo": {
     "category": {
-      "title": "{name} – Products | MTR Industry",
+      "title": "{name} – Products | MTR Manufacturer of Springs & Wireforms",
       "description": "Explore our {name}: photos, specifications and variants. Browse all items in the {name} category.",
-      "keywords": "{name}, MTR Industry, products, category, catalog",
-      "ogAlt": "{name} – MTR Industry"
+      "keywords": "{name}, MTR Manufacturer of Springs & Wireforms, products, category, catalog",
+      "ogAlt": "{name} – MTR Manufacturer of Springs & Wireforms"
     },
     "product": {
-      "title": "{name} | MTR Industry",
+      "title": "{name} | MTR Manufacturer of Springs & Wireforms",
       "descriptionFallback": "Explore {name}: high-quality photos and detailed specifications.",
-      "keywords": "{name}, MTR Industry, product, specifications, photos, price",
-      "ogAlt": "{name} – MTR Industry"
+      "keywords": "{name}, MTR Manufacturer of Springs & Wireforms, product, specifications, photos, price",
+      "ogAlt": "{name} – MTR Manufacturer of Springs & Wireforms"
     }
   },
   "pagination": {
@@ -1562,9 +1573,9 @@
   },
   "profile": {
     "seo": {
-      "title": "My Account – Client Area | MTR Industry",
+      "title": "My Account – Client Area | MTR Manufacturer of Springs & Wireforms",
       "description": "Access your account details, contact information and quick actions (claims, support, password).",
-      "ogAlt": "MTR Industry client area"
+      "ogAlt": "MTR Manufacturer of Springs & Wireforms client area"
     },
     "userFallback": "User",
     "lang": {
@@ -1622,7 +1633,7 @@
   },
   "devisCompression": {
     "createDevis": "Create Quote",
-    "title": "Quote Request – Compression Spring",
+    "title": "Compression Spring",
     "searchPlaceholder": "Search by No., client or date…",
     "searchAria": "Search a quote request",
     "clearSearch": "Clear search",
@@ -1644,7 +1655,7 @@
   },
   "devisFil": {
     "createDevis": "Create Quote",
-    "title": "Quote Request – Straight Cut Wire",
+    "title": "Straight Cut Wire",
     "searchPlaceholder": "Search by No., client or date…",
     "searchAria": "Search a quote request",
     "clearSearch": "Clear search",
@@ -1666,7 +1677,7 @@
   },
   "devisGrille": {
     "createDevis": "Create Quote",
-    "title": "Quote Request – Wire Mesh",
+    "title": "Wire Mesh",
     "searchPlaceholder": "Search by No., client or date…",
     "searchAria": "Search a quote request",
     "clearSearch": "Clear search",
@@ -1688,7 +1699,7 @@
   },
   "devisTorsion": {
     "createDevis": "Create Quote",
-    "title": "Quote Request – Torsion Spring",
+    "title": " Torsion Spring",
     "searchPlaceholder": "Search by No., client or date…",
     "searchAria": "Search a quote request",
     "clearSearch": "Clear search",
@@ -1711,7 +1722,7 @@
   },
   "devisTraction": {
     "createDevis": "Create Quote",
-    "title": "Quote Request – Extension Spring",
+    "title": " Extension Spring",
     "searchPlaceholder": "Search by No., client or date…",
     "searchAria": "Search a quote request",
     "clearSearch": "Clear search",
@@ -1735,7 +1746,7 @@
   },
   "devisAutre": {
     "createDevis": "Create Quote",
-    "title": "Quote Request – Other Types",
+    "title": "Other Types",
     "searchPlaceholder": "Search by No., client or date…",
     "searchAria": "Search a quote request",
     "clearSearch": "Clear search",

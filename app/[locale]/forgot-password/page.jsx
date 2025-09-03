@@ -11,7 +11,7 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "auth.forgotPage.seo" });
 
-  const title = t("title", { default: "Mot de passe oublié – MTR Industry" });
+  const title = t("title", { default: "Mot de passe oublié – MTR Manufacture Tunisienne des Ressorts" });
   const description = t("description", {
     default: "Saisissez votre email pour recevoir un code de réinitialisation de mot de passe.",
   });
@@ -22,7 +22,7 @@ export async function generateMetadata(props) {
       url: `${APP_URL}/og/forgot-password.jpg`,
       width: 1200,
       height: 630,
-      alt: t("ogAlt", { default: "Réinitialiser mon mot de passe – MTR Industry" }),
+      alt: t("ogAlt", { default: "Réinitialiser mon mot de passe – MTR Manufacture Tunisienne des Ressorts" }),
     },
   ];
 
@@ -33,7 +33,7 @@ export async function generateMetadata(props) {
       canonical: `/${locale}/forgot-password`,
       languages: { fr: "/fr/forgot-password", en: "/en/forgot-password" },
     },
-    openGraph: { type: "website", url, title, description, siteName: "MTR Industry", images /*, locale: ...*/ },
+    openGraph: { type: "website", url, title, description, siteName: "MTR Manufacture Tunisienne des Ressorts", images /*, locale: ...*/ },
     twitter: { card: "summary_large_image", title, description, images: images.map((i) => i.url) },
     // Page d’auth → éviter l’indexation
     robots: { index: false, follow: false, noimageindex: true },

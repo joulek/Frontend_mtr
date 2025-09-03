@@ -10,21 +10,21 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "auth.changePasswordPage.seo" });
 
-  const title = t("title", { default: "Changer mon mot de passe | MTR Industry" });
+  const title = t("title", { default: "Changer mon mot de passe | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("description", { default: "Mettez à jour votre mot de passe depuis votre espace client." });
   const url = `${APP_URL}/${locale}/change-password`;
   const images = [{
     url: `${APP_URL}/og/change-password.jpg`,
     width: 1200,
     height: 630,
-    alt: t("ogAlt", { default: "Changer le mot de passe – MTR Industry" })
+    alt: t("ogAlt", { default: "Changer le mot de passe – MTR Manufacture Tunisienne des Ressorts" })
   }];
 
   return {
     title,
     description,
     alternates: { canonical: `/${locale}/change-password` },
-    openGraph: { type: "website", url, title, description, siteName: "MTR Industry", images, locale },
+    openGraph: { type: "website", url, title, description, siteName: "MTR Manufacture Tunisienne des Ressorts", images, locale },
     twitter: { card: "summary_large_image", title, description, images: images.map(i => i.url) },
     robots: { index: false, follow: false, googleBot: { index: false, follow: false, noimageindex: true } },
   };
