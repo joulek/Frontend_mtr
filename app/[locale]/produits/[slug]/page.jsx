@@ -80,7 +80,7 @@ export async function generateMetadata({ params }) {
       title,
       description,
       url,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       type: "website",
       images: [
         {

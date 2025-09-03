@@ -12,7 +12,7 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "auth.setPasswordPage.seo" });
 
-  const title = t("title", { default: "Définir mon mot de passe | MTR Industry" });
+  const title = t("title", { default: "Définir mon mot de passe | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("description", {
     default: "Créez votre mot de passe à partir du lien sécurisé reçu par email.",
   });
@@ -32,8 +32,8 @@ export async function generateMetadata(props) {
       url,
       title,
       description,
-      images: [{ url: og, width: 1200, height: 630, alt: t("ogAlt", { default: "Définir mon mot de passe – MTR Industry" }) }],
-      siteName: "MTR Industry",
+      images: [{ url: og, width: 1200, height: 630, alt: t("ogAlt", { default: "Définir mon mot de passe – MTR Manufacture Tunisienne des Ressorts" }) }],
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       // (optionnel) locale OG standardisée :
       // locale: locale === "fr" ? "fr_FR" : "en_US",
     },
@@ -49,7 +49,7 @@ export default async function Page(props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Définir mon mot de passe – MTR Industry",
+    name: "Définir mon mot de passe – MTR Manufacture Tunisienne des Ressorts",
     description: "Formulaire pour définir un mot de passe via lien sécurisé.",
     primaryImageOfPage: `${APP_URL}/og/set-password.jpg`,
     breadcrumb: {

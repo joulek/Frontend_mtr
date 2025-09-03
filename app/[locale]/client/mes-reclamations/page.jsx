@@ -11,7 +11,7 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "auth.client.claimsPage.seo" });
 
-  const title = t("title", { default: "Mes réclamations – Espace client | MTR Industry" });
+  const title = t("title", { default: "Mes réclamations – Espace client | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("description", {
     default: "Consultez, filtrez et téléchargez vos réclamations client (PDF, détails, statut).",
   });
@@ -22,7 +22,7 @@ export async function generateMetadata(props) {
       url: `${APP_URL}/og/mes-reclamations.jpg`,
       width: 1200,
       height: 630,
-      alt: t("ogAlt", { default: "Aperçu de la page Mes réclamations – MTR Industry" }),
+      alt: t("ogAlt", { default: "Aperçu de la page Mes réclamations – MTR Manufacture Tunisienne des Ressorts" }),
     },
   ];
 
@@ -38,7 +38,7 @@ export async function generateMetadata(props) {
       url,
       title,
       description,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       images,
       // (optionnel) locale OG :
       // locale: locale === "fr" ? "fr_FR" : "en_US",

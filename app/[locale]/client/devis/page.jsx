@@ -12,7 +12,7 @@ export async function generateMetadata(props) {
   const t = await getTranslations({ locale, namespace: "auth.devis" });
 
   const title = t("seo.title", {
-    default: "Demander un devis – Ressorts compression, traction, torsion | MTR Industry",
+    default: "Demander un devis – Ressorts compression, traction, torsion | MTR Manufacture Tunisienne des Ressorts",
   });
   const description = t("seo.description", {
     default:
@@ -25,7 +25,7 @@ export async function generateMetadata(props) {
       url: `${APP_URL}/og/devis.jpg`,
       width: 1200,
       height: 630,
-      alt: t("seo.ogAlt", { default: "Demande de devis MTR Industry" }),
+      alt: t("seo.ogAlt", { default: "Demande de devis MTR Manufacture Tunisienne des Ressorts" }),
     },
   ];
 
@@ -46,14 +46,14 @@ export async function generateMetadata(props) {
       "ressort torsion",
       "fil dressé",
       "grille métallique",
-      "MTR Industry",
+      "MTR Manufacture Tunisienne des Ressorts",
     ],
     openGraph: {
       type: "website",
       url,
       title,
       description,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       images,
       // (optionnel) locale OG si tu veux : "fr_FR" / "en_US"
       // locale: locale === "fr" ? "fr_FR" : "en_US",
@@ -78,7 +78,7 @@ export default async function Page(props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: isFr ? "Demander un devis – MTR Industry" : "Request a quote – MTR Industry",
+    name: isFr ? "Demander un devis – MTR Manufacture Tunisienne des Ressorts" : "Request a quote – MTR Manufacture Tunisienne des Ressorts",
     description: isFr
       ? "Obtenez un devis rapide pour vos ressorts de compression, traction, torsion, fils dressés et grilles métalliques."
       : "Get a quick quote for compression, extension, torsion springs, straightened wires and wire mesh.",

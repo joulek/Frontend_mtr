@@ -12,7 +12,7 @@ export async function generateMetadata(props) {
   // Namespace à ajouter dans tes JSON de traductions
   const t = await getTranslations({ locale, namespace: "auth.resetPasswordPage.seo" });
 
-  const title = t("title", { default: "Réinitialiser le mot de passe | MTR Industry" });
+  const title = t("title", { default: "Réinitialiser le mot de passe | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("description", {
     default: "Saisissez votre email, le code reçu puis un nouveau mot de passe.",
   });
@@ -32,8 +32,8 @@ export async function generateMetadata(props) {
       url,
       title,
       description,
-      images: [{ url: og, width: 1200, height: 630, alt: t("ogAlt", { default: "Réinitialiser mon mot de passe – MTR Industry" }) }],
-      siteName: "MTR Industry",
+      images: [{ url: og, width: 1200, height: 630, alt: t("ogAlt", { default: "Réinitialiser mon mot de passe – MTR Manufacture Tunisienne des Ressorts" }) }],
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       // (optionnel) locale OG standardisée :
       // locale: locale === "fr" ? "fr_FR" : "en_US",
     },
@@ -50,7 +50,7 @@ export default async function Page(props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Réinitialiser le mot de passe – MTR Industry",
+    name: "Réinitialiser le mot de passe – MTR Manufacture Tunisienne des Ressorts",
     description: "Formulaire sécurisé pour réinitialiser votre mot de passe.",
     primaryImageOfPage: `${APP_URL}/og/reset-password.jpg`,
     breadcrumb: {

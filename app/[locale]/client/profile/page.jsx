@@ -11,7 +11,7 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "profile.seo" });
 
-  const title = t("title", { default: "Mon compte – Espace client | MTR Industry" });
+  const title = t("title", { default: "Mon compte – Espace client | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("description", {
     default:
       "Accédez à vos informations de compte, vos coordonnées et vos raccourcis (réclamations, support, mot de passe).",
@@ -19,7 +19,7 @@ export async function generateMetadata(props) {
 
   const url = `${APP_URL}/${locale}/client/profile`;
   const images = [
-    { url: `${APP_URL}/og/client.jpg`, width: 1200, height: 630, alt: t("ogAlt", { default: "Espace client MTR Industry" }) }
+    { url: `${APP_URL}/og/client.jpg`, width: 1200, height: 630, alt: t("ogAlt", { default: "Espace client MTR Manufacture Tunisienne des Ressorts" }) }
   ];
 
   return {
@@ -34,7 +34,7 @@ export async function generateMetadata(props) {
       url,
       title,
       description,
-      siteName: "MTR Industry",
+      siteName: "MTR Manufacture Tunisienne des Ressorts",
       images,
       // (optionnel) préciser une locale OG standardisée :
       // locale: locale === "fr" ? "fr_FR" : "en_US",

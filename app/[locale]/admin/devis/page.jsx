@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -10,6 +11,7 @@ import DevisTorsionList from "@/components/admin/devis/DevisTorsionList";
 import DevisAutreList from "@/components/admin/devis/DevisAutreList";
 import DevisFillList from "@/components/admin/devis/DevisFillList";
 import DevisGrilleList from "@/components/admin/devis/DevisGrilleList";
+
 // Images
 import compressionImg from "@/public/devis/compression_logo.png";
 import tractionImg from "@/public/devis/ressort_traction_1.jpg";
@@ -19,61 +21,70 @@ import grillImg from "@/public/devis/grille.png";
 import autresImg from "@/public/devis/autre.jpg";
 
 export default function AdminDevisSelector() {
+  // chemin de namespaces que TU utilises dans ton code
+  const t = useTranslations("auth.admin.devisAdmin");
+
   const [type, setType] = useState("compression");
-  const t = useTranslations("auth.devis");
+
+  // labels traduits par i18n, avec fallback FR au cas où une clé manque
+  const tl = (k) => t.has(`types.${k}`) ? t(`types.${k}`) : ({
+    compression: "Compression",
+    traction: "Traction",
+    torsion: "Torsion",
+    fill: "Fil dressé coupé",
+    grille: "Grille métallique",
+    autre: "Autre article"
+  })[k];
 
   const TYPES = [
-    { key: "compression", label: t("types.compression"), img: compressionImg },
-    { key: "traction", label: t("types.traction"), img: tractionImg },
-    { key: "torsion", label: t("types.torsion"), img: torsionImg },
-    { key: "fill", label: t("types.fil"), img: fillImg },
-    { key: "grille", label: t("types.grille") || "", img: grillImg },
-    { key: "autre", label: t("types.autre") || "", img: autresImg },
+    { key: "compression", img: compressionImg },
+    { key: "traction",    img: tractionImg },
+    { key: "torsion",     img: torsionImg },
+    { key: "fill",        img: fillImg },
+    { key: "grille",      img: grillImg },
+    { key: "autre",       img: autresImg },
   ];
 
   const renderPage = () => {
     switch (type) {
-      case "compression":
-        return <DevisCompressionList />;
-      case "traction":
-        return <DevisTractionList />;
-      case "torsion":
-        return <DevisTorsionList />;
-      case "fill":
-        return <DevisFillList />;
-      case "grille":
-        return <DevisGrilleList />;
-      case "autre":
-        return <DevisAutreList />;
-      default:
-        return null;
+      case "compression": return <DevisCompressionList />;
+      case "traction":    return <DevisTractionList />;
+      case "torsion":     return <DevisTorsionList />;
+      case "fill":        return <DevisFillList />;
+      case "grille":      return <DevisGrilleList />;
+      case "autre":       return <DevisAutreList />;
+      default:            return null;
     }
   };
 
   return (
     <div className="p-6">
-      <h1 className="mb-6 sm:mb-8 text-3xl font-extrabold tracking-tight text-[#0B1E3A] text-center">
-        Gestion des demandes de devis
+      {/* Titre traduit */}
+      <h1 className="mb-6 sm:mb-8 text-3xl font-extrabold tracking-tight text-[#002147] text-center">
+        {t("title")}
       </h1>
 
+      {/* Sélecteur de type (libellés i18n) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {TYPES.map(({ key, label, img }) => {
+        {TYPES.map(({ key, img }) => {
           const active = type === key;
+          const label = tl(key);
+
           return (
             <button
               key={key}
               onClick={() => setType(key)}
-              className={`rounded-xl border p-4 flex items-center gap-3 justify-start transition ${active
+              className={`rounded-xl border p-4 flex items-center gap-3 justify-start transition ${
+                active
                   ? "border-yellow-500 bg-yellow-50 shadow"
                   : "border-gray-200 bg-white hover:border-yellow-400"
-                }`}
+              }`}
             >
               <div className="relative w-10 h-10 overflow-hidden rounded-lg ring-1 ring-gray-200">
                 <Image src={img} alt={label} fill className="object-cover" />
               </div>
               <span className="font-semibold text-[#0B1E3A] text-left">{label}</span>
             </button>
-
           );
         })}
       </div>

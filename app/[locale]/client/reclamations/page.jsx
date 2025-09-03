@@ -14,7 +14,7 @@ export async function generateMetadata(props) {
 
   const t = await getTranslations({ locale, namespace: "auth.client.reclamationsPage.seo" });
 
-  const title = t("title", { default: "Passer une réclamation – Espace client | MTR Industry" });
+  const title = t("title", { default: "Passer une réclamation – Espace client | MTR Manufacture Tunisienne des Ressorts" });
   const description = t("description", {
     default:
       "Soumettez une réclamation sur un devis, bon de commande, bon de livraison ou facture. Ajoutez des précisions et des pièces jointes.",
@@ -26,7 +26,7 @@ export async function generateMetadata(props) {
       url: `${APP_URL}/og/reclamations.jpg`,
       width: 1200,
       height: 630,
-      alt: t("ogAlt", { default: "Passer une réclamation – MTR Industry" }),
+      alt: t("ogAlt", { default: "Passer une réclamation – MTR Manufacture Tunisienne des Ressorts" }),
     },
   ];
 
@@ -37,7 +37,7 @@ export async function generateMetadata(props) {
       canonical: `/${locale}/client/reclamations`,
       languages: { fr: "/fr/client/reclamations", en: "/en/client/reclamations" },
     },
-    openGraph: { type: "website", url, title, description, siteName: "MTR Industry", images /*, locale: ...*/ },
+    openGraph: { type: "website", url, title, description, siteName: "MTR Manufacture Tunisienne des Ressorts", images /*, locale: ...*/ },
     twitter: { card: "summary_large_image", title, description, images: images.map(i => i.url) },
     robots: { index: false, follow: false, noimageindex: true },
   };

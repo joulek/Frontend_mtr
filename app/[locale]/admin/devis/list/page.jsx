@@ -336,7 +336,7 @@ export default function DevisList() {
       <div className="mx-auto w-full max-w-6xl space-y-8">
         {/* Header */}
         <header className="space-y-4 text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#0B1E3A]">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#002147]">
             {t("title")}
           </h1>
           {err && <p className="text-sm text-red-600">{err}</p>}
