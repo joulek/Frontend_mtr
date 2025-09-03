@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { PhoneCall, Mail, MapPin, CheckCircle, Send, Factory, Cog, Wrench } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -27,10 +27,21 @@ const labelFloat =
   "peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 " +
   "peer-focus:-top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-[#F5B301] peer-[&:not(:placeholder-shown)]:-top-2 peer-[&:not(:placeholder-shown)]:text-xs";
 
+/* ---------- Slugify helper ---------- */
+function slugify(s = "") {
+  return s
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "") // enlève les accents (é → e)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
 export default function HomeClient() {
   const t = useTranslations("home");
+  const locale = useLocale(); // ✅ locale fiable fournie par next-intl
 
-  // helper pour traductions « riches » (avec <strong>…</strong>)
+  // traductions riches
   const rich = (key) => t.rich(key, { strong: (chunks) => <strong>{chunks}</strong> });
 
   const [form, setForm] = useState({ nom: "", email: "", sujet: "", message: "" });
@@ -39,21 +50,6 @@ export default function HomeClient() {
   const [errMsg, setErrMsg] = useState("");
 
   const yearsExp = new Date().getFullYear() - 1994;
-  const [locale, setLocale] = useState("fr");
-
-  // détecte la langue html/navigateur → fr|en
-  useEffect(() => {
-    const pick = () => {
-      const htmlLang = document?.documentElement?.lang || "";
-      const navLang = navigator?.language || "";
-      const l = (htmlLang || navLang || "fr").toLowerCase();
-      setLocale(l.startsWith("en") ? "en" : "fr");
-    };
-    pick();
-    const mo = new MutationObserver(pick);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
-    return () => mo.disconnect();
-  }, []);
 
   /* ------------------ Récupération des catégories ------------------ */
   const [categories, setCategories] = useState([]);
@@ -210,7 +206,6 @@ export default function HomeClient() {
   }
 
   /* -------------------------------- RENDER -------------------------------- */
-  // juste avant le return
   const rawBullets = typeof t.raw === "function" ? t.raw("presentation.bullets") : undefined;
   const bullets = Array.isArray(rawBullets) ? rawBullets : [];
 
@@ -346,7 +341,7 @@ export default function HomeClient() {
                     const raw = c?.image?.url || "";
                     const imgUrl = raw.startsWith("http") ? raw : `${BACKEND}${raw.startsWith("/") ? "" : "/"}${raw}`;
                     const alt = c?.image?.[`alt_${locale}`] || c?.image?.alt_fr || title;
-                    const slug = c?.slug || (title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+                    const slug = (c?.slug && c.slug.trim()) || slugify(title); // ✅ slug backend prioritaire, sinon propre
                     const href = `/${locale}/produits/${slug}`;
                     return (
                       <motion.div key={c._id || title} variants={vItemUp}>
@@ -564,9 +559,9 @@ export default function HomeClient() {
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">{t("contact.tel")}</p>
-                    <p className="font-semibold text-[#0B2239]">+216 00 000 000</p>
+                    <p className="font-semibold text-[#0B2239]">+216 98 333 883</p>
                     <a
-                      href="tel:+21600000000"
+                      href="tel:+21698333883"
                       className="mt-3 inline-block rounded-full border border-[#F5B301] px-4 py-2 text-sm font-semibold text-[#0B2239] hover:bg-[#F5B301] hover:text-[#0B2239]"
                     >
                       {t("contact.telBtn")}

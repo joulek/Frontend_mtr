@@ -9,13 +9,21 @@ import { motion, useScroll, useTransform } from "framer-motion";
 /* -------------------- Consts -------------------- */
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
 const API = `${BACKEND}/api`;
-const AUTOPLAY_MS = 4000; // vitesse autoplay
+const AUTOPLAY_MS = 4000;
 
 /* Helpers */
 function slugify(s = "") {
   return String(s)
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+}
+function humanizeTitle(s = "") {
+  return String(s)
+    .replace(/-/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 function pickName(item, locale = "fr") {
   return (locale?.startsWith("en") ? item?.name_en : item?.name_fr) || item?.name_fr || item?.name_en || "";
@@ -25,15 +33,13 @@ const toUrl = (src = "") => (src?.startsWith("http") ? src : `${BACKEND}${src?.s
 /* Forcer l’affichage liste (pas d’auto-open) pour certains slugs */
 const FORCE_LIST_SLUGS = new Set(["ressorts"]);
 
-/* -------------------- Anim -------------------- */
+/* Anim */
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut", delay } },
 });
 
-/* =======================================================
-   Carousel (autoplay + pause hover + clavier)
-   ======================================================= */
+/* -------------------- Carousel -------------------- */
 function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
   const viewportRef = useRef(null);
   const slideRef = useRef(null);
@@ -42,10 +48,9 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
   const autoplayRef = useRef(null);
   const isHoverRef = useRef(false);
 
-  // Mesure slide
   useEffect(() => {
     const ro = new ResizeObserver(() => {
-      if (slideRef.current) setSlideW(slideRef.current.offsetWidth + 24); // gap ~24
+      if (slideRef.current) setSlideW(slideRef.current.offsetWidth + 24);
     });
     if (slideRef.current) {
       setSlideW(slideRef.current.offsetWidth + 24);
@@ -54,7 +59,6 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
     return () => ro.disconnect();
   }, [items.length]);
 
-  // Sync index au scroll
   const onScroll = useCallback(() => {
     const vp = viewportRef.current;
     if (!vp || !slideW) return;
@@ -72,14 +76,13 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
   const scrollTo = (i) => {
     const vp = viewportRef.current;
     if (!vp) return;
-    const clamped = ((i % items.length) + items.length) % items.length; // wrap
+    const clamped = ((i % items.length) + items.length) % items.length;
     vp.scrollTo({ left: clamped * (slideW || vp.clientWidth), behavior: "smooth" });
   };
 
   const next = () => scrollTo(index + 1);
   const prev = () => scrollTo(index - 1);
 
-  // Autoplay (pause hover / blur)
   const startAuto = useCallback(() => {
     if (autoplayRef.current) clearInterval(autoplayRef.current);
     if (items.length <= 1) return;
@@ -104,7 +107,6 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
     };
   }, [startAuto]);
 
-  // Clavier
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "ArrowRight") next();
@@ -138,7 +140,6 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
         ))}
       </div>
 
-      {/* Contrôles */}
       {items.length > 1 && (
         <>
           <button
@@ -158,7 +159,6 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
         </>
       )}
 
-      {/* Dots */}
       {items.length > 1 && (
         <div className="mt-5 flex items-center justify-center gap-2">
           {items.map((_, i) => (
@@ -175,11 +175,9 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
   );
 }
 
-/* =======================================================
-   Page
-   ======================================================= */
+/* -------------------- Page -------------------- */
 export default function ProductsByCategoryPage() {
-  const { locale, slug } = useParams(); // <- pas de types en JSX
+  const { locale, slug } = useParams();
   const router = useRouter();
 
   const [categories, setCategories] = useState([]);
@@ -189,7 +187,6 @@ export default function ProductsByCategoryPage() {
   const [error, setError] = useState("");
   const [didAutoOpen, setDidAutoOpen] = useState(false);
 
-  // fetch catégories
   useEffect(() => {
     let alive = true;
     const controller = new AbortController();
@@ -220,7 +217,6 @@ export default function ProductsByCategoryPage() {
     );
   }, [categories, slug, locale]);
 
-  // fetch produits
   useEffect(() => {
     if (!currentCategory?._id) return;
     let alive = true;
@@ -241,14 +237,15 @@ export default function ProductsByCategoryPage() {
     return () => { alive = false; controller.abort(); };
   }, [currentCategory?._id]);
 
+  // Titre affiché : priorité à la traduction ; sinon slug humanisé (TitleCase)
   const pageTitle =
     currentCategory?.translations?.[locale] ||
     currentCategory?.translations?.fr ||
     currentCategory?.translations?.en ||
     currentCategory?.label ||
-    String(slug || "").replace(/-/g, " ");
+    humanizeTitle(String(slug || ""));
 
-  // auto-open si un seul produit
+  // auto-open si un seul produit (sauf slugs forcés liste)
   useEffect(() => {
     const forceList = FORCE_LIST_SLUGS.has(String(slug));
     if (!loadingProds && !loadingCats && !error) {
@@ -275,10 +272,10 @@ export default function ProductsByCategoryPage() {
             <motion.nav {...fadeUp(0.05)} className="text-sm text-slate-500">
               <button onClick={() => router.push(`/${locale}`)} className="hover:underline">Accueil</button>
               <span className="mx-2">/</span>
-              <span className="text-slate-700 font-semibold capitalize">{pageTitle}</span>
+              <span className="text-slate-700 font-semibold">{pageTitle}</span>
             </motion.nav>
 
-            <motion.h1 {...fadeUp(0.1)} className="mt-3 text-3xl md:text-4xl font-extrabold text-[#0B2239] capitalize tracking-tight">
+            <motion.h1 {...fadeUp(0.1)} className="mt-3 text-3xl md:text-4xl font-extrabold text-[#0B2239] tracking-tight">
               {pageTitle}
             </motion.h1>
 
@@ -293,7 +290,6 @@ export default function ProductsByCategoryPage() {
         </motion.section>
 
         <section className="mx-auto max-w-7xl px-4 pb-20 pt-6">
-          {/* états */}
           {(loadingCats || loadingProds || didAutoOpen) && (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -308,7 +304,6 @@ export default function ProductsByCategoryPage() {
             <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
           )}
 
-          {/* Carousel — image seule + label + overlay au survol */}
           {!loadingCats && !loadingProds && !error && !didAutoOpen && products.length > 0 && (
             <motion.div {...fadeUp(0.06)}>
               <Carousel
@@ -322,7 +317,6 @@ export default function ProductsByCategoryPage() {
 
                   return (
                     <article className="group relative h-64 sm:h-72 lg:h-80 overflow-hidden rounded-3xl shadow-lg ring-1 ring-slate-200">
-                      {/* Image */}
                       <Image
                         src={img}
                         alt={title}
@@ -331,14 +325,12 @@ export default function ProductsByCategoryPage() {
                         className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-110"
                       />
 
-                      {/* Label bas-gauche (identification) */}
                       <div className="absolute left-3 bottom-3 z-20 transition-opacity duration-300 group-hover:opacity-0">
                         <span className="inline-flex items-center rounded-lg bg-black/60 px-3 py-1.5 text-[12px] font-semibold text-white shadow backdrop-blur-sm">
                           {title}
                         </span>
                       </div>
 
-                      {/* overlay + cartouche Home au survol */}
                       <div className="absolute inset-0 z-10 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                         <div className="relative w-[86%] max-w-[520px]">
@@ -356,7 +348,6 @@ export default function ProductsByCategoryPage() {
                         </div>
                       </div>
 
-                      {/* Toute la carte cliquable */}
                       <a href={href} className="absolute inset-0 z-30" aria-label={`Voir détail: ${title}`} />
                     </article>
                   );

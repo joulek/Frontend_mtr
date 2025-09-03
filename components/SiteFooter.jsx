@@ -22,17 +22,32 @@ export default function SiteFooter({ locale = "fr" }) {
     { label: t("links.contact"), href: anchor("contact") },
   ];
 
+  const contacts = [
+    {
+      name: "Chorki Hbaeib",
+      phone: "+216 98 331 896",
+      tel: "tel:+21698331896",
+    },
+    {
+      name: "Mohamed Hbaeib",
+      phone: "+216 98 333 883",
+      tel: "tel:+21698333883",
+
+    },
+  ];
+
   return (
     <footer className="relative mt-0 bg-[#0B2239] text-white">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_20%_10%,rgba(255,255,255,0.05),transparent),radial-gradient(50%_40%_at_80%_60%,rgba(245,179,1,0.08),transparent)]" />
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 md:grid-cols-3">
-        {/* Col 1 */}
+      {/* grid => 4 colonnes sur desktop */}
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 md:grid-cols-4">
+        {/* Col 1 : Brand */}
         <div>
           <h4 className="text-xl font-extrabold">MTR</h4>
-          <p className="mt-3 max-w-xs text-sm text-white/80">
-            {t("brandLine")}
-          </p>
+          <p className="mt-3 max-w-xs text-sm text-white/80">{t("brandLine")}</p>
+
+          {/* Réseaux */}
           <div className="mt-5 flex items-center gap-3">
             <a
               href="https://www.facebook.com/profile.php?id=100076355199317&locale=fr_FR"
@@ -69,13 +84,16 @@ export default function SiteFooter({ locale = "fr" }) {
           </div>
         </div>
 
-        {/* Col 2 */}
+        {/* Col 2 : Entreprise */}
         <div>
           <h5 className="text-lg font-semibold">{t("column.company")}</h5>
           <ul className="mt-4 space-y-3 text-sm text-white/80">
             {company.map((l, i) => (
               <li key={i}>
-                <Link href={l.href} className="group inline-flex items-center gap-2 hover:text-[#F5B301]">
+                <Link
+                  href={l.href}
+                  className="group inline-flex items-center gap-2 hover:text-[#F5B301]"
+                >
                   <ChevronRight className="h-4 w-4 opacity-60 transition group-hover:text-[#F5B301]" />
                   {l.label}
                 </Link>
@@ -84,16 +102,44 @@ export default function SiteFooter({ locale = "fr" }) {
           </ul>
         </div>
 
-        {/* Col 3 */}
+        {/* Col 3 : Ressources */}
         <div>
           <h5 className="text-lg font-semibold">{t("column.resources")}</h5>
           <ul className="mt-4 space-y-3 text-sm text-white/80">
             {resources.map((l, i) => (
               <li key={i}>
-                <Link href={l.href} className="group inline-flex items-center gap-2 hover:text-[#F5B301]">
+                <Link
+                  href={l.href}
+                  className="group inline-flex items-center gap-2 hover:text-[#F5B301]"
+                >
                   <ChevronRight className="h-4 w-4 opacity-60 transition group-hover:text-[#F5B301]" />
                   {l.label}
                 </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Col 4 : Contacts (nouvelle section) */}
+        <div>
+          <h5 className="text-lg font-semibold">
+            {t("column.contacts", { default: "Contacts" })}
+          </h5>
+          <ul className="mt-4 space-y-3 text-sm text-white/80">
+            {contacts.map((c, i) => (
+              <li key={i} className="flex flex-col">
+                <span className="font-semibold">{c.name}</span>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={c.tel}
+                    className="hover:text-[#F5B301]"
+                    dir="ltr"
+                    aria-label={`${c.name} téléphone`}
+                  >
+                    {c.phone}
+                  </a>
+
+                </div>
               </li>
             ))}
           </ul>
@@ -111,7 +157,10 @@ export default function SiteFooter({ locale = "fr" }) {
             <Link href={`/${locale}/help-desk`} className="hover:text-[#F5B301]">
               {t("links.helpdesk")}
             </Link>
-            <Link href={`/${locale}/privacy-policy`} className="hover:text-[#F5B301]">
+            <Link
+              href={`/${locale}/privacy-policy`}
+              className="hover:text-[#F5B301]"
+            >
               {t("links.privacy")}
             </Link>
           </div>

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import SiteHeader from "@/components/SiteHeader"; // ✅ Import du header
+import SiteHeader from "@/components/SiteHeader";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -32,7 +32,7 @@ export default function LoginPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include", // cookie HttpOnly
+          credentials: "include",
           body: JSON.stringify({ email, password, rememberMe: remember }),
         }
       );
@@ -41,24 +41,16 @@ export default function LoginPage() {
       if (!res.ok) {
         setError(data?.message || t("errors.loginFailed"));
       } else {
-        // ✅ on garde tes clés et on ajoute mtr_role (pour le header)
         const role = data.role || data.user?.role || "";
         try {
           localStorage.setItem("userRole", role);
           localStorage.setItem("mtr_role", role);
           localStorage.setItem("rememberMe", remember ? "1" : "0");
-        } catch {}
+        } catch { }
 
-        if (role === "admin") {
-          router.push(`/${locale}/admin`);
-        } else if (role === "client") {
-          // ✅ Home locale en mode client (conserve le header client partout)
-          router.push(`/${locale}?client=1`);
-          // si tu préfères l’espace client au lieu de la home, remplace par :
-          // router.push(`/${locale}/client`);
-        } else {
-          router.push(`/${locale}/home`);
-        }
+        if (role === "admin") router.push(`/${locale}/admin`);
+        else if (role === "client") router.push(`/${locale}?client=1`);
+        else router.push(`/${locale}/home`);
       }
     } catch {
       setError(t("errors.network"));
@@ -68,54 +60,58 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      {/* ✅ Header */}
+    <div className="min-h-screen bg-[#f5f7fb] [background:radial-gradient(80%_60%_at_10%_0%,rgba(11,34,57,.06),transparent),radial-gradient(60%_40%_at_90%_10%,rgba(245,179,1,.07),transparent)]">
+      {/* Header global */}
       <SiteHeader onLogout={undefined} />
 
-      <div className="flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-2xl shadow-2xl border border-[#ffb400]/50 bg-white">
-          {/* Left panel */}
-          <div className="hidden lg:flex relative items-center justify-center p-10">
+      {/* Contenu */}
+      <main className="px-4 py-10">
+        <div className="mx-auto grid w-full max-w-6xl overflow-hidden rounded-3xl border border-[#F5B301]/30 bg-white shadow-2xl ring-1 ring-black/5 lg:grid-cols-2">
+          {/* Pane gauche (visuel + logo) */}
+          <div className="relative hidden min-h-[560px] lg:block">
             <Image
               src="/about1.png"
-              alt="Ressorts"
+              alt=""
               fill
-              sizes="(min-width:1024px) 50vw, 100vw"
+              sizes="50vw"
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-[#002147]/30" />
-            <div className="relative text-center text-white space-y-6 max-w-sm">
-              <div className="mx-auto rounded-3xl inline-flex">
-                <Image
-                  src="/logoN.png"
-                  alt="MTR"
-                  width={490}
-                  height={150}
-                  style={{ marginTop: "-60px" }}
-                  priority
-                />
-              </div>
+            {/* overlay aux couleurs du site */}
+            <div className="absolute inset-0 bg-[#0B2239]/35 backdrop-blur-[0.5px]" />
+            {/* bloc centré */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
+              {/* ✅ Logo corrigé : position centré, responsive, sans marges négatives */}
+              <Image
+                src="/logo_MTR.png"
+                alt="MTR — Manufacture Tunisienne des Ressorts"
+                width={270}      // ~ largeur par défaut desktop
+                height={90}
+                className="drop-shadow-xl w-[200px] md:w-[240px] lg:w-[260px] h-auto"
+                priority
+              />
+
               <h2
-                className="text-4xl font-extrabold leading-tight text-[#002147]"
-                style={{ fontFamily: "'Lora', serif", marginTop: "-60px" }}
+                className="mt-6 max-w-md text-3xl font-extrabold leading-tight text-[#ffb400] md:text-4xl"
+                style={{ fontFamily: "'Lora', serif" }}
               >
                 {t("joinClientSpace")}
               </h2>
+
               <p
-                className="text-[#002147]/80 font-bold text-lg"
-                style={{ fontFamily: "'Lora', serif", marginTop: "80px" }}
+                className="mt-4 max-w-md text-sm font-medium text-[#002147]/80 md:text-base"
+                style={{ fontFamily: "'Lora', serif" }}
               >
                 {t("promoText")}
               </p>
             </div>
           </div>
 
-          {/* Form panel */}
-          <div className="p-8 sm:p-10 lg:p-12">
+          {/* Pane droite (formulaire) */}
+          <div className="p-6 sm:p-10 lg:p-12">
             <div className="mx-auto w-full max-w-md">
               <h1
-                className="text-3xl sm:text-4xl font-extrabold text-center text-[#002147]"
+                className="text-center text-3xl font-extrabold text-[#0B2239] sm:text-4xl"
                 style={{ fontFamily: "'Lora', serif" }}
               >
                 {t("loginTitle")}
@@ -126,7 +122,9 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="email"
-                    className="block font-semibold text-[#002147]"
+                    className="block font-semibold text-[#0B2239]"
+                    style={{ fontFamily: "'Lora', serif" }}
+
                   >
                     {t("email")} <span className="text-red-500">*</span>
                   </label>
@@ -135,17 +133,18 @@ export default function LoginPage() {
                     name="email"
                     type="email"
                     autoComplete="email"
-                    className="w-full rounded-xl border border-[#ddd] bg-white px-4 py-3 text-[#002147] placeholder-[#555] outline-none focus:border-[#ffb400] focus:ring-2 focus:ring-[#ffb400]/25 transition"
+                    className="w-full rounded-xl border border-[#e6e8ee] bg-white px-4 py-3 text-[#0B2239] placeholder-[#7a8599] outline-none transition focus:border-[#F5B301] focus:ring-2 focus:ring-[#F5B301]/25"
                     placeholder={t("placeholders.email")}
                     required
                   />
                 </div>
 
-                {/* Password */}
+                {/* Mot de passe */}
                 <div className="space-y-2">
                   <label
                     htmlFor="password"
-                    className="block font-semibold text-[#002147]"
+                    className="block font-semibold text-[#0B2239]"
+                    style={{ fontFamily: "'Lora', serif" }}
                   >
                     {t("password")} <span className="text-red-500">*</span>
                   </label>
@@ -155,47 +154,47 @@ export default function LoginPage() {
                       name="password"
                       type={showPwd ? "text" : "password"}
                       autoComplete="current-password"
-                      className={`w-full rounded-xl border border-[#ddd] bg-white py-3 text-[#002147] placeholder-[#555] outline-none focus:border-[#ffb400] focus:ring-2 focus:ring-[#ffb400]/25 transition ${
-                        locale === "ar" ? "pl-10 pr-4" : "pr-10 pl-4"
-                      }`}
+                      className={`w-full rounded-xl border border-[#e6e8ee] bg-white py-3 text-[#0B2239] placeholder-[#7a8599] outline-none transition focus:border-[#F5B301] focus:ring-2 focus:ring-[#F5B301]/25 ${locale === "ar" ? "pl-10 pr-4" : "pr-10 pl-4"
+                        }`}
                       placeholder="********"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPwd((v) => !v)}
-                      className={`absolute inset-y-0 my-auto px-3 ${
-                        locale === "ar" ? "left-3" : "right-3"
-                      }`}
-                      style={{ color: "#555" }}
+                      className={`absolute inset-y-0 my-auto px-3 text-[#7a8599] ${locale === "ar" ? "left-3" : "right-3"
+                        }`}
                       aria-label="Afficher / masquer le mot de passe"
+                        style={{ fontFamily: "'Lora', serif" }}
                     >
                       {showPwd ? <FaEyeSlash /> : <FaEye />}
                     </button>
                   </div>
                 </div>
 
-                {/* Error */}
+                {/* Erreur */}
                 {error && (
-                  <p className="text-red-600 text-sm text-center font-semibold">
+                  <p className="text-center text-sm font-semibold text-red-600">
                     {error}
                   </p>
                 )}
 
                 {/* Options */}
                 <div className="flex items-center justify-between text-sm">
-                  <label className="inline-flex items-center gap-2 text-[#555]">
+                  <label className="inline-flex items-center gap-2 text-[#6b7280]">
                     <input
                       type="checkbox"
-                      className="accent-[#002147]"
+                      className="accent-[#0B2239]"
                       checked={remember}
                       onChange={(e) => setRemember(e.target.checked)}
+                        style={{ fontFamily: "'Lora', serif" }}
                     />
                     {t("rememberMe")}
                   </label>
                   <a
                     href={`/${locale}/forgot-password`}
-                    className="font-semibold hover:underline text-[#002147] "
+                    className="font-semibold text-[#0B2239] hover:underline"
+                      style={{ fontFamily: "'Lora', serif" }}
                   >
                     {t("forgot")}
                   </a>
@@ -205,16 +204,17 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-[#002147] hover:bg-[#003366] text-white font-bold py-3 shadow-lg shadow-[#002147]/30 transition disabled:opacity-60"
+                  className="w-full rounded-xl bg-[#0B2239] py-3 font-bold text-white shadow-lg shadow-[#0B2239]/25 transition hover:bg-[#0c2b40] disabled:opacity-60"
                 >
                   {loading ? t("loading") : t("loginBtn")}
                 </button>
 
-                <p className="text-center text-sm text-[#555]">
+                <p className="text-center text-sm text-[#6b7280]"   style={{ fontFamily: "'Lora', serif" }}>
                   {t("noAccount")}{" "}
                   <Link
                     href={`/${locale}/register`}
-                    className="font-semibold hover:underline text-[#002147] "
+                    className="font-semibold text-[#0B2239] hover:underline"
+                      style={{ fontFamily: "'Lora', serif" }}
                   >
                     {t("goRegister")}
                   </Link>
@@ -223,7 +223,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

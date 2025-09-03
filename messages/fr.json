@@ -88,10 +88,10 @@
         "cards": {
           "call": {
             "title": "Appel direct",
-            "line1": "+216 00 000 000",
+            "line1": "+216 98 333 883",
             "line2": "Lun–Ven, 8h–17h",
             "cta": "Appeler",
-            "href": "tel:+21600000000"
+            "href": "tel:+21698333883"
           },
           "email": {
             "title": "Écrire un e-mail",
@@ -117,7 +117,7 @@
           },
           "q2": {
             "t": "Quels types de ressorts fabriquez-vous ?",
-            "a": "Compression, traction, torsion et formes en fil. Travail du fil 0,1–10 mm, petites et grandes séries, avec traitements (zingage, peinture, trempe…)."
+            "a": "Compression, traction, torsion et formes en fil métallique. Travail du fil 0,1–10 mm, petites et grandes séries."
           },
           "q3": {
             "t": "Faites-vous des prototypes ?",
@@ -216,7 +216,8 @@
       "brandLine": "Manufacture Tunisienne des Ressorts.",
       "column": {
         "company": "Entreprise",
-        "resources": "Ressources"
+        "resources": "Ressources",
+        "contacts": "Contacts"
       },
       "links": {
         "about": "À propos",

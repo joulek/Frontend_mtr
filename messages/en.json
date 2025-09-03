@@ -100,7 +100,9 @@
         "description": "Enter your email, the code you received, then a new password.",
         "ogAlt": "Reset my password – MTR Industry"
       }
-    },
+    }
+  },
+  "auth": {
     "articles": {
       "title": "Articles management",
       "searchPlaceholder": "Search (reference, designation, quote no.)",
@@ -161,9 +163,7 @@
       "misc": {
         "none": "—"
       }
-    }
-  },
-  "auth": {
+    },
     "usersAdmin": {
       "title": "Users management",
       "searchPlaceholder": "Search (name, email, phone, type, role, address, date...)",
@@ -1273,10 +1273,10 @@
         "cards": {
           "call": {
             "title": "Call us",
-            "line1": "+216 00 000 000",
+            "line1": "+216 98 333 883",
             "line2": "Mon–Fri, 8am–5pm",
             "cta": "Call",
-            "href": "tel:+21600000000"
+            "href": "tel:+21698333883"
           },
           "email": {
             "title": "Write an email",
@@ -1302,7 +1302,7 @@
           },
           "q2": {
             "t": "What types of springs do you make?",
-            "a": "Compression, extension, torsion and wire-formed parts. Wire 0.1–10 mm, small to large series, with finishes (galvanizing, painting, heat treatment…)."
+            "a": "Compression, extension, torsion and wire-formed parts. Wire 0.1–10 mm, small to large series."
           },
           "q3": {
             "t": "Do you make prototypes?",
@@ -1378,7 +1378,8 @@
       "brandLine": "Tunisian Spring Manufacturer.",
       "column": {
         "company": "Company",
-        "resources": "Resources"
+        "resources": "Resources",
+        "contacts": "Contacts"
       },
       "links": {
         "about": "About",

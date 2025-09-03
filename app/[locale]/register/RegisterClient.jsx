@@ -22,6 +22,9 @@ export default function RegisterPage() {
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
 
+  // 🟡 adapte cette valeur à la hauteur réelle de ton SiteHeader (en px)
+  const HEADER_H = 72;
+
   const BACKEND =
     (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
 
@@ -52,7 +55,7 @@ export default function RegisterPage() {
     } else if (typeCompte === "societe") {
       payload.company = {
         nomSociete: String(fd.get("nomSociete") || ""),
-        matriculeFiscal: String(fd.get("matriculeFiscale") || ""), // (orthographe backend)
+        matriculeFiscal: String(fd.get("matriculeFiscale") || ""),
         posteActuel: String(fd.get("posteActuelSociete") || ""),
       };
     }
@@ -88,13 +91,16 @@ export default function RegisterPage() {
 
   return (
     <>
-      {/* 🔹 Header global du site */}
       <SiteHeader />
 
-      {/* 🔹 Contenu page (padding top léger pour respirer sous le header sticky) */}
-      <main className="pt-6">
-        <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center px-4 py-10">
-          <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-2xl shadow-2xl border border-[#ffb400]/50 bg-white">
+      {/* ✅ pas de min-h-screen ici : on soustrait la hauteur du header pour éviter
+          le petit scroll blanc en bas de page */}
+      <main
+        className="overflow-x-clip"
+        style={{ minHeight: `calc(100svh - ${HEADER_H}px)` }}
+      >
+        <div className="bg-[#f5f5f5] flex items-center justify-center px-4 py-10 h-full">
+          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-2xl shadow-2xl border border-[#ffb400]/50 bg-white">
             {/* Form */}
             <div className="p-8 sm:p-10 lg:p-12">
               <div className="mx-auto w-full max-w-xl">
@@ -400,14 +406,14 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Left visual panel */}
+            {/* Right visual panel */}
             <div className="hidden lg:flex relative items-center justify-center p-10">
               <Image
                 src="/about.jpg"
                 alt="Ressorts"
                 fill
                 sizes="(min-width:1024px) 50vw, 100vw"
-                className="object-cover opacity-30"
+                className="object-cover opacity-40"
                 priority
               />
               <div className="absolute inset-0 bg-[#002147]/40" />
@@ -416,7 +422,7 @@ export default function RegisterPage() {
                 style={{ marginTop: "-60px" }}
               >
                 <div className="mx-auto rounded-3xl inline-flex">
-                  <Image src="/logoN.png" alt="MTR" width={1000} height={400} priority />
+                  <Image src="/logo_MTR.png" alt="MTR" width={1000} height={400} priority />
                 </div>
                 <h2
                   className="text-4xl font-extrabold leading-tight text-[#ffb400]"
