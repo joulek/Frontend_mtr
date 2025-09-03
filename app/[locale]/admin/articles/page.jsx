@@ -1,11 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FiSearch, FiXCircle, FiEdit2, FiTrash2, FiPlus, FiX, FiCheck } from "react-icons/fi";
+import {
+  FiSearch,
+  FiXCircle,
+  FiEdit2,
+  FiTrash2,
+  FiPlus,
+  FiX,
+  FiCheck,
+} from "react-icons/fi";
 import { useTranslations } from "next-intl";
 import Pagination from "@/components/Pagination";
 
+/* ---------------------------- API backend ---------------------------- */
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+const API = `${BACKEND}/api`;
+
 const CARD_WRAPPER = "mx-auto w-full max-w-6xl px-3 sm:px-6";
 
 export default function AdminArticlesPage() {
@@ -25,7 +36,7 @@ export default function AdminArticlesPage() {
 
   const emptyForm = {
     _id: null,
-    reference: "", // preview seulement
+    reference: "", // preview seulement (lecture seule en édition)
     designation: "",
     prixHT: "",
     type: "",
@@ -42,18 +53,20 @@ export default function AdminArticlesPage() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BACKEND}/api/articles`, {
+      const res = await fetch(`${API}/articles`, {
         cache: "no-store",
         credentials: "include",
       });
       const json = await res.json().catch(() => null);
       if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
+
       const arr = json?.data ?? json?.items ?? [];
       setItems(Array.isArray(arr) ? arr : []);
       setPage(1);
     } catch (e) {
       console.error("fetchItems:", e);
       setItems([]);
+      alert(e.message || "Erreur de chargement.");
     } finally {
       setLoading(false);
     }
@@ -62,7 +75,7 @@ export default function AdminArticlesPage() {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      const res = await fetch(`${BACKEND}/api/produits`, {
+      const res = await fetch(`${API}/produits`, {
         cache: "no-store",
         credentials: "include",
       });
@@ -84,7 +97,7 @@ export default function AdminArticlesPage() {
     }
   };
 
-  // essaie /nextRef puis /next-ref
+  // Essaie /nextRef puis /next-ref pour compat
   const fetchNextRef = async () => {
     const tryOnce = async (path) => {
       const res = await fetch(`${BACKEND}${path}`, {
@@ -120,6 +133,9 @@ export default function AdminArticlesPage() {
   };
 
   const openEdit = (it) => {
+    // si l'article est archivé → on ne permet pas l'édition
+    if (it.isArchived || it.archived) return;
+
     setForm({
       _id: it._id,
       reference: it.reference ?? "",
@@ -149,10 +165,11 @@ export default function AdminArticlesPage() {
   };
 
   const validForm = () => {
-    if (!form.type) return t("errors.requiredType");
-    if (!form.designation?.trim()) return t("errors.requiredDesignation");
+    if (!form.type) return t("errors.requiredType", { default: "Type requis." });
+    if (!form.designation?.trim())
+      return t("errors.requiredDesignation", { default: "Désignation requise." });
     if (form.prixHT === "" || isNaN(Number(form.prixHT)) || Number(form.prixHT) < 0) {
-      return t("errors.invalidHT");
+      return t("errors.invalidHT", { default: "Prix HT invalide." });
     }
     return null;
   };
@@ -170,7 +187,7 @@ export default function AdminArticlesPage() {
         type: form.type,
       };
 
-      const url = isEditing ? `${BACKEND}/api/articles/${form._id}` : `${BACKEND}/api/articles`;
+      const url = isEditing ? `${API}/articles/${form._id}` : `${API}/articles`;
       const method = isEditing ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -188,7 +205,7 @@ export default function AdminArticlesPage() {
       await fetchItems();
     } catch (e) {
       console.error("submitForm:", e);
-      alert(e.message || "Erreur");
+      alert(e.message || "Erreur réseau (CORS/credentials).");
     } finally {
       setSubmitting(false);
     }
@@ -203,18 +220,19 @@ export default function AdminArticlesPage() {
     if (!toDelete?._id) return;
     setDeleting(true);
     try {
-      const res = await fetch(`${BACKEND}/api/articles/${toDelete._id}`, {
+      const res = await fetch(`${API}/articles/${toDelete._id}`, {
         method: "DELETE",
         credentials: "include",
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`);
+
       setDeleteOpen(false);
       setToDelete(null);
       await fetchItems();
     } catch (e) {
       console.error("doDelete:", e);
-      alert(e.message || "Erreur");
+      alert(e.message || "Erreur réseau (CORS/credentials).");
     } finally {
       setDeleting(false);
     }
@@ -247,7 +265,10 @@ export default function AdminArticlesPage() {
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
-  const colWidths = ["w-[16%]", "w-[32%]", "w-[20%]", "w-[16%]", "w-[16%]"]; // ref, design, type, HT, TTC
+  const colWidths = ["w-[16%]", "w-[32%]", "w-[20%]", "w-[12%]", "w-[12%]", "w-[8%]"]; // ref, design, type, HT, TTC, actions
+
+  /* ======================= Helpers UI ======================= */
+  const isArchived = (it) => !!(it.isArchived || it.archived);
 
   /* ======================= UI ======================= */
 
@@ -345,43 +366,87 @@ export default function AdminArticlesPage() {
                             {t("table.priceTTC")}
                           </div>
                         </th>
+                        <th className="p-3 text-right">
+                          <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+                            {t("table.actions", { default: "Actions" })}
+                          </div>
+                        </th>
                       </tr>
                       <tr>
-                        <td colSpan={5}>
+                        <td colSpan={6}>
                           <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
                         </td>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {pageItems.map((it) => (
-                        <tr
-                          key={it._id}
-                          className="bg-white hover:bg-[#0B1E3A]/[0.03] transition-colors"
-                        >
-                          <td className="p-3 align-middle">
-                            <div className="flex items-center gap-3">
-                              <span className="h-2 w-2 rounded-full bg-[#F7C600]" />
-                              <span className="text-[#0B1E3A] font-medium">
-                                {it.reference}
+                      {pageItems.map((it) => {
+                        const archived = isArchived(it);
+                        return (
+                          <tr
+                            key={it._id}
+                            className="bg-white hover:bg-[#0B1E3A]/[0.03] transition-colors"
+                          >
+                            <td className="p-3 align-middle">
+                              <div className="flex items-center gap-3">
+                                <span className="h-2 w-2 rounded-full bg-[#F7C600]" />
+                                <span
+                                  className={`font-medium ${
+                                    archived ? "text-slate-400 italic" : "text-[#0B1E3A]"
+                                  }`}
+                                >
+                                  {it.reference}
+                                </span>
+                                {archived && (
+                                  <span className="ml-2 rounded-full bg-gray-100 text-gray-600 text-[11px] px-2 py-0.5">
+                                    Archivé
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="p-3 align-middle">
+                              <span className={`text-slate-700 ${archived ? "text-slate-400 italic" : ""}`}>
+                                {archived ? "—" : it.designation}
                               </span>
-                            </div>
-                          </td>
-                          <td className="p-3 align-middle">
-                            <span className="text-slate-700">{it.designation}</span>
-                          </td>
-                          <td className="p-3 align-middle">
-                            <span className="text-slate-700">
-                              {it.type?.name_fr || it.typeName || "-"}
-                            </span>
-                          </td>
-                          <td className="p-3 align-middle text-right text-[#0B1E3A]">
-                            {Number(it.prixHT).toFixed(4)}
-                          </td>
-                          <td className="p-3 align-middle text-right text-[#0B1E3A]">
-                            {Number(it.prixTTC ?? it.prixHT * 1.2).toFixed(4)}
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+
+                            <td className="p-3 align-middle">
+                              <span className={`text-slate-700 ${archived ? "text-slate-400 italic" : ""}`}>
+                                {archived ? "—" : (it.type?.name_fr || it.typeName || "-")}
+                              </span>
+                            </td>
+
+                            <td className="p-3 align-middle text-right text-[#0B1E3A]">
+                              {archived ? "—" : Number(it.prixHT).toFixed(4)}
+                            </td>
+                            <td className="p-3 align-middle text-right text-[#0B1E3A]">
+                              {archived ? "—" : Number(it.prixTTC ?? it.prixHT * 1.2).toFixed(4)}
+                            </td>
+
+                            <td className="p-3 align-middle text-right">
+                              <button
+                                onClick={() => openEdit(it)}
+                                disabled={archived}
+                                className={`inline-flex items-center justify-center rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition mr-2 ${
+                                  archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"
+                                }`}
+                                aria-label={t("actions.editAria", { default: "Modifier l’article" })}
+                                title={t("actions.edit", { default: "Modifier" })}
+                              >
+                                <FiEdit2 size={16} />
+                              </button>
+                              <button
+                                onClick={() => confirmDelete(it)}
+                                className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[13px] font-medium text-red-700 hover:bg-red-100 hover:shadow-sm transition"
+                                aria-label={t("actions.deleteAria", { default: "Supprimer l’article" })}
+                                title={t("actions.delete", { default: "Supprimer" })}
+                              >
+                                <FiTrash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -400,72 +465,72 @@ export default function AdminArticlesPage() {
 
               {/* Mobile cards */}
               <div className="md:hidden grid grid-cols-1 gap-3 px-4 py-4">
-                {pageItems.map((it) => (
-                  <div
-                    key={it._id}
-                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-gray-500">
-                        {t("table.reference")}
-                      </p>
-                      <p className="font-medium text-[#0B1E3A] flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-[#F7C600]" />
-                        {it.reference}
-                      </p>
+                {pageItems.map((it) => {
+                  const archived = isArchived(it);
+                  return (
+                    <div key={it._id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-500">{t("table.reference")}</p>
+                        <p className={`font-medium flex items-center gap-2 ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                          <span className="h-2 w-2 rounded-full bg-[#F7C600]" />
+                          {it.reference}
+                          {archived && (
+                            <span className="ml-1 rounded-full bg-gray-100 text-gray-600 text-[11px] px-2 py-0.5">
+                              Archivé
+                            </span>
+                          )}
+                        </p>
 
-                      <p className="mt-3 text-xs font-semibold text-gray-500">
-                        {t("table.designation")}
-                      </p>
-                      <p className="text-[#0B1E3A]">{it.designation}</p>
+                        <p className="mt-3 text-xs font-semibold text-gray-500">{t("table.designation")}</p>
+                        <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                          {archived ? "—" : it.designation}
+                        </p>
 
-                      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500">
-                            {t("table.type")}
-                          </p>
-                          <p className="text-[#0B1E3A]">
-                            {it.type?.name_fr || it.typeName || "-"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500">
-                            {t("table.priceHT")}
-                          </p>
-                          <p className="text-[#0B1E3A]">
-                            {Number(it.prixHT).toFixed(4)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500">
-                            {t("table.priceTTC")}
-                          </p>
-                          <p className="text-[#0B1E3A]">
-                            {Number(it.prixTTC ?? it.prixHT * 1.2).toFixed(4)}
-                          </p>
+                        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500">{t("table.type")}</p>
+                            <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                              {archived ? "—" : (it.type?.name_fr || it.typeName || "-")}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500">{t("table.priceHT")}</p>
+                            <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                              {archived ? "—" : Number(it.prixHT).toFixed(4)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500">{t("table.priceTTC")}</p>
+                            <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                              {archived ? "—" : Number(it.prixTTC ?? it.prixHT * 1.2).toFixed(4)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-3">
-                      <button
-                        onClick={() => openEdit(it)}
-                        className="inline-flex h-9 items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50 px-3 text-[13px] font-medium text-yellow-800 hover:bg-yellow-100 hover:shadow-sm transition"
-                      >
-                        <FiEdit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setToDelete(it);
-                          setDeleteOpen(true);
-                        }}
-                        className="inline-flex h-9 items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 text-[13px] font-medium text-red-700 hover:bg-red-100 hover:shadow-sm transition"
-                      >
-                        <FiTrash2 size={16} />
-                      </button>
+                      <div className="flex items-center justify-end gap-2 pt-3">
+                        <button
+                          onClick={() => openEdit(it)}
+                          disabled={archived}
+                          className={`inline-flex h-9 items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50 px-3 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition ${
+                            archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"
+                          }`}
+                        >
+                          <FiEdit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setToDelete(it);
+                            setDeleteOpen(true);
+                          }}
+                          className="inline-flex h-9 items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 text-[13px] font-medium text-red-700 hover:bg-red-100 hover:shadow-sm transition"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 <div className="pt-2">
                   <Pagination
@@ -499,6 +564,26 @@ export default function AdminArticlesPage() {
             </div>
 
             <form onSubmit={submitForm} className="px-6 py-6 space-y-5">
+              {isEditing && (
+                <label className="block">
+                  <span className="block text-sm font-medium text-gray-700 mb-1">
+                    {t("labels.reference", { default: "Référence" })}
+                  </span>
+                  <input
+                    name="reference"
+                    value={form.reference}
+                    readOnly
+                    disabled
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[#0B1E3A] cursor-not-allowed"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    {t("help.referenceLocked", {
+                      default: "La référence est générée automatiquement et ne peut pas être modifiée.",
+                    })}
+                  </p>
+                </label>
+              )}
+
               {/* Type */}
               <label className="block">
                 <span className="block text-sm font-medium text-gray-700 mb-1">
@@ -596,6 +681,11 @@ export default function AdminArticlesPage() {
             </div>
             <div className="px-6 py-6 text-sm text-gray-700">
               {t("delete.confirm")} <span className="font-semibold">{toDelete?.reference}</span> ?
+              <div className="mt-1 text-xs text-gray-500">
+                {t("delete.noteKeepRef", {
+                  default: "La ligne restera visible avec la seule référence.",
+                })}
+              </div>
             </div>
             <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex items-center justify-end gap-2">
               <button
