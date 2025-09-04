@@ -1,3 +1,4 @@
+// components/SiteHeader.jsx
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -8,28 +9,64 @@ import { Facebook, Linkedin, MoreVertical, User, LogOut } from "lucide-react";
 import { Inter } from "next/font/google";
 import { useTranslations } from "next-intl";
 
-/* -------- Police pro -------- */
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+/* -------- Police -------- */
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 /* ---------------------------- API backend ---------------------------- */
-const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+const BACKEND = (
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000"
+).replace(/\/$/, "");
 const API = `${BACKEND}/api`;
 
 /* --------------------------- Helpers --------------------------- */
 function pickName(cat, locale) {
   return (
-    (cat?.translations && (cat.translations[locale] || cat.translations.fr || cat.translations.en)) ||
+    (cat?.translations &&
+      (cat.translations[locale] ||
+        cat.translations.fr ||
+        cat.translations.en)) ||
     cat?.label ||
     ""
   );
 }
-function slugify(s = "") {
+function slugifySafe(s = "") {
   return String(s)
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 }
 const makeCatHref = (cat, locale) =>
-  `/${locale}/produits/${cat?.slug || slugify(pickName(cat, locale))}`;
+  `/${locale}/produits/${cat?.slug || slugifySafe(pickName(cat, locale))}`;
+
+/* --- produits helpers --- */
+function pickProdName(p, locale) {
+  // حاول حسب اللغة أولاً
+  const byLocale =
+    locale === "en"
+      ? p?.name_en || p?.label_en || p?.title_en
+      : p?.name_fr || p?.label_fr || p?.title_fr;
+
+  return (
+    byLocale ||
+    // إذا عندك structure أخرى:
+    (p?.translations &&
+      (p.translations[locale] || p.translations.fr || p.translations.en)) ||
+    p?.name ||
+    p?.label ||
+    p?.title ||
+    ""
+  );
+}
+
+const makeProductHref = (prod, locale) =>
+  `/${locale}/produits/${
+    prod?.slug || slugifySafe(pickProdName(prod, locale))
+  }`;
 
 function swapLocaleInPath(path, nextLocale) {
   const [p, q] = (path || "/").split("?");
@@ -43,7 +80,6 @@ function swapLocaleInPath(path, nextLocale) {
   }
   return q ? `${base}?${q}` : base;
 }
-
 const PATH_LOCALE_RE = /^\/(fr|en)(?:\/|$)/;
 
 export default function SiteHeader({ mode = "public", onLogout }) {
@@ -53,10 +89,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
   const pathname = usePathname() || "/";
   const homePaths = ["/", "/fr", "/en", "/fr/", "/en/"];
 
-  // === Langue: source de vérité = localStorage, défaut FR ===
+  // === Langue ===
   const [locale, setLocale] = useState("fr");
-
-  // Init à partir du localStorage (puis URL), et synchronise URL + <html lang>
   useEffect(() => {
     let desired = "fr";
     try {
@@ -66,15 +100,16 @@ export default function SiteHeader({ mode = "public", onLogout }) {
 
     const m = PATH_LOCALE_RE.exec(pathname);
     const pathLocale = m?.[1] || null;
-    if (!localStorage.getItem("mtr_locale") && (pathLocale === "fr" || pathLocale === "en")) {
+    if (
+      !localStorage.getItem("mtr_locale") &&
+      (pathLocale === "fr" || pathLocale === "en")
+    ) {
       desired = pathLocale;
     }
 
     setLocale(desired);
-
-    if (typeof document !== "undefined") {
+    if (typeof document !== "undefined")
       document.documentElement.lang = desired;
-    }
 
     const current = pathLocale;
     if (current !== desired) {
@@ -85,7 +120,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
 
   const isHome = homePaths.includes(pathname);
 
-  /* session (⇐ BACKEND /api/me) */
+  /* session */
   const [me, setMe] = useState(null);
   const [hintRole, setHintRole] = useState(() => {
     try {
@@ -98,33 +133,41 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     let alive = true;
     (async () => {
       try {
-        const r = await fetch(`${API}/users/me`, { credentials: "include", cache: "no-store" });
+        const r = await fetch(`${API}/users/me`, {
+          credentials: "include",
+          cache: "no-store",
+        });
         if (!alive) return;
         if (r.ok) {
           const json = await r.json();
           setMe(json);
           if (json?.role) {
-            try { localStorage.setItem("mtr_role", json.role); } catch {}
+            try {
+              localStorage.setItem("mtr_role", json.role);
+            } catch {}
             setHintRole(json.role);
           }
         } else {
           setMe(null);
           setHintRole(null);
-          try { localStorage.removeItem("mtr_role"); } catch {}
+          try {
+            localStorage.removeItem("mtr_role");
+          } catch {}
         }
       } catch {
         setMe(null);
         setHintRole(null);
-        try { localStorage.removeItem("mtr_role"); } catch {}
+        try {
+          localStorage.removeItem("mtr_role");
+        } catch {}
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  /* État client connecté */
   const isLoggedClient = mode === "client" || me?.role === "client";
-
-  /* home href */
   const homeHref = `/${locale}`;
 
   /* catégories */
@@ -136,7 +179,11 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     (async () => {
       try {
         setLoadingCats(true);
-        const res = await fetch(`${API}/categories`, { method: "GET", cache: "no-store", signal: controller.signal });
+        const res = await fetch(`${API}/categories`, {
+          method: "GET",
+          cache: "no-store",
+          signal: controller.signal,
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!alive) return;
@@ -147,10 +194,48 @@ export default function SiteHeader({ mode = "public", onLogout }) {
         if (alive) setLoadingCats(false);
       }
     })();
-    return () => { alive = false; if (!controller.signal.aborted) controller.abort(); };
+    return () => {
+      alive = false;
+      if (!controller.signal.aborted) controller.abort();
+    };
   }, []);
 
-  /* scroll vers section home (SANS hash) */
+  /* produits */
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        setLoadingProducts(true);
+        const res = await fetch(`${API}/produits`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        const list = Array.isArray(data?.products)
+          ? data.products
+          : Array.isArray(data)
+          ? data
+          : [];
+        console.log("fetch products", list);
+        if (alive) setProducts(list);
+      } catch {
+        if (alive) setProducts([]);
+      } finally {
+        if (alive) setLoadingProducts(false);
+      }
+    })();
+    return () => {
+      alive = false;
+      if (!controller.signal.aborted) controller.abort();
+    };
+  }, []);
+
+  /* scroll vers section home */
   const [open, setOpen] = useState(false);
   const goToSection = useCallback(
     async (id, closeMenu) => {
@@ -171,15 +256,15 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     [pathname, router, homeHref]
   );
 
-  /* switch langue: met à jour state + localStorage + html + URL */
+  /* switch langue */
   const switchLang = useCallback(
     (next) => {
       if (next === locale) return;
       setLocale(next);
-      try { localStorage.setItem("mtr_locale", next); } catch {}
-      if (typeof document !== "undefined") {
-        document.documentElement.lang = next;
-      }
+      try {
+        localStorage.setItem("mtr_locale", next);
+      } catch {}
+      if (typeof document !== "undefined") document.documentElement.lang = next;
       const nextPath = swapLocaleInPath(pathname, next);
       router.push(nextPath, { scroll: false });
     },
@@ -190,10 +275,12 @@ export default function SiteHeader({ mode = "public", onLogout }) {
   const ProductsMenu = ({ cats, locale }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [hoveredParent, setHoveredParent] = useState(null);
-    const childrenMap = new Map();
-    const getParentId = (c) => c?.parent?._id || c?.parent || c?.parentId || c?.parent_id || null;
-    const getId = (c) => c?._id || pickName(c, locale);
 
+    // mapping enfants catégories
+    const childrenMap = new Map();
+    const getParentId = (c) =>
+      c?.parent?._id || c?.parent || c?.parentId || c?.parent_id || null;
+    const getId = (c) => c?._id || pickName(c, locale);
     cats.forEach((c) => {
       const pid = getParentId(c);
       if (!pid) return;
@@ -203,15 +290,34 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     });
     const tops = cats.filter((c) => !getParentId(c));
 
+    // index produits par catégorie
+    const prodsByCat = new Map();
+    const getProdCatId = (p) =>
+      p?.category?._id ||
+      p?.category ||
+      p?.categoryId ||
+      p?.category_id ||
+      null;
+    (products || []).forEach((p) => {
+      const cid = getProdCatId(p);
+      if (!cid) return;
+      const arr = prodsByCat.get(cid) || [];
+      arr.push(p);
+      prodsByCat.set(cid, arr);
+    });
+
     return (
       <div
         className="relative"
         onMouseEnter={() => setMenuOpen(true)}
-        onMouseLeave={() => { setMenuOpen(false); setHoveredParent(null); }}
+        onMouseLeave={() => {
+          setMenuOpen(false);
+          setHoveredParent(null);
+        }}
       >
         <button
           type="button"
-          className="group relative px-3 py-2 text-[16px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]"
+          className="group relative px-3 py-2 text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]"
           aria-haspopup="true"
           aria-expanded={menuOpen ? "true" : "false"}
         >
@@ -220,6 +326,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
 
         {menuOpen && (
           <div className="absolute left-0 top-full z-50 before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-2">
+            {/* Colonne de gauche: catégories racines */}
             <ul className="relative w-64 rounded-lg bg-white p-2 shadow-2xl ring-1 ring-slate-200 after:content-[''] after:absolute after:top-0 after:right-[-8px] after:w-2 after:h-full">
               {tops.map((parent) => {
                 const id = getId(parent);
@@ -232,30 +339,87 @@ export default function SiteHeader({ mode = "public", onLogout }) {
                       href={makeCatHref(parent, locale)}
                       onMouseEnter={() => setHoveredParent(id)}
                       className={`flex items-center justify-between rounded-md px-4 py-3 text-[16px] transition ${
-                        active ? "bg-[#F5B301] text-[#0B2239]" : "text-[#0B2239] hover:bg-[#F5B301] hover:text-[#0B2239]"
+                        active
+                          ? "bg-[#F5B301] text-[#0B2239]"
+                          : "text-[#0B2239] hover:bg-[#F5B301] hover:text-[#0B2239]"
                       }`}
                     >
                       {label}
-                      {hasChildren ? <span className="ml-3 text-xs opacity-70">›</span> : null}
+                      {hasChildren ? (
+                        <span className="ml-3 text-xs opacity-70">›</span>
+                      ) : null}
                     </Link>
                   </li>
                 );
               })}
             </ul>
 
-            {hoveredParent && (childrenMap.get(hoveredParent) || []).length > 0 && (
-              <ul className="absolute left-[100%] top-0 ml-2 w-64 rounded-lg bg-white p-2 shadow-2xl ring-1 ring-slate-200">
-                {(childrenMap.get(hoveredParent) || []).map((child) => (
-                  <li key={getId(child)}>
-                    <Link
-                      href={makeCatHref(child, locale)}
-                      className="block rounded-md px-4 py-3 text-[16px] text-[#0B2239] hover:bg-slate-50"
-                    >
-                      {pickName(child, locale)}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            {/* Colonne de droite: sous-catégories + produits de la catégorie survolée */}
+            {hoveredParent && (
+              <div className="absolute left-[100%] top-0 ml-2 w-72 rounded-lg bg-white p-2 shadow-2xl ring-1 ring-slate-200">
+                {/* Sous-catégories */}
+                {Array.isArray(childrenMap.get(hoveredParent)) &&
+                  childrenMap.get(hoveredParent).length > 0 && (
+                    <ul className="mb-1">
+                      {(childrenMap.get(hoveredParent) || []).map((child) => (
+                        <li key={getId(child)}>
+                          <Link
+                            href={makeCatHref(child, locale)}
+                            className="block rounded-md px-4 py-2 text-[15px] text-[#0B2239] hover:bg-slate-50"
+                          >
+                            {pickName(child, locale)}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                {/* Produits de la catégorie survolée */}
+                {/* Produits de la catégorie survolée */}
+                {(() => {
+                  const parentObj = cats.find(
+                    (c) => (c?._id || pickName(c, locale)) === hoveredParent
+                  );
+                  const parentCatKey = parentObj?._id || hoveredParent;
+
+                  // خوذ المنتجات متاع الفئة
+                  const prodsRaw = prodsByCat.get(parentCatKey) || [];
+
+                  // إزالة الدوبلكي حسب _id أو الاسم
+                  const seen = new Set();
+                  const prods = [];
+                  for (const p of prodsRaw) {
+                    const key = p?._id || pickProdName(p, locale);
+                    if (!seen.has(key)) {
+                      seen.add(key);
+                      prods.push(p);
+                    }
+                  }
+
+                  // ✅ ما نعرضوش القسم "Produits" إلا إذا فما 2 أو أكثر
+                  const showProductsPanel = prods.length >= 2;
+
+                  return showProductsPanel ? (
+                    <div className="mt-1 border-t border-slate-100 pt-2">
+                      <div className="px-4 pb-1 text-xs uppercase tracking-wide text-slate-400">
+                        Produits
+                      </div>
+                      <ul>
+                        {prods.map((p) => (
+                          <li key={p?._id || pickProdName(p, locale)}>
+                            <Link
+                              href={makeProductHref(p, locale)}
+                              className="block rounded-md px-4 py-2 text-[15px] text-[#0B2239] hover:bg-slate-50"
+                            >
+                              {pickProdName(p, locale)}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
             )}
           </div>
         )}
@@ -268,16 +432,21 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     const [servicesOpen, setServicesOpen] = useState(false);
     const ref = useRef(null);
     useEffect(() => {
-      const onDoc = (e) => { if (!ref.current?.contains(e.target)) setServicesOpen(false); };
+      const onDoc = (e) => {
+        if (!ref.current?.contains(e.target)) setServicesOpen(false);
+      };
       document.addEventListener("mousedown", onDoc);
       return () => document.removeEventListener("mousedown", onDoc);
     }, []);
 
-    const itemCls = "px-3 py-2 text-[16px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]";
+    const itemCls =
+      "px-3 py-2 text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]";
 
     return (
       <>
-        <Link href={`/${locale}/client/reclamations`} className={itemCls}>{t("client.claim")}</Link>
+        <Link href={`/${locale}/client/reclamations`} className={itemCls}>
+          {t("client.claim")}
+        </Link>
         <div ref={ref} className="relative">
           <button
             type="button"
@@ -289,30 +458,52 @@ export default function SiteHeader({ mode = "public", onLogout }) {
             {t("client.myServices")} ▾
           </button>
           {servicesOpen && (
-            <div role="menu" className="absolute left-0 top-full mt-1 w-64 rounded-lg border border-slate-200 bg-white shadow-lg z-50">
-              <Link href={`/${locale}/client/mes-devis`} role="menuitem" className="block px-4 py-2 text-[16px] text-slate-700 hover:bg-slate-50">
+            <div
+              role="menu"
+              className="absolute left-0 top-full mt-1 w-64 rounded-lg border border-slate-200 bg-white shadow-lg z-50"
+            >
+              <Link
+                href={`/${locale}/client/mes-devis`}
+                role="menuitem"
+                className="block px-4 py-2 text-[16px] text-slate-700 hover:bg-slate-50"
+              >
                 {t("client.myQuotes")}
               </Link>
-              <Link href={`/${locale}/client/mes-reclamations`} role="menuitem" className="block px-4 py-2 text-[16px] text-slate-700 hover:bg-slate-50">
+              <Link
+                href={`/${locale}/client/mes-reclamations`}
+                role="menuitem"
+                className="block px-4 py-2 text-[16px] text-slate-700 hover:bg-slate-50"
+              >
                 {t("client.myClaims")}
               </Link>
             </div>
           )}
         </div>
-        <Link href={`/${locale}/client/devis`} className={itemCls}>{t("client.askQuote")}</Link>
+        <Link href={`/${locale}/client/devis`} className={itemCls}>
+          {t("client.askQuote")}
+        </Link>
       </>
     );
   };
 
-  /* Mobile: seulement l’arbo “Mes services” */
   const ClientNavItemsMobile = () => (
     <details>
-      <summary className="px-3 py-2 cursor-pointer select-none text-[16px]">{t("client.myServices")}</summary>
+      <summary className="px-3 py-2 cursor-pointer select-none text-[16px]">
+        {t("client.myServices")}
+      </summary>
       <div className="pl-4 flex flex-col">
-        <Link href={`/${locale}/client/mes-devis`} className="px-3 py-2 rounded hover:bg-slate-50 text-[16px]" onClick={() => setOpen(false)}>
+        <Link
+          href={`/${locale}/client/mes-devis`}
+          className="px-3 py-2 rounded hover:bg-slate-50 text-[16px]"
+          onClick={() => setOpen(false)}
+        >
           {t("client.myQuotes")}
         </Link>
-        <Link href={`/${locale}/client/mes-reclamations`} className="px-3 py-2 rounded hover:bg-slate-50 text-[16px]" onClick={() => setOpen(false)}>
+        <Link
+          href={`/${locale}/client/mes-reclamations`}
+          className="px-3 py-2 rounded hover:bg-slate-50 text-[16px]"
+          onClick={() => setOpen(false)}
+        >
           {t("client.myClaims")}
         </Link>
       </div>
@@ -324,7 +515,9 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     const [uOpen, setUOpen] = useState(false);
     const ref = useRef(null);
     useEffect(() => {
-      const onDoc = (e) => { if (!ref.current?.contains(e.target)) setUOpen(false); };
+      const onDoc = (e) => {
+        if (!ref.current?.contains(e.target)) setUOpen(false);
+      };
       document.addEventListener("mousedown", onDoc);
       return () => document.removeEventListener("mousedown", onDoc);
     }, []);
@@ -350,7 +543,10 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               {t("userMenu.profile")}
             </Link>
             <button
-              onClick={() => { setUOpen(false); (onLogout || handleLogout)(); }}
+              onClick={() => {
+                setUOpen(false);
+                (onLogout || handleLogout)();
+              }}
               className="flex w-full items-center gap-2 px-4 py-3 text-left text-[16px] text-red-600 hover:bg-red-50"
             >
               <LogOut className="h-4 w-4" />
@@ -362,12 +558,14 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     );
   };
 
-  /* Logout (fallback si onLogout non fourni) */
   async function handleLogout() {
     try {
-      await fetch(`${API}/auth/logout`, { method: "POST", credentials: "include" });
-    } catch {}
-    finally {
+      await fetch(`${API}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+    } finally {
       try {
         localStorage.removeItem("mtr_role");
         localStorage.removeItem("userRole");
@@ -386,29 +584,60 @@ export default function SiteHeader({ mode = "public", onLogout }) {
       <div className="bg-[#0B2239] text-white">
         <div className="mx-auto flex h-10 max-w-screen-2xl items-center justify-between px-4 text-[13px] sm:text-[14px]">
           <nav className="flex items-center gap-4">
-            <button type="button" onClick={() => goToSection("apropos")} className="opacity-90 transition hover:text-[#F5B301]" role="link">
+            <button
+              type="button"
+              onClick={() => goToSection("apropos")}
+              className="opacity-90 transition hover:text-[#F5B301]"
+              role="link"
+            >
               {t("topbar.about")}
             </button>
             <span className="opacity-40">|</span>
-            <Link href={`/${locale}/help-desk`} className="opacity-90 transition hover:text-[#F5B301]">{t("topbar.helpdesk")}</Link>
+            <Link
+              href={`/${locale}/help-desk`}
+              className="opacity-90 transition hover:text-[#F5B301]"
+            >
+              {t("topbar.helpdesk")}
+            </Link>
             <span className="opacity-40">|</span>
-            <button type="button" onClick={() => goToSection("presentation")} className="opacity-90 transition hover:text-[#F5B301]" role="link">
+            <button
+              type="button"
+              onClick={() => goToSection("presentation")}
+              className="opacity-90 transition hover:text-[#F5B301]"
+              role="link"
+            >
               {t("topbar.presentation")}
             </button>
           </nav>
 
           <div className="flex items-center gap-3">
-            <a href="https://www.facebook.com/profile.php?id=100076355199317&locale=fr_FR" target="_blank" rel="noreferrer" className="rounded-full bg-white/10 p-1.5 hover:bg-white/20" aria-label={t("aria.facebook")} title="Facebook">
+            <a
+              href="https://www.facebook.com/profile.php?id=100076355199317&locale=fr_FR"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full bg-white/10 p-1.5 hover:bg-white/20"
+              aria-label={t("aria.facebook")}
+              title="Facebook"
+            >
               <Facebook className="h-4 w-4" />
             </a>
-            <a href="https://www.linkedin.com/in/manufacutre-tunisienne-des-ressorts-22b388276/" target="_blank" rel="noreferrer" className="rounded-full bg-white/10 p-1.5 hover:bg-white/20" aria-label={t("aria.linkedin")} title="LinkedIn">
+            <a
+              href="https://www.linkedin.com/in/manufacutre-tunisienne-des-ressorts-22b388276/"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full bg-white/10 p-1.5 hover:bg-white/20"
+              aria-label={t("aria.linkedin")}
+              title="LinkedIn"
+            >
               <Linkedin className="h-4 w-4" />
             </a>
 
             <div className="flex items-center gap-2 ml-2">
               <button
                 onClick={() => switchLang("fr")}
-                className={`${locale === "fr" ? "ring-2 ring-[#F5B301] rounded-full" : ""} px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
+                className={`${
+                  locale === "fr" ? "ring-2 ring-[#F5B301] rounded-full" : ""
+                } px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
                 title={t("aria.langFR")}
                 aria-pressed={locale === "fr"}
               >
@@ -416,7 +645,9 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               </button>
               <button
                 onClick={() => switchLang("en")}
-                className={`${locale === "en" ? "ring-2 ring-[#F5B301] rounded-full" : ""} px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
+                className={`${
+                  locale === "en" ? "ring-2 ring-[#F5B301] rounded-full" : ""
+                } px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
                 title={t("aria.langEN")}
                 aria-pressed={locale === "en"}
               >
@@ -432,31 +663,64 @@ export default function SiteHeader({ mode = "public", onLogout }) {
         <div className="mx-auto max-w-screen-2xl px-6">
           <div className="flex h-16 items-center justify-between">
             {/* logo → home */}
-            <Link href={homeHref} className="flex items-center gap-3" aria-label={t("logoAlt")}>
-              <Image src="/logo_MTR.png" alt={t("logoAlt")} width={100} height={100} className="object-contain" priority />
+            <Link
+              href={homeHref}
+              className="flex items-center gap-3"
+              aria-label={t("logoAlt")}
+            >
+              <Image
+                src="/logo_MTR.png"
+                alt={t("logoAlt")}
+                width={100}
+                height={100}
+                className="object-contain"
+                priority
+              />
             </Link>
 
             {/* nav desktop */}
             <nav className="hidden items-center gap-1 md:flex">
-              <Link href={homeHref} className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]">
+              <Link
+                href={homeHref}
+                className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]"
+              >
                 {t("nav.home")}
               </Link>
 
-              {(!isLoggedClient || isHome) ? (
+              {!isLoggedClient || isHome ? (
                 <>
-                  <button type="button" onClick={() => goToSection("presentation")} className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]" role="link">
+                  <button
+                    type="button"
+                    onClick={() => goToSection("presentation")}
+                    className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]"
+                    role="link"
+                  >
                     {t("nav.company")}
                   </button>
-                  {!loadingCats && <ProductsMenu cats={categories} locale={locale} />}
-                  <button type="button" onClick={() => goToSection("contact")} className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]" role="link">
+                  {!loadingCats && (
+                    <ProductsMenu cats={categories} locale={locale} />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => goToSection("contact")}
+                    className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]"
+                    role="link"
+                  >
                     {t("nav.contact")}
                   </button>
-                  <button type="button" onClick={() => goToSection("localisation")} className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]" role="link">
+                  <button
+                    type="button"
+                    onClick={() => goToSection("localisation")}
+                    className="px-3 py-2 text-[15px] md:text-[16px] font-medium text-[#0B2239] hover:text-[#F5B301]"
+                    role="link"
+                  >
                     {t("nav.location")}
                   </button>
                 </>
               ) : (
-                !loadingCats && <ProductsMenu cats={categories} locale={locale} />
+                !loadingCats && (
+                  <ProductsMenu cats={categories} locale={locale} />
+                )
               )}
 
               {isLoggedClient && <ClientNavItemsDesktop />}
@@ -468,10 +732,16 @@ export default function SiteHeader({ mode = "public", onLogout }) {
                 <UserMenu />
               ) : (
                 <>
-                  <Link href={`/${locale}/login`} className="hidden md:inline-block rounded-full bg-[#F5B301] px-4 py-2 text-[15px] md:text-[16px] font-semibold text-[#0B2239] shadow hover:brightness-95">
+                  <Link
+                    href={`/${locale}/login`}
+                    className="hidden md:inline-block rounded-full bg-[#F5B301] px-4 py-2 text-[15px] md:text-[16px] font-semibold text-[#0B2239] shadow hover:brightness-95"
+                  >
                     {t("actions.login")}
                   </Link>
-                  <Link href={`/${locale}/devis`} className="hidden md:inline-block rounded-full bg-[#F5B301] px-4 py-2 text-[15px] md:text-[16px] font-semibold text-[#0B2239] shadow hover:brightness-95">
+                  <Link
+                    href={`/${locale}/devis`}
+                    className="hidden md:inline-block rounded-full bg-[#F5B301] px-4 py-2 text-[15px] md:text-[16px] font-semibold text-[#0B2239] shadow hover:brightness-95"
+                  >
                     {t("actions.askQuote")}
                   </Link>
                 </>
@@ -493,22 +763,46 @@ export default function SiteHeader({ mode = "public", onLogout }) {
         {open && (
           <div className="md:hidden border-top border-slate-200 bg-white">
             <div className="mx-auto max-w-screen-2xl px-4 py-3 flex flex-col gap-1">
-              <Link href={homeHref} className="rounded px-3 py-2 hover:bg-slate-50 text-[15px]" onClick={() => setOpen(false)}>
+              <Link
+                href={homeHref}
+                className="rounded px-3 py-2 hover:bg-slate-50 text-[15px]"
+                onClick={() => setOpen(false)}
+              >
                 {t("nav.home")}
               </Link>
 
               {(!isLoggedClient || isHome) && (
                 <>
-                  <button type="button" onClick={() => goToSection("presentation", true)} className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]" role="link">
+                  <button
+                    type="button"
+                    onClick={() => goToSection("presentation", true)}
+                    className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]"
+                    role="link"
+                  >
                     {t("nav.company")}
                   </button>
-                  <button type="button" onClick={() => goToSection("specialites", true)} className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]" role="link">
+                  <button
+                    type="button"
+                    onClick={() => goToSection("specialites", true)}
+                    className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]"
+                    role="link"
+                  >
                     {t("nav.products")}
                   </button>
-                  <button type="button" onClick={() => goToSection("contact", true)} className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]" role="link">
+                  <button
+                    type="button"
+                    onClick={() => goToSection("contact", true)}
+                    className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]"
+                    role="link"
+                  >
                     {t("nav.contact")}
                   </button>
-                  <button type="button" onClick={() => goToSection("localisation", true)} className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]" role="link">
+                  <button
+                    type="button"
+                    onClick={() => goToSection("localisation", true)}
+                    className="text-left rounded px-3 py-2 hover:bg-slate-50 text-[15px]"
+                    role="link"
+                  >
                     {t("nav.location")}
                   </button>
                 </>
@@ -517,16 +811,28 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               {isLoggedClient ? (
                 <>
                   <ClientNavItemsMobile />
-                  <Link href={`/${locale}/client/devis`} onClick={() => setOpen(false)} className="mt-2 rounded-xl bg-[#F5B301] px-4 py-2 text-center text-[15px] font-semibold text-[#0B2239] shadow hover:brightness-95">
+                  <Link
+                    href={`/${locale}/client/devis`}
+                    onClick={() => setOpen(false)}
+                    className="mt-2 rounded-xl bg-[#F5B301] px-4 py-2 text-center text-[15px] font-semibold text-[#0B2239] shadow hover:brightness-95"
+                  >
                     {t("client.askQuote")}
                   </Link>
                 </>
               ) : (
                 <>
-                  <Link href={`/${locale}/devis`} onClick={() => setOpen(false)} className="rounded-xl bg-[#F5B301] px-4 py-2 text-center text-[15px] font-semibold text-[#0B2239] shadow hover:brightness-95">
+                  <Link
+                    href={`/${locale}/devis`}
+                    onClick={() => setOpen(false)}
+                    className="rounded-xl bg-[#F5B301] px-4 py-2 text-center text-[15px] font-semibold text-[#0B2239] shadow hover:brightness-95"
+                  >
                     {t("actions.askQuote")}
                   </Link>
-                  <Link href={`/${locale}/login`} onClick={() => setOpen(false)} className="mt-2 rounded-xl bg-[#F5B301] px-4 py-2 text-center text-[15px] font-semibold text-[#0B2239] shadow hover:brightness-95">
+                  <Link
+                    href={`/${locale}/login`}
+                    onClick={() => setOpen(false)}
+                    className="mt-2 rounded-xl bg-[#F5B301] px-4 py-2 text-center text-[15px] font-semibold text-[#0B2239] shadow hover:brightness-95"
+                  >
                     {t("actions.login")}
                   </Link>
                 </>
