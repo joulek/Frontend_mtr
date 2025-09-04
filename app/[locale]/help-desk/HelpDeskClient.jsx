@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -35,6 +35,24 @@ export default function HelpDeskClient() {
   const [loading, setLoading] = useState(false);
   const [okMsg, setOkMsg] = useState("");
   const [errMsg, setErrMsg] = useState("");
+
+  // timers pour auto-hide (✅ جديد)
+  const okTimer = useRef(null);
+  const errTimer = useRef(null);
+
+  useEffect(() => {
+    if (!okMsg) return;
+    if (okTimer.current) clearTimeout(okTimer.current);
+    okTimer.current = setTimeout(() => setOkMsg(""), 3000); // يخفي بعد 3 ثواني
+    return () => { if (okTimer.current) clearTimeout(okTimer.current); };
+  }, [okMsg]);
+
+  useEffect(() => {
+    if (!errMsg) return;
+    if (errTimer.current) clearTimeout(errTimer.current);
+    errTimer.current = setTimeout(() => setErrMsg(""), 4000); // يخفي بعد 4 ثواني
+    return () => { if (errTimer.current) clearTimeout(errTimer.current); };
+  }, [errMsg]);
 
   const submitContact = async (e) => {
     e.preventDefault();
@@ -201,8 +219,19 @@ export default function HelpDeskClient() {
               </div>
             </div>
 
-            {okMsg && <p className="mt-4 text-green-600">{okMsg}</p>}
-            {errMsg && <p className="mt-4 text-red-600">{errMsg}</p>}
+            {/* ✅ رسائل مع إخفاء تلقائي */}
+            <div className="mt-4 space-y-2" aria-live="polite">
+              {okMsg && (
+                <p className="rounded-lg bg-green-50 px-3 py-2 text-green-700 ring-1 ring-green-200 transition-opacity duration-300">
+                  {okMsg}
+                </p>
+              )}
+              {errMsg && (
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-red-700 ring-1 ring-red-200 transition-opacity duration-300">
+                  {errMsg}
+                </p>
+              )}
+            </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3 text-sm text-slate-500">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -41,6 +41,7 @@ export default function HomeClient() {
   const t = useTranslations("home");
   const locale = useLocale(); // ✅ locale fiable fournie par next-intl
 
+
   // traductions riches
   const rich = (key) => t.rich(key, { strong: (chunks) => <strong>{chunks}</strong> });
 
@@ -54,6 +55,24 @@ export default function HomeClient() {
   /* ------------------ Récupération des catégories ------------------ */
   const [categories, setCategories] = useState([]);
   const [loadingCats, setLoadingCats] = useState(true);
+
+  // timers pour auto-hide messages
+  const okTimer = useRef(null);
+  const errTimer = useRef(null);
+  useEffect(() => {
+    if (!okMsg) return;
+    if (okTimer.current) clearTimeout(okTimer.current);
+    okTimer.current = setTimeout(() => setOkMsg(""), 3000); // 3 ثواني
+    return () => { if (okTimer.current) clearTimeout(okTimer.current); };
+  }, [okMsg]);
+
+  useEffect(() => {
+    if (!errMsg) return;
+    if (errTimer.current) clearTimeout(errTimer.current);
+    errTimer.current = setTimeout(() => setErrMsg(""), 4000); // 4 ثواني
+    return () => { if (errTimer.current) clearTimeout(errTimer.current); };
+  }, [errMsg]);
+
 
   useEffect(() => {
     let alive = true;
@@ -531,9 +550,19 @@ export default function HomeClient() {
                     </label>
                   </div>
                 </div>
+                <div className="mt-4 space-y-2" aria-live="polite">
+                  {okMsg && (
+                    <p className="rounded-lg bg-green-50 px-3 py-2 text-green-700 ring-1 ring-green-200 transition-opacity duration-300">
+                      {okMsg}
+                    </p>
+                  )}
+                  {errMsg && (
+                    <p className="rounded-lg bg-red-50 px-3 py-2 text-red-700 ring-1 ring-red-200 transition-opacity duration-300">
+                      {errMsg}
+                    </p>
+                  )}
+                </div>
 
-                {okMsg && <p className="mt-4 text-green-600">{okMsg}</p>}
-                {errMsg && <p className="mt-4 text-red-600">{errMsg}</p>}
 
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3 text-sm text-slate-500">
