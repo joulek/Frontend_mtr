@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Pagination from "@/components/Pagination";
-import { FiSearch, FiXCircle } from "react-icons/fi";
+import { FiSearch, FiXCircle, FiFileText } from "react-icons/fi";
 import MultiDevisModal from "@/components/admin/devis/MultiDevisModal.jsx";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
@@ -234,20 +234,30 @@ export default function AdminDevisTractionPage() {
 
                           <td className="p-2.5 border-b border-gray-200 whitespace-nowrap">{shortDate(d.createdAt)}</td>
 
+                          {/* PDF pill button */}
                           <td className="p-2.5 border-b border-gray-200 whitespace-nowrap">
                             {hasPdf ? (
-                              <button onClick={() => viewPdfById(d._id)}  className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10">
+                              <button
+                                onClick={() => viewPdfById(d._id)}
+                                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                              >
+                                <FiFileText size={16} />
                                 {t("open")}
                               </button>
                             ) : <span className="text-gray-400">—</span>}
                           </td>
 
+                          {/* Attachments pill buttons */}
                           <td className="p-2.5 border-b border-gray-200 hidden lg:table-cell">
                             {docs.length === 0 ? <span className="text-gray-400">—</span> : (
                               <div className="flex flex-wrap gap-2">
                                 {docs.map((doc) => (
-                                  <button key={doc.index} onClick={() => viewDocByIndex(d._id, doc.index)}
-                                     className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10">
+                                  <button
+                                    key={doc.index}
+                                    onClick={() => viewDocByIndex(d._id, doc.index)}
+                                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                                  >
+                                    <FiFileText size={16} />
                                     {t("open")}
                                   </button>
                                 ))}
@@ -296,7 +306,13 @@ export default function AdminDevisTractionPage() {
                       </div>
 
                       {hasPdf ? (
-                        <button onClick={() => viewPdfById(d._id)} className="inline-flex rounded-full border px-3 py-1 text-[12px]">
+                        <button
+                          onClick={() => viewPdfById(d._id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                          aria-label={t("open")}
+                          title={t("open")}
+                        >
+                          <FiFileText size={16} />
                           {t("open")}
                         </button>
                       ) : <span className="text-gray-400 text-sm">—</span>}
@@ -319,8 +335,12 @@ export default function AdminDevisTractionPage() {
                     ) : (
                       <div className="mt-1 flex flex-wrap gap-2">
                         {docs.map((doc) => (
-                          <button key={doc.index} onClick={() => viewDocByIndex(d._id, doc.index)}
-                            className="inline-flex rounded-full border px-2 py-0.5 text-[12px]">
+                          <button
+                            key={doc.index}
+                            onClick={() => viewDocByIndex(d._id, doc.index)}
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                          >
+                            <FiFileText size={16} />
                             {t("open")}
                           </button>
                         ))}
@@ -364,7 +384,6 @@ export default function AdminDevisTractionPage() {
   );
 }
 
-// فتح مباشر (stream)
 function viewPdfById(id) {
   window.open(`${BACKEND}/api/devis/traction/${id}/pdf`, "_blank", "noopener,noreferrer");
 }

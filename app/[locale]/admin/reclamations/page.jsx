@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Pagination from "@/components/Pagination";
-import { FiXCircle } from "react-icons/fi";
+import { FiXCircle, FiFileText } from "react-icons/fi";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
@@ -208,10 +208,11 @@ export default function AdminReclamationsPage() {
                     <button
                       onClick={() => viewPdfById(r._id)}
                       disabled={openingId === r._id}
-                      className={`inline-flex items-center gap-1 rounded-full border border-[#0B1E3A]/20 px-3 py-1 text-xs transition
-                                  ${openingId === r._id ? "bg-[#F7C600]/20 text-[#0B1E3A] cursor-wait animate-pulse" : "hover:bg-[#0B1E3A]/5"}`}
+                      className={`inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm
+                                  ${openingId === r._id ? "cursor-wait animate-pulse" : "hover:bg-slate-50"} text-[#0B1E3A]`}
                       aria-label={t("actions.openPdf")} title={t("actions.openPdf")}
                     >
+                      <FiFileText size={16} />
                       {openingId === r._id ? t("actions.openingPdf") : t("actions.openPdf")}
                     </button>
                   ) : (
@@ -226,9 +227,10 @@ export default function AdminReclamationsPage() {
                         <button
                           key={idx}
                           onClick={() => viewDocByIndex(r._id, idx)}
-                          className="inline-flex items-center rounded-full border border-[#0B1E3A]/20 px-3 py-1 text-xs hover:bg-[#0B1E3A]/5"
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
                           title={p?.mimetype || ""}
                         >
+                          <FiFileText size={16} />
                           {p?.filename || `pj_${idx + 1}`}
                         </button>
                       ))}
@@ -278,14 +280,12 @@ export default function AdminReclamationsPage() {
                           <button
                             onClick={() => viewPdfById(r._id)}
                             disabled={openingId === r._id}
-                            className={`inline-flex items-center gap-1 rounded-full border border-[#0B1E3A]/20 
-                                        px-2.5 py-1 text-xs transition ${
-                                          openingId === r._id
-                                            ? "bg-[#F7C600]/20 text-[#0B1E3A] cursor-wait animate-pulse"
-                                            : "hover:bg-[#0B1E3A]/5"
-                                        }`}
+                            className={`inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-[#0B1E3A] ${
+                              openingId === r._id ? "cursor-wait animate-pulse" : "hover:bg-slate-50"
+                            }`}
                             aria-label={t("actions.openPdf")} title={t("actions.openPdf")}
                           >
+                            <FiFileText size={16} />
                             {openingId === r._id ? t("actions.opening") : t("actions.open")}
                           </button>
                         ) : (
@@ -301,10 +301,11 @@ export default function AdminReclamationsPage() {
                               <button
                                 key={idx}
                                 onClick={() => viewDocByIndex(r._id, idx)}
-                                className="inline-flex items-center rounded-full border border-[#0B1E3A]/20 px-2.5 py-1 text-xs hover:bg-[#0B1E3A]/5"
+                                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
                                 title={p?.mimetype || ""}
                               >
-                                {p?.filename || `pj_${idx + 1}`}
+                                <FiFileText size={16} />
+                                {t("actions.open")}
                               </button>
                             ))}
                           </div>

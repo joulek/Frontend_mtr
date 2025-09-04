@@ -36,7 +36,7 @@ export default function AdminArticlesPage() {
 
   const emptyForm = {
     _id: null,
-    reference: "", // preview seulement (lecture seule en édition)
+    reference: "",
     designation: "",
     prixHT: "",
     type: "",
@@ -82,7 +82,6 @@ export default function AdminArticlesPage() {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
 
-      // accepte plusieurs formes de payload
       const arr = data?.data ?? data?.items ?? data?.produits ?? data ?? [];
       const normalized = (Array.isArray(arr) ? arr : []).map((p) => ({
         _id: p?._id,
@@ -97,7 +96,6 @@ export default function AdminArticlesPage() {
     }
   };
 
-  // Essaie /nextRef puis /next-ref pour compat
   const fetchNextRef = async () => {
     const tryOnce = async (path) => {
       const res = await fetch(`${BACKEND}${path}`, {
@@ -133,7 +131,6 @@ export default function AdminArticlesPage() {
   };
 
   const openEdit = (it) => {
-    // si l'article est archivé → on ne permet pas l'édition
     if (it.isArchived || it.archived) return;
 
     setForm({
@@ -265,7 +262,8 @@ export default function AdminArticlesPage() {
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
-  const colWidths = ["w-[16%]", "w-[32%]", "w-[20%]", "w-[12%]", "w-[12%]", "w-[8%]"]; // ref, design, type, HT, TTC, actions
+  // ref, design, type, HT, TTC, actions (➡ actions élargie)
+  const colWidths = ["w-[16%]", "w-[32%]", "w-[20%]", "w-[12%]", "w-[12%]", "w-[12%]"];
 
   /* ======================= Helpers UI ======================= */
   const isArchived = (it) => !!(it.isArchived || it.archived);
@@ -390,9 +388,8 @@ export default function AdminArticlesPage() {
                               <div className="flex items-center gap-3">
                                 <span className="h-2 w-2 rounded-full bg-[#F7C600]" />
                                 <span
-                                  className={`font-medium ${
-                                    archived ? "text-slate-400 italic" : "text-[#0B1E3A]"
-                                  }`}
+                                  className={`font-medium ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"
+                                    }`}
                                 >
                                   {it.reference}
                                 </span>
@@ -423,26 +420,29 @@ export default function AdminArticlesPage() {
                               {archived ? "—" : Number(it.prixTTC ?? it.prixHT * 1.2).toFixed(4)}
                             </td>
 
-                            <td className="p-3 align-middle text-right">
-                              <button
-                                onClick={() => openEdit(it)}
-                                disabled={archived}
-                                className={`inline-flex items-center justify-center rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition mr-2 ${
-                                  archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"
-                                }`}
-                                aria-label={t("actions.editAria", { default: "Modifier l’article" })}
-                                title={t("actions.edit", { default: "Modifier" })}
-                              >
-                                <FiEdit2 size={16} />
-                              </button>
-                              <button
-                                onClick={() => confirmDelete(it)}
-                                className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[13px] font-medium text-red-700 hover:bg-red-100 hover:shadow-sm transition"
-                                aria-label={t("actions.deleteAria", { default: "Supprimer l’article" })}
-                                title={t("actions.delete", { default: "Supprimer" })}
-                              >
-                                <FiTrash2 size={16} />
-                              </button>
+                            {/* 👉 Actions sur la même ligne */}
+                            <td className="p-3 align-middle text-right whitespace-nowrap">
+                              <div className="inline-flex items-center gap-2">
+                                <button
+                                  onClick={() => openEdit(it)}
+                                  disabled={archived}
+                                  className={`inline-flex items-center justify-center rounded-full border border-yellow-200 bg-yellow-50 px-2.5 py-1.5 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition ${archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"}`}
+                                  aria-label={t("actions.edit", { default: "Modifier" })}
+                                  title={t("actions.edit", { default: "Modifier" })}
+                                >
+                                  <FiEdit2 size={16} />
+                                </button>
+
+                                <button
+                                  onClick={() => confirmDelete(it)}
+                                  className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1.5 text-[13px] font-medium text-red-700 hover:bg-red-100 hover:shadow-sm transition"
+                                  aria-label={t("actions.delete", { default: "Supprimer" })}
+                                  title={t("actions.delete", { default: "Supprimer" })}
+                                >
+                                  <FiTrash2 size={16} />
+                                </button>
+
+                              </div>
                             </td>
                           </tr>
                         );
@@ -482,26 +482,26 @@ export default function AdminArticlesPage() {
                         </p>
 
                         <p className="mt-3 text-xs font-semibold text-gray-500">{t("table.designation")}</p>
-                        <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                        <p className={`${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
                           {archived ? "—" : it.designation}
                         </p>
 
                         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                           <div>
                             <p className="text-xs font-semibold text-gray-500">{t("table.type")}</p>
-                            <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                            <p className={`${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
                               {archived ? "—" : (it.type?.name_fr || it.typeName || "-")}
                             </p>
                           </div>
                           <div>
                             <p className="text-xs font-semibold text-gray-500">{t("table.priceHT")}</p>
-                            <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                            <p className={`${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
                               {archived ? "—" : Number(it.prixHT).toFixed(4)}
                             </p>
                           </div>
                           <div>
                             <p className="text-xs font-semibold text-gray-500">{t("table.priceTTC")}</p>
-                            <p className={` ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
+                            <p className={`${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}>
                               {archived ? "—" : Number(it.prixTTC ?? it.prixHT * 1.2).toFixed(4)}
                             </p>
                           </div>
@@ -512,9 +512,8 @@ export default function AdminArticlesPage() {
                         <button
                           onClick={() => openEdit(it)}
                           disabled={archived}
-                          className={`inline-flex h-9 items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50 px-3 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition ${
-                            archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"
-                          }`}
+                          className={`inline-flex h-9 items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50 px-3 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition ${archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"
+                            }`}
                         >
                           <FiEdit2 size={16} />
                         </button>
@@ -656,8 +655,8 @@ export default function AdminArticlesPage() {
                       ? t("form.updating")
                       : t("form.creating")
                     : isEditing
-                    ? t("form.update")
-                    : t("form.create")}
+                      ? t("form.update")
+                      : t("form.create")}
                 </button>
               </div>
             </form>

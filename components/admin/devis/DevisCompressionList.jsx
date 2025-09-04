@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Pagination from "@/components/Pagination";
-import { FiSearch, FiXCircle } from "react-icons/fi";
+import { FiSearch, FiXCircle, FiFileText } from "react-icons/fi";
 import MultiDevisModal from "@/components/admin/devis/MultiDevisModal.jsx";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
@@ -31,8 +31,8 @@ export default function DevisCompressionList() {
   const [total, setTotal] = useState(0);
 
   const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(true);   // skeleton فقط إذا ما عناش بيانات
-  const [syncing, setSyncing] = useState(false);  // refresh صامت
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   // بحث (debounce)
   const [q, setQ] = useState("");
@@ -51,7 +51,7 @@ export default function DevisCompressionList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Toast بسيط
+  // Toast
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const showToast = useCallback((text, kind = "info") => {
@@ -77,51 +77,65 @@ export default function DevisCompressionList() {
   }, []);
 
   // Load paginé
-  const load = useCallback(async (silent = false) => {
-    try {
-      setErr("");
-      if (silent) setSyncing(true);
-      else if (items.length === 0) setLoading(true);
+  const load = useCallback(
+    async (silent = false) => {
+      try {
+        setErr("");
+        if (silent) setSyncing(true);
+        else if (items.length === 0) setLoading(true);
 
-      const params = new URLSearchParams({
-        q: debouncedQ || "",
-        page: String(page),
-        pageSize: String(pageSize),
-      });
+        const params = new URLSearchParams({
+          q: debouncedQ || "",
+          page: String(page),
+          pageSize: String(pageSize),
+        });
 
-      const res = await fetch(`${BACKEND}/api/devis/compression/paginated?` + params.toString(), {
-        credentials: "include",
-        cache: "no-store",
-      });
+        const res = await fetch(`${BACKEND}/api/devis/compression/paginated?` + params.toString(), {
+          credentials: "include",
+          cache: "no-store",
+        });
 
-      if (res.status === 401) { router.push(`/fr/login?next=${encodeURIComponent("/fr/admin/devis/compression")}`); return; }
-      if (res.status === 403) { router.push(`/fr/unauthorized?code=403`); return; }
+        if (res.status === 401) {
+          router.push(`/fr/login?next=${encodeURIComponent("/fr/admin/devis/compression")}`);
+          return;
+        }
+        if (res.status === 403) {
+          router.push(`/fr/unauthorized?code=403`);
+          return;
+        }
 
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.success) throw new Error(data?.message || `Erreur (${res.status})`);
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) throw new Error(data?.message || `Erreur (${res.status})`);
 
-      setItems(data.items || []);
-      setTotal(data.total || 0);
+        setItems(data.items || []);
+        setTotal(data.total || 0);
 
-      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ items: data.items || [], total: data.total || 0 }));
-    } catch (e) {
-      setErr(e.message || "Erreur réseau");
-    } finally {
-      if (silent) setSyncing(false);
-      else setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedQ, page, pageSize, router, items.length]);
+        sessionStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ items: data.items || [], total: data.total || 0 })
+        );
+      } catch (e) {
+        setErr(e.message || "Erreur réseau");
+      } finally {
+        if (silent) setSyncing(false);
+        else setLoading(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [debouncedQ, page, pageSize, router, items.length]
+  );
 
   // أول تحميل + كل تبديل للـ q/page/pageSize
-  useEffect(() => { load(items.length > 0); }, [load]);
+  useEffect(() => {
+    load(items.length > 0);
+  }, [load]);
 
   // فتح multi-devis
   function openMultiFromSelection() {
     const chosen = items.filter((it) => selectedIds.includes(it._id));
     if (!chosen.length) return;
     const c0 = chosen[0]?.user?._id?.toString?.();
-    if (!chosen.every((x) => (x?.user?._id?.toString?.()) === c0)) {
+    if (!chosen.every((x) => x?.user?._id?.toString?.() === c0)) {
       showToast("Sélectionne des demandes appartenant au même client.", "warning");
       return;
     }
@@ -138,13 +152,20 @@ export default function DevisCompressionList() {
             {t("title")}
           </h1>
 
-          {/* Recherche + bouton */}
+        {/* Recherche + bouton */}
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
             <div className="relative w-full sm:w-[320px] lg:w-[420px]">
-              <FiSearch aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <FiSearch
+                aria-hidden
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
               <input
                 value={q}
-                onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setPage(1);
+                }}
                 placeholder={t("searchPlaceholder")}
                 aria-label={t("searchAria")}
                 className="w-full rounded-xl border border-gray-300 bg-white px-10 pr-9 py-2 text-sm text-[#0B1E3A] shadow focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
@@ -152,7 +173,10 @@ export default function DevisCompressionList() {
               {q && (
                 <button
                   type="button"
-                  onClick={() => { setQ(""); setPage(1); }}
+                  onClick={() => {
+                    setQ("");
+                    setPage(1);
+                  }}
                   aria-label={t("clearSearch")}
                   className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 >
@@ -174,13 +198,15 @@ export default function DevisCompressionList() {
         {/* syncing pill */}
         {syncing && (
           <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-800">
-            <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-top-transparent border-t-transparent" />
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
             {t("states.syncing") ?? "Mise à jour…"}
           </div>
         )}
 
         {err && (
-          <p className="mt-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-red-700">{err}</p>
+          <p className="mt-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-red-700">
+            {err}
+          </p>
         )}
       </div>
 
@@ -205,7 +231,10 @@ export default function DevisCompressionList() {
                       <th className="p-2.5 text-left w-12">
                         <input
                           type="checkbox"
-                          checked={items.length > 0 && items.every((it) => selectedIds.includes(it._id))}
+                          checked={
+                            items.length > 0 &&
+                            items.every((it) => selectedIds.includes(it._id))
+                          }
                           onChange={(e) => {
                             const pageIds = items.map((it) => it._id);
                             setSelectedIds((prev) =>
@@ -220,25 +249,36 @@ export default function DevisCompressionList() {
                       <th className="p-2.5 text-left">{t("columns.client")}</th>
                       <th className="p-2.5 text-left whitespace-nowrap">{t("columns.date")}</th>
                       <th className="p-2.5 text-left whitespace-nowrap">{t("columns.pdf")}</th>
-                      <th className="p-2.5 text-left whitespace-nowrap hidden lg:table-cell">{t("columns.attachments")}</th>
+                      <th className="p-2.5 text-left whitespace-nowrap hidden lg:table-cell">
+                        {t("columns.attachments")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((d) => {
                       const hasPdf = Boolean(d?.hasDemandePdf);
                       const docs = (d?.documents || [])
-                        .map((doc, i) => ({ ...doc, index: i, filename: cleanFilename(doc.filename) }))
-                        .filter((doc) => !!doc.filename); // ما عادش نطيّح على size
+                        .map((doc, i) => ({
+                          ...doc,
+                          index: i,
+                          filename: cleanFilename(doc.filename),
+                        }))
+                        .filter((doc) => !!doc.filename);
 
                       return (
-                        <tr key={d._id} className="odd:bg-slate-50/40 hover:bg-[#0B1E3A]/[0.04] transition-colors">
+                        <tr
+                          key={d._id}
+                          className="odd:bg-slate-50/40 hover:bg-[#0B1E3A]/[0.04] transition-colors"
+                        >
                           <td className="p-2.5 border-b border-gray-200 w-12">
                             <input
                               type="checkbox"
                               checked={selectedIds.includes(d._id)}
                               onChange={(e) =>
                                 setSelectedIds((prev) =>
-                                  e.target.checked ? [...prev, d._id] : prev.filter((id) => id !== d._id)
+                                  e.target.checked
+                                    ? [...prev, d._id]
+                                    : prev.filter((id) => id !== d._id)
                                 )
                               }
                             />
@@ -252,7 +292,10 @@ export default function DevisCompressionList() {
                           </td>
 
                           <td className="p-2.5 border-b border-gray-200">
-                            <span className="block truncate max-w-[18rem]" title={`${d.user?.prenom || ""} ${d.user?.nom || ""}`}>
+                            <span
+                              className="block truncate max-w-[18rem]"
+                              title={`${d.user?.prenom || ""} ${d.user?.nom || ""}`}
+                            >
                               {d.user?.prenom} {d.user?.nom}
                             </span>
                           </td>
@@ -263,7 +306,11 @@ export default function DevisCompressionList() {
 
                           <td className="p-2.5 border-b border-gray-200 whitespace-nowrap">
                             {hasPdf ? (
-                              <button onClick={() => viewPdfById(d._id)}  className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10">
+                              <button
+                                onClick={() => viewPdfById(d._id)}
+                                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                              >
+                                <FiFileText size={16} />
                                 {t("open")}
                               </button>
                             ) : (
@@ -280,8 +327,9 @@ export default function DevisCompressionList() {
                                   <button
                                     key={doc.index}
                                     onClick={() => viewDocByIndex(d._id, doc.index)}
-                                    className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10"
+                                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
                                   >
+                                    <FiFileText size={16} />
                                     {t("open")}
                                   </button>
                                 ))}
@@ -301,7 +349,10 @@ export default function DevisCompressionList() {
                   pageSize={pageSize}
                   total={total}
                   onPageChange={(n) => setPage(Number(n))}
-                  onPageSizeChange={(s) => { setPageSize(Number(s)); setPage(1); }}
+                  onPageSizeChange={(s) => {
+                    setPageSize(Number(s));
+                    setPage(1);
+                  }}
                   pageSizeOptions={[5, 10, 20, 50]}
                 />
               </div>
@@ -312,7 +363,11 @@ export default function DevisCompressionList() {
               {items.map((d) => {
                 const hasPdf = Boolean(d?.hasDemandePdf);
                 const docs = (d?.documents || [])
-                  .map((doc, i) => ({ ...doc, index: i, filename: cleanFilename(doc.filename) }))
+                  .map((doc, i) => ({
+                    ...doc,
+                    index: i,
+                    filename: cleanFilename(doc.filename),
+                  }))
                   .filter((doc) => !!doc.filename);
 
                 return (
@@ -324,7 +379,11 @@ export default function DevisCompressionList() {
                           className="mt-0.5"
                           checked={selectedIds.includes(d._id)}
                           onChange={(e) =>
-                            setSelectedIds((prev) => (e.target.checked ? [...prev, d._id] : prev.filter((id) => id !== d._id)))
+                            setSelectedIds((prev) =>
+                              e.target.checked
+                                ? [...prev, d._id]
+                                : prev.filter((id) => id !== d._id)
+                            )
                           }
                         />
                         <span className="h-2.5 w-2.5 rounded-full bg-[#F7C600]" />
@@ -332,7 +391,13 @@ export default function DevisCompressionList() {
                       </div>
 
                       {hasPdf ? (
-                        <button onClick={() => viewPdfById(d._id)} className="inline-flex rounded-full border px-3 py-1 text-[12px]">
+                        <button
+                          onClick={() => viewPdfById(d._id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                          aria-label={t("open")}
+                          title={t("open")}
+                        >
+                          <FiFileText size={16} />
                           {t("open")}
                         </button>
                       ) : (
@@ -342,16 +407,24 @@ export default function DevisCompressionList() {
 
                     <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p className="text-[11px] font-semibold text-gray-500">{t("columns.client")}</p>
-                        <p className="truncate">{d.user?.prenom} {d.user?.nom}</p>
+                        <p className="text-[11px] font-semibold text-gray-500">
+                          {t("columns.client")}
+                        </p>
+                        <p className="truncate">
+                          {d.user?.prenom} {d.user?.nom}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-[11px] font-semibold text-gray-500">{t("columns.date")}</p>
+                        <p className="text-[11px] font-semibold text-gray-500">
+                          {t("columns.date")}
+                        </p>
                         <p className="truncate">{shortDate(d.createdAt)}</p>
                       </div>
                     </div>
 
-                    <p className="mt-2 text-[11px] font-semibold text-gray-500">{t("columns.attachments")}</p>
+                    <p className="mt-2 text-[11px] font-semibold text-gray-500">
+                      {t("columns.attachments")}
+                    </p>
                     {docs.length === 0 ? (
                       <p className="text-gray-500">—</p>
                     ) : (
@@ -360,8 +433,9 @@ export default function DevisCompressionList() {
                           <button
                             key={doc.index}
                             onClick={() => viewDocByIndex(d._id, doc.index)}
-                            className="inline-flex rounded-full border px-2 py-0.5 text-[12px]"
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
                           >
+                            <FiFileText size={16} />
                             {t("open")}
                           </button>
                         ))}
@@ -376,7 +450,10 @@ export default function DevisCompressionList() {
                 pageSize={pageSize}
                 total={total}
                 onPageChange={(n) => setPage(Number(n))}
-                onPageSizeChange={(s) => { setPageSize(Number(s)); setPage(1); }}
+                onPageSizeChange={(s) => {
+                  setPageSize(Number(s));
+                  setPage(1);
+                }}
                 pageSizeOptions={[5, 10, 20, 50]}
               />
             </div>
@@ -388,7 +465,11 @@ export default function DevisCompressionList() {
         open={multiOpen}
         onClose={() => setMultiOpen(false)}
         demands={multiDemands}
-        onCreated={() => { setMultiOpen(false); setSelectedIds([]); load(false); }}
+        onCreated={() => {
+          setMultiOpen(false);
+          setSelectedIds([]);
+          load(false);
+        }}
         demandKinds={["compression"]}
         articleKinds={["compression"]}
       />
@@ -397,7 +478,10 @@ export default function DevisCompressionList() {
         <div className="fixed z-50 top-4 right-4 rounded-xl border px-4 py-2 shadow-lg bg-blue-50 border-blue-200 text-blue-800">
           <div className="flex items-center gap-3">
             <span className="text-sm">{toast.text}</span>
-            <button onClick={() => setToast(null)} className="ml-1 inline-flex rounded-md border px-2 py-0.5 text-xs">
+            <button
+              onClick={() => setToast(null)}
+              className="ml-1 inline-flex rounded-md border px-2 py-0.5 text-xs"
+            >
               OK
             </button>
           </div>
@@ -407,12 +491,10 @@ export default function DevisCompressionList() {
   );
 }
 
-// Helpers d’ouverture (نفس المسارات في الراوتر)
-// بدّل كلياً
+// Helpers d’ouverture
 function viewPdfById(id) {
   window.open(`${BACKEND}/api/devis/compression/${id}/pdf`, "_blank", "noopener,noreferrer");
 }
-
 function viewDocByIndex(id, index) {
   window.open(`${BACKEND}/api/devis/compression/${id}/document/${index}`, "_blank", "noopener,noreferrer");
 }

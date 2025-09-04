@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Pagination from "@/components/Pagination";
-import { FiSearch, FiXCircle } from "react-icons/fi";
+import { FiSearch, FiXCircle, FiFileText } from "react-icons/fi";
 import MultiDevisModal from "@/components/admin/devis/MultiDevisModal.jsx";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
@@ -13,8 +13,12 @@ const CACHE_KEY = "devisFil.items.v1";
 
 function cleanFilename(name = "") { return name?.startsWith?.("~$") ? "" : name || ""; }
 function shortDate(d) {
-  try { const dt = new Date(d); return `${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`; }
-  catch { return ""; }
+  try {
+    const dt = new Date(d);
+    return `${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  } catch {
+    return "";
+  }
 }
 
 export default function DevisFilList() {
@@ -118,7 +122,7 @@ export default function DevisFilList() {
                 onChange={(e) => { setQ(e.target.value); setPage(1); }}
                 placeholder={t("searchPlaceholder")}
                 aria-label={t("searchAria")}
-                className="w-full rounded-xl border border-gray-300 bg-white px-10 pr-9 py-2 text-sm text-[#0B1E3A] shadow focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
+                className="w-full rounded-xl border border-gray-300 bg-white px-10 pr-9 py-2 text-sm text-[#0B1E3A] shadow focus:border[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
               />
               {q && (
                 <button type="button" onClick={() => { setQ(""); setPage(1); }} aria-label={t("clearSearch")}
@@ -209,19 +213,31 @@ export default function DevisFilList() {
                             </span>
                           </td>
                           <td className="p-2.5 border-b border-gray-200 whitespace-nowrap">{shortDate(d.createdAt)}</td>
+
+                          {/* PDF button pill */}
                           <td className="p-2.5 border-b border-gray-200 whitespace-nowrap">
                             {hasPdf ? (
-                              <button onClick={() => viewPdfById(d._id)}  className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10">
+                              <button
+                                onClick={() => viewPdfById(d._id)}
+                                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                              >
+                                <FiFileText size={16} />
                                 {t("open")}
                               </button>
                             ) : <span className="text-gray-400">—</span>}
                           </td>
+
+                          {/* Attachments buttons pill */}
                           <td className="p-2.5 border-b border-gray-200 hidden lg:table-cell">
                             {docs.length === 0 ? <span className="text-gray-400">—</span> : (
                               <div className="flex flex-wrap gap-2">
                                 {docs.map((doc) => (
-                                  <button key={doc.index} onClick={() => viewDocByIndex(d._id, doc.index)}
-                                    className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10">
+                                  <button
+                                    key={doc.index}
+                                    onClick={() => viewDocByIndex(d._id, doc.index)}
+                                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                                  >
+                                    <FiFileText size={16} />
                                     {t("open")}
                                   </button>
                                 ))}
@@ -267,7 +283,13 @@ export default function DevisFilList() {
                       </div>
 
                       {hasPdf ? (
-                        <button onClick={() => viewPdfById(d._id)} className="inline-flex rounded-full border px-3 py-1 text-[12px]">
+                        <button
+                          onClick={() => viewPdfById(d._id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                          aria-label={t("open")}
+                          title={t("open")}
+                        >
+                          <FiFileText size={16} />
                           {t("open")}
                         </button>
                       ) : <span className="text-gray-400 text-sm">—</span>}
@@ -284,8 +306,12 @@ export default function DevisFilList() {
                     {docs.length === 0 ? <p className="text-gray-500">—</p> : (
                       <div className="mt-1 flex flex-wrap gap-2">
                         {docs.map((doc) => (
-                          <button key={doc.index} onClick={() => viewDocByIndex(d._id, doc.index)}
-                            className="inline-flex rounded-full border px-2 py-0.5 text-[12px]">
+                          <button
+                            key={doc.index}
+                            onClick={() => viewDocByIndex(d._id, doc.index)}
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+                          >
+                            <FiFileText size={16} />
                             {t("open")}
                           </button>
                         ))}

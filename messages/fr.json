@@ -375,7 +375,7 @@
         "none": "Pièces jointes : —"
       },
       "actions": {
-        "openPdf": "Ouvrir PDF",
+        "openPdf": "Ouvrir ",
         "open": "Ouvrir",
         "opening": "Ouverture…",
         "openingPdf": "Ouverture…"
@@ -779,7 +779,7 @@
           }
         },
         "actions": {
-          "openPdf": "Ouvrir PDF"
+          "openPdf": "Ouvrir "
         },
         "messages": {
           "noData": "Aucun devis trouvé."
@@ -1323,6 +1323,9 @@
       }
     },
     "articles": {
+      "help": {
+        "referenceLocked": "La référence est générée automatiquement et ne peut pas être modifiée."
+      },
       "title": "Gestion des articles",
       "searchPlaceholder": "Rechercher (référence, désignation, n° devis)",
       "searchAria": "Rechercher un article",
@@ -1356,7 +1359,9 @@
       },
       "actions": {
         "edit": "Modifier",
-        "delete": "Supprimer"
+        "delete": "Supprimer",
+        "editAria": "Modifier l’article",
+        "deleteAria": "Supprimer l’article"
       },
       "form": {
         "addTitle": "Ajouter un article",
@@ -1371,7 +1376,8 @@
         "title": "Supprimer l’article",
         "confirm": "Confirmez-vous la suppression de",
         "delete": "Supprimer",
-        "deleting": "Suppression…"
+        "deleting": "Suppression…",
+        "noteKeepRef": "La ligne restera visible avec la seule référence."
       },
       "errors": {
         "requiredReference": "Référence obligatoire",
@@ -1537,7 +1543,8 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Mise à jour…",
       "loading": "Chargement…",
       "empty": "Aucun devis",
@@ -1564,7 +1571,8 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Mise à jour…",
       "loading": "Chargement…",
       "empty": "Aucun devis",
@@ -1591,7 +1599,8 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Mise à jour…",
       "loading": "Chargement…",
       "empty": "Aucun devis",
@@ -1618,7 +1627,8 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document indisponible.",
       "docOpenError": "Impossible d’ouvrir le document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Mise à jour…",
       "loading": "Chargement…",
       "empty": "Aucun devis",
@@ -1646,7 +1656,8 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Mise à jour…",
       "loading": "Chargement…",
       "empty": "Aucun devis",
@@ -1675,7 +1686,8 @@
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document.",
       "network": "Erreur réseau"
-    },"states": {
+    },
+    "states": {
       "syncing": "Mise à jour…",
       "loading": "Chargement…",
       "empty": "Aucun devis",

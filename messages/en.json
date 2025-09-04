@@ -104,6 +104,9 @@
       }
     },
     "articles": {
+      "help": {
+        "referenceLocked": "The reference is generated automatically and cannot be edited."
+      },
       "title": "Articles management",
       "searchPlaceholder": "Search (reference, designation, quote no.)",
       "searchAria": "Search an article",
@@ -137,7 +140,9 @@
       },
       "actions": {
         "edit": "Edit",
-        "delete": "Delete"
+        "delete": "Delete",
+        "editAria": "Edit article",
+        "deleteAria": "Delete article"
       },
       "form": {
         "addTitle": "Add article",
@@ -152,7 +157,8 @@
         "title": "Delete article",
         "confirm": "Do you really want to delete",
         "delete": "Delete",
-        "deleting": "Deleting…"
+        "deleting": "Deleting…",
+        "noteKeepRef": "The line will remain visible with only the reference."
       },
       "errors": {
         "requiredReference": "Reference is required",
@@ -251,7 +257,7 @@
         "none": "Attachments: —"
       },
       "actions": {
-        "openPdf": "Open PDF",
+        "openPdf": "Open",
         "open": "Open",
         "opening": "Opening…",
         "openingPdf": "Opening…"
@@ -443,7 +449,7 @@
           }
         },
         "actions": {
-          "openPdf": "Open PDF"
+          "openPdf": "Open "
         },
         "messages": {
           "noData": "No quotes found."
@@ -806,7 +812,7 @@
           "cannotOpen": "Unable to open this file."
         },
         "aria": {
-          "openPdf": "Open PDF",
+          "openPdf": "Open ",
           "clear": "Clear"
         }
       },
@@ -1651,7 +1657,8 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Syncing…",
       "loading": "Loading…",
       "empty": "No quotes",
@@ -1678,7 +1685,8 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Syncing…",
       "loading": "Loading…",
       "empty": "No quotes",
@@ -1705,7 +1713,8 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Syncing…",
       "loading": "Loading…",
       "empty": "No quotes",
@@ -1733,7 +1742,8 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Syncing…",
       "loading": "Loading…",
       "empty": "No quotes",
@@ -1762,7 +1772,8 @@
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document.",
       "network": "Network error"
-    },"states": {
+    },
+    "states": {
       "syncing": "Syncing…",
       "loading": "Loading…",
       "empty": "No quotes",
@@ -1789,7 +1800,8 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
-    },"states": {
+    },
+    "states": {
       "syncing": "Syncing…",
       "loading": "Loading…",
       "empty": "No quotes",

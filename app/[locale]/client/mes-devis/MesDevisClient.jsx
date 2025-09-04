@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FiSearch, FiXCircle, FiExternalLink } from "react-icons/fi";
+import { FiSearch, FiXCircle, FiFileText } from "react-icons/fi";
 import Pagination from "@/components/Pagination";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
@@ -26,36 +26,23 @@ function readOrdered() {
 function writeOrdered(map) {
   try {
     localStorage.setItem(ORDERED_KEY, JSON.stringify(map || {}));
-  } catch {}
+  } catch { }
 }
 
-/* === Chip “Ouvrir/Open” : bordure JAUNE + hover, i18n === */
-function OpenChip({ onClick, label, tooltip, className = "" }) {
-  const t = useTranslations("auth.client.quotesPage");
-  const chipLabel = label ?? t("actions.open");
-  const title = tooltip || chipLabel;
+/* === Reclamation-style “Ouvrir” chip === */
+function OpenChipDoc({ onClick, label = "Ouvrir", tooltip, className = "" }) {
+  const title = tooltip || label;
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
       aria-label={title}
-      className={[
-        "group inline-flex items-center gap-1.5 rounded-full",
-        "px-3 py-1 text-sm font-medium",
-        "bg-white/80 backdrop-blur border border-[#F5B301] text-[#0B1E3A]",
-        "shadow-[0_1px_0_rgba(0,0,0,0.03)]",
-        "hover:bg-[#F5B301]/10",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5B301]/60",
-        "transition-colors duration-200 active:scale-[0.98]",
-        className,
-      ].join(" ")}
+      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
+
     >
-      <FiExternalLink
-        className="h-4 w-4 opacity-80 transition-transform duration-200 group-hover:translate-x-0.5"
-        aria-hidden="true"
-      />
-      <span>{chipLabel}</span>
+      <FiFileText size={16} />
+      <span>{label}</span>
     </button>
   );
 }
@@ -346,11 +333,11 @@ export default function MesDevisClient() {
     return (
       <div className="flex flex-wrap gap-2">
         {files.map((f, i) => (
-          <OpenChip
+          <OpenChipDoc
             key={f._id || f.name || i}
             onClick={() => openDoc(it, f, f.index ?? i)}
             tooltip={f?.name || t("table.files")}
-            className="!px-3 !py-1"
+            className="!px-3 !py-1.5"
           />
         ))}
       </div>
@@ -374,7 +361,7 @@ export default function MesDevisClient() {
         <div className="text-xs text-slate-500">{t("labels.ddv")}</div>
         <div>
           {it.hasPdf || it.pdfUrl ? (
-            <OpenChip onClick={() => openDdvPdf(it)} tooltip={t("aria.openPdf")} />
+            <OpenChipDoc onClick={() => openDdvPdf(it)} tooltip={t("aria.openPdf")} />
           ) : (
             <span className="text-slate-400">—</span>
           )}
@@ -383,7 +370,7 @@ export default function MesDevisClient() {
         <div className="text-xs text-slate-500">{t("labels.devis")}</div>
         <div>
           {existeDevis ? (
-            <OpenChip
+            <OpenChipDoc
               onClick={() => openDevisPdf(it._id)}
               tooltip={
                 devisMap[it._id]?.numero
@@ -550,7 +537,7 @@ export default function MesDevisClient() {
                       </td>
                       <td className="p-3 align-top">
                         {(it.hasPdf || it.pdfUrl) ? (
-                          <OpenChip onClick={() => openDdvPdf(it)} tooltip={t("aria.openPdf")} />
+                          <OpenChipDoc onClick={() => openDdvPdf(it)} tooltip={t("aria.openPdf")} />
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
@@ -560,7 +547,7 @@ export default function MesDevisClient() {
                       </td>
                       <td className="p-3 align-top">
                         {existeDevis ? (
-                          <OpenChip
+                          <OpenChipDoc
                             onClick={() => openDevisPdf(it._id)}
                             tooltip={
                               devisMap[it._id]?.numero
