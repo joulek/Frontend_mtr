@@ -1537,6 +1537,11 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
+    },"states": {
+      "syncing": "Mise à jour…",
+      "loading": "Chargement…",
+      "empty": "Aucun devis",
+      "error": "Une erreur est survenue"
     }
   },
   "devisCompression": {
@@ -1559,6 +1564,11 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
+    },"states": {
+      "syncing": "Mise à jour…",
+      "loading": "Chargement…",
+      "empty": "Aucun devis",
+      "error": "Une erreur est survenue"
     }
   },
   "devisFil": {
@@ -1581,6 +1591,11 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
+    },"states": {
+      "syncing": "Mise à jour…",
+      "loading": "Chargement…",
+      "empty": "Aucun devis",
+      "error": "Une erreur est survenue"
     }
   },
   "devisGrille": {
@@ -1603,6 +1618,11 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document indisponible.",
       "docOpenError": "Impossible d’ouvrir le document."
+    },"states": {
+      "syncing": "Mise à jour…",
+      "loading": "Chargement…",
+      "empty": "Aucun devis",
+      "error": "Une erreur est survenue"
     }
   },
   "devisTorsion": {
@@ -1626,6 +1646,11 @@
       "pdfOpenError": "Impossible d’ouvrir le PDF.",
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document."
+    },"states": {
+      "syncing": "Mise à jour…",
+      "loading": "Chargement…",
+      "empty": "Aucun devis",
+      "error": "Une erreur est survenue"
     }
   },
   "devisTraction": {
@@ -1650,6 +1675,11 @@
       "docUnavailable": "Document non disponible.",
       "docOpenError": "Impossible d’ouvrir le document.",
       "network": "Erreur réseau"
+    },"states": {
+      "syncing": "Mise à jour…",
+      "loading": "Chargement…",
+      "empty": "Aucun devis",
+      "error": "Une erreur est survenue"
     }
   },
   "pagination": {
