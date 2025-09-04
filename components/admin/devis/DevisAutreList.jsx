@@ -240,7 +240,7 @@ export default function DevisAutreList() {
 
                           <td className="p-2.5 border-b border-gray-200 whitespace-nowrap">
                             {hasPdf ? (
-                              <button onClick={() => viewPdfById(d._id)} className="inline-flex rounded-full border px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/5">
+                              <button onClick={() => viewPdfById(d._id)} className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10">
                                 {t("open")}
                               </button>
                             ) : <span className="text-gray-400">—</span>}
@@ -251,7 +251,7 @@ export default function DevisAutreList() {
                               <div className="flex flex-wrap gap-2">
                                 {docs.map((doc) => (
                                   <button key={doc.index} onClick={() => viewDocByIndex(d._id, doc.index)}
-                                    className="inline-flex rounded-full border px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/5">
+                                     className="inline-flex items-center gap-2 rounded-full border border-[#0B1E3A]/20 bg-[#0B1E3A]/5 px-3 py-1 text-[12px] hover:bg-[#0B1E3A]/10">
                                     {t("open")}
                                   </button>
                                 ))}

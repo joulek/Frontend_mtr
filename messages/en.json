@@ -1651,6 +1651,11 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
+    },"states": {
+      "syncing": "Syncing…",
+      "loading": "Loading…",
+      "empty": "No quotes",
+      "error": "Something went wrong"
     }
   },
   "devisFil": {
@@ -1673,6 +1678,11 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
+    },"states": {
+      "syncing": "Syncing…",
+      "loading": "Loading…",
+      "empty": "No quotes",
+      "error": "Something went wrong"
     }
   },
   "devisGrille": {
@@ -1695,6 +1705,11 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
+    },"states": {
+      "syncing": "Syncing…",
+      "loading": "Loading…",
+      "empty": "No quotes",
+      "error": "Something went wrong"
     }
   },
   "devisTorsion": {
@@ -1718,6 +1733,11 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
+    },"states": {
+      "syncing": "Syncing…",
+      "loading": "Loading…",
+      "empty": "No quotes",
+      "error": "Something went wrong"
     }
   },
   "devisTraction": {
@@ -1742,6 +1762,11 @@
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document.",
       "network": "Network error"
+    },"states": {
+      "syncing": "Syncing…",
+      "loading": "Loading…",
+      "empty": "No quotes",
+      "error": "Something went wrong"
     }
   },
   "devisAutre": {
@@ -1764,6 +1789,11 @@
       "pdfOpenError": "Unable to open PDF.",
       "docUnavailable": "Document not available.",
       "docOpenError": "Unable to open document."
+    },"states": {
+      "syncing": "Syncing…",
+      "loading": "Loading…",
+      "empty": "No quotes",
+      "error": "Something went wrong"
     }
   }
 }
