@@ -2,18 +2,12 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import Image from "next/image";
+// ❌ import Image from "next/image"; // نشيلوها لتفادي sharp
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Facebook, Linkedin, MoreVertical, User, LogOut } from "lucide-react";
-import { Inter } from "next/font/google";
+// ❌ import { Inter } from "next/font/google"; // نشيلوها لتفادي lightningcss عبر next-font
 import { useTranslations } from "next-intl";
-
-/* -------- Police -------- */
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 /* ---------------------------- API backend ---------------------------- */
 const BACKEND = (
@@ -45,7 +39,6 @@ const makeCatHref = (cat, locale) =>
 
 /* --- produits helpers --- */
 function pickProdName(p, locale) {
-  // حاول حسب اللغة أولاً
   const byLocale =
     locale === "en"
       ? p?.name_en || p?.label_en || p?.title_en
@@ -53,7 +46,6 @@ function pickProdName(p, locale) {
 
   return (
     byLocale ||
-    // إذا عندك structure أخرى:
     (p?.translations &&
       (p.translations[locale] || p.translations.fr || p.translations.en)) ||
     p?.name ||
@@ -64,18 +56,11 @@ function pickProdName(p, locale) {
 }
 
 const makeProductHref = (prod, locale) => {
-  const slug =
-    prod?.slug || slugifySafe(pickProdName(prod, locale));
-  const id =
-    prod?._id || prod?.id || prod?.productId;
-
-  // Détail: /produits/[slug]/[productId]
+  const slug = prod?.slug || slugifySafe(pickProdName(prod, locale));
+  const id = prod?._id || prod?.id || prod?.productId;
   if (id) return `/${locale}/produits/${slug}/${id}`;
-
-  // Fallback (au cas où la liste ne renvoie pas l'id)
   return `/${locale}/produits/${slug}`;
 };
-
 
 function swapLocaleInPath(path, nextLocale) {
   const [p, q] = (path || "/").split("?");
@@ -105,8 +90,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     try {
       const saved = localStorage.getItem("mtr_locale");
       if (saved === "en" || saved === "fr") desired = saved;
-    } catch { }
-
+    } catch {}
     const m = PATH_LOCALE_RE.exec(pathname);
     const pathLocale = m?.[1] || null;
     if (
@@ -115,11 +99,9 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     ) {
       desired = pathLocale;
     }
-
     setLocale(desired);
     if (typeof document !== "undefined")
       document.documentElement.lang = desired;
-
     const current = pathLocale;
     if (current !== desired) {
       router.replace(swapLocaleInPath(pathname, desired), { scroll: false });
@@ -153,7 +135,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
           if (json?.role) {
             try {
               localStorage.setItem("mtr_role", json.role);
-            } catch { }
+            } catch {}
             setHintRole(json.role);
           }
         } else {
@@ -161,14 +143,14 @@ export default function SiteHeader({ mode = "public", onLogout }) {
           setHintRole(null);
           try {
             localStorage.removeItem("mtr_role");
-          } catch { }
+          } catch {}
         }
       } catch {
         setMe(null);
         setHintRole(null);
         try {
           localStorage.removeItem("mtr_role");
-        } catch { }
+        } catch {}
       }
     })();
     return () => {
@@ -224,13 +206,11 @@ export default function SiteHeader({ mode = "public", onLogout }) {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-
         const list = Array.isArray(data?.products)
           ? data.products
           : Array.isArray(data)
-            ? data
-            : [];
-        console.log("fetch products", list);
+          ? data
+          : [];
         if (alive) setProducts(list);
       } catch {
         if (alive) setProducts([]);
@@ -272,7 +252,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
       setLocale(next);
       try {
         localStorage.setItem("mtr_locale", next);
-      } catch { }
+      } catch {}
       if (typeof document !== "undefined") document.documentElement.lang = next;
       const nextPath = swapLocaleInPath(pathname, next);
       router.push(nextPath, { scroll: false });
@@ -285,7 +265,6 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [hoveredParent, setHoveredParent] = useState(null);
 
-    // mapping enfants catégories
     const childrenMap = new Map();
     const getParentId = (c) =>
       c?.parent?._id || c?.parent || c?.parentId || c?.parent_id || null;
@@ -299,7 +278,6 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     });
     const tops = cats.filter((c) => !getParentId(c));
 
-    // index produits par catégorie
     const prodsByCat = new Map();
     const getProdCatId = (p) =>
       p?.category?._id ||
@@ -335,7 +313,6 @@ export default function SiteHeader({ mode = "public", onLogout }) {
 
         {menuOpen && (
           <div className="absolute left-0 top-full z-50 before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-2">
-            {/* Colonne de gauche: catégories racines */}
             <ul className="relative w-64 rounded-lg bg-white p-2 shadow-2xl ring-1 ring-slate-200 after:content-[''] after:absolute after:top-0 after:right-[-8px] after:w-2 after:h-full">
               {tops.map((parent) => {
                 const id = getId(parent);
@@ -347,10 +324,11 @@ export default function SiteHeader({ mode = "public", onLogout }) {
                     <Link
                       href={makeCatHref(parent, locale)}
                       onMouseEnter={() => setHoveredParent(id)}
-                      className={`flex items-center justify-between rounded-md px-4 py-3 text-[16px] transition ${active
+                      className={`flex items-center justify-between rounded-md px-4 py-3 text-[16px] transition ${
+                        active
                           ? "bg-[#F5B301] text-[#0B2239]"
                           : "text-[#0B2239] hover:bg-[#F5B301] hover:text-[#0B2239]"
-                        }`}
+                      }`}
                     >
                       {label}
                       {hasChildren ? (
@@ -362,10 +340,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               })}
             </ul>
 
-            {/* Colonne de droite: sous-catégories + produits de la catégorie survolée */}
             {hoveredParent && (
               <div className="absolute left-[100%] top-0 ml-2 w-72 rounded-lg bg-white p-2 shadow-2xl ring-1 ring-slate-200">
-                {/* Sous-catégories */}
                 {Array.isArray(childrenMap.get(hoveredParent)) &&
                   childrenMap.get(hoveredParent).length > 0 && (
                     <ul className="mb-1">
@@ -382,18 +358,12 @@ export default function SiteHeader({ mode = "public", onLogout }) {
                     </ul>
                   )}
 
-                {/* Produits de la catégorie survolée */}
-                {/* Produits de la catégorie survolée */}
                 {(() => {
                   const parentObj = cats.find(
                     (c) => (c?._id || pickName(c, locale)) === hoveredParent
                   );
                   const parentCatKey = parentObj?._id || hoveredParent;
-
-                  // خوذ المنتجات متاع الفئة
                   const prodsRaw = prodsByCat.get(parentCatKey) || [];
-
-                  // إزالة الدوبلكي حسب _id أو الاسم
                   const seen = new Set();
                   const prods = [];
                   for (const p of prodsRaw) {
@@ -403,10 +373,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
                       prods.push(p);
                     }
                   }
-
-                  // ✅ ما نعرضوش القسم "Produits" إلا إذا فما 2 أو أكثر
                   const showProductsPanel = prods.length >= 2;
-
                   return showProductsPanel ? (
                     <div className="mt-1 border-t border-slate-100 pt-2">
                       <div className="px-4 pb-1 text-xs uppercase tracking-wide text-slate-400">
@@ -578,7 +545,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
         localStorage.removeItem("mtr_role");
         localStorage.removeItem("userRole");
         localStorage.removeItem("rememberMe");
-      } catch { }
+      } catch {}
       setMe(null);
       setHintRole(null);
       router.replace(`/${locale}`);
@@ -587,7 +554,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
 
   /* ======================= RENDER ======================= */
   return (
-    <header className={`${inter.className} sticky top-0 z-40`}>
+    // ⬇️ نشيل inter.className ونستعمل class global font-inter
+    <header className="font-inter sticky top-0 z-40">
       {/* top bar */}
       <div className="bg-[#0B2239] text-white">
         <div className="mx-auto flex h-10 max-w-screen-2xl items-center justify-between px-4 text-[13px] sm:text-[14px]">
@@ -674,13 +642,13 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               className="flex items-center gap-3"
               aria-label={t("logoAlt")}
             >
-              <Image
+              {/* ⬇️ نستعمل img عوض next/image */}
+              <img
                 src="/logo_MTR.png"
                 alt={t("logoAlt")}
                 width={100}
                 height={100}
                 className="object-contain"
-                priority
               />
             </Link>
 
