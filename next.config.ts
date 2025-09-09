@@ -1,12 +1,9 @@
-// next.config.ts
 import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
-// استعمل الـ backend من env أو render
-const BACKEND =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
 
 const nextConfig: NextConfig = {
   images: {
@@ -17,14 +14,8 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      {
-        source: "/api/:path*",
-        destination: `${BACKEND}/api/:path*`, // يبعث للـ backend
-      },
-      {
-        source: "/uploads/:path*",
-        destination: `${BACKEND}/uploads/:path*`, // يبعث صور للـ backend
-      },
+      { source: "/api/:path*",     destination: `${BACKEND}/api/:path*` },
+      { source: "/uploads/:path*", destination: `${BACKEND}/uploads/:path*` },
     ];
   },
 };
