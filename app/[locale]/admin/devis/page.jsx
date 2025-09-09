@@ -1,7 +1,7 @@
+// app/[locale]/admin/devis/AdminDevisSelector.jsx (أو وين موجود عندك)
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 // Pages admin (listes)
@@ -12,59 +12,60 @@ import DevisAutreList from "@/components/admin/devis/DevisAutreList";
 import DevisFillList from "@/components/admin/devis/DevisFillList";
 import DevisGrilleList from "@/components/admin/devis/DevisGrilleList";
 
-// Images
-import compressionImg from "@/public/devis/compression_logo.png";
-import tractionImg from "@/public/devis/ressort_traction_1.jpg";
-import torsionImg from "@/public/devis/torsion_ressorts.png";
-import fillImg from "@/public/devis/dresser.png";
-import grillImg from "@/public/devis/grille.png";
-import autresImg from "@/public/devis/autre.jpg";
+// ❌ نحّينا imports متاع الصور من public
+// ❌ ونحّينا import Image من "next/image"
 
 export default function AdminDevisSelector() {
-  // chemin de namespaces que TU utilises dans ton code
   const t = useTranslations("auth.admin.devisAdmin");
-
   const [type, setType] = useState("compression");
 
-  // labels traduits par i18n, avec fallback FR au cas où une clé manque
-  const tl = (k) => t.has(`types.${k}`) ? t(`types.${k}`) : ({
-    compression: "Compression",
-    traction: "Traction",
-    torsion: "Torsion",
-    fill: "Fil dressé coupé",
-    grille: "Grille métallique",
-    autre: "Autre article"
-  })[k];
+  const tl = (k) =>
+    t.has(`types.${k}`)
+      ? t(`types.${k}`)
+      : {
+          compression: "Compression",
+          traction: "Traction",
+          torsion: "Torsion",
+          fill: "Fil dressé coupé",
+          grille: "Grille métallique",
+          autre: "Autre article",
+        }[k];
 
+  // ✅ نستعمل مسارات نصّية من مجلد public
   const TYPES = [
-    { key: "compression", img: compressionImg },
-    { key: "traction",    img: tractionImg },
-    { key: "torsion",     img: torsionImg },
-    { key: "fill",        img: fillImg },
-    { key: "grille",      img: grillImg },
-    { key: "autre",       img: autresImg },
+    { key: "compression", img: "/devis/compression_logo.png" },
+    { key: "traction",    img: "/devis/ressort_traction_1.jpg" },
+    { key: "torsion",     img: "/devis/torsion_ressorts.png" },
+    { key: "fill",        img: "/devis/dresser.png" },
+    { key: "grille",      img: "/devis/grille.png" },
+    { key: "autre",       img: "/devis/autre.jpg" },
   ];
 
   const renderPage = () => {
     switch (type) {
-      case "compression": return <DevisCompressionList />;
-      case "traction":    return <DevisTractionList />;
-      case "torsion":     return <DevisTorsionList />;
-      case "fill":        return <DevisFillList />;
-      case "grille":      return <DevisGrilleList />;
-      case "autre":       return <DevisAutreList />;
-      default:            return null;
+      case "compression":
+        return <DevisCompressionList />;
+      case "traction":
+        return <DevisTractionList />;
+      case "torsion":
+        return <DevisTorsionList />;
+      case "fill":
+        return <DevisFillList />;
+      case "grille":
+        return <DevisGrilleList />;
+      case "autre":
+        return <DevisAutreList />;
+      default:
+        return null;
     }
   };
 
   return (
     <div className="p-6">
-      {/* Titre traduit */}
       <h1 className="mb-6 sm:mb-8 text-3xl font-extrabold tracking-tight text-[#002147] text-center">
         {t("title")}
       </h1>
 
-      {/* Sélecteur de type (libellés i18n) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {TYPES.map(({ key, img }) => {
           const active = type === key;
@@ -80,10 +81,18 @@ export default function AdminDevisSelector() {
                   : "border-gray-200 bg-white hover:border-yellow-400"
               }`}
             >
-              <div className="relative w-10 h-10 overflow-hidden rounded-lg ring-1 ring-gray-200">
-                <Image src={img} alt={label} fill className="object-cover" />
-              </div>
-              <span className="font-semibold text-[#0B1E3A] text-left">{label}</span>
+              {/* ✅ <img> بسيطة، بلا sharp ولا blur */}
+              <img
+                src={img}
+                alt={label}
+                className="w-10 h-10 object-cover overflow-hidden rounded-lg ring-1 ring-gray-200"
+                loading="lazy"
+                width={40}
+                height={40}
+              />
+              <span className="font-semibold text-[#0B1E3A] text-left">
+                {label}
+              </span>
             </button>
           );
         })}
