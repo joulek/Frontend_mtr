@@ -105,7 +105,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
     try {
       const saved = localStorage.getItem("mtr_locale");
       if (saved === "en" || saved === "fr") desired = saved;
-    } catch {}
+    } catch { }
 
     const m = PATH_LOCALE_RE.exec(pathname);
     const pathLocale = m?.[1] || null;
@@ -153,7 +153,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
           if (json?.role) {
             try {
               localStorage.setItem("mtr_role", json.role);
-            } catch {}
+            } catch { }
             setHintRole(json.role);
           }
         } else {
@@ -161,14 +161,14 @@ export default function SiteHeader({ mode = "public", onLogout }) {
           setHintRole(null);
           try {
             localStorage.removeItem("mtr_role");
-          } catch {}
+          } catch { }
         }
       } catch {
         setMe(null);
         setHintRole(null);
         try {
           localStorage.removeItem("mtr_role");
-        } catch {}
+        } catch { }
       }
     })();
     return () => {
@@ -228,8 +228,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
         const list = Array.isArray(data?.products)
           ? data.products
           : Array.isArray(data)
-          ? data
-          : [];
+            ? data
+            : [];
         console.log("fetch products", list);
         if (alive) setProducts(list);
       } catch {
@@ -272,7 +272,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
       setLocale(next);
       try {
         localStorage.setItem("mtr_locale", next);
-      } catch {}
+      } catch { }
       if (typeof document !== "undefined") document.documentElement.lang = next;
       const nextPath = swapLocaleInPath(pathname, next);
       router.push(nextPath, { scroll: false });
@@ -347,11 +347,10 @@ export default function SiteHeader({ mode = "public", onLogout }) {
                     <Link
                       href={makeCatHref(parent, locale)}
                       onMouseEnter={() => setHoveredParent(id)}
-                      className={`flex items-center justify-between rounded-md px-4 py-3 text-[16px] transition ${
-                        active
+                      className={`flex items-center justify-between rounded-md px-4 py-3 text-[16px] transition ${active
                           ? "bg-[#F5B301] text-[#0B2239]"
                           : "text-[#0B2239] hover:bg-[#F5B301] hover:text-[#0B2239]"
-                      }`}
+                        }`}
                     >
                       {label}
                       {hasChildren ? (
@@ -411,7 +410,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
                   return showProductsPanel ? (
                     <div className="mt-1 border-t border-slate-100 pt-2">
                       <div className="px-4 pb-1 text-xs uppercase tracking-wide text-slate-400">
-                        Produits
+                        {t("nav.products")}
                       </div>
                       <ul>
                         {prods.map((p) => (
@@ -579,7 +578,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
         localStorage.removeItem("mtr_role");
         localStorage.removeItem("userRole");
         localStorage.removeItem("rememberMe");
-      } catch {}
+      } catch { }
       setMe(null);
       setHintRole(null);
       router.replace(`/${locale}`);
@@ -644,9 +643,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
             <div className="flex items-center gap-2 ml-2">
               <button
                 onClick={() => switchLang("fr")}
-                className={`${
-                  locale === "fr" ? "ring-2 ring-[#F5B301] rounded-full" : ""
-                } px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
+                className={`${locale === "fr" ? "ring-2 ring-[#F5B301] rounded-full" : ""
+                  } px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
                 title={t("aria.langFR")}
                 aria-pressed={locale === "fr"}
               >
@@ -654,9 +652,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               </button>
               <button
                 onClick={() => switchLang("en")}
-                className={`${
-                  locale === "en" ? "ring-2 ring-[#F5B301] rounded-full" : ""
-                } px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
+                className={`${locale === "en" ? "ring-2 ring-[#F5B301] rounded-full" : ""
+                  } px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`}
                 title={t("aria.langEN")}
                 aria-pressed={locale === "en"}
               >
