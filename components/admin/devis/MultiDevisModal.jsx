@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { FiX, FiTrash2, FiPlus, FiSearch } from "react-icons/fi";
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
 const DEFAULT_KINDS = ["compression", "torsion", "traction", "fil", "forme"];
 
 export default function MultiDevisModal({

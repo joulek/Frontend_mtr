@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 const BACKEND =
   process.env.BACKEND_URL ||
   process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:4000";
+  "https://backend-mtr.onrender.com";
 
 export async function POST(req) {
   let body = {};

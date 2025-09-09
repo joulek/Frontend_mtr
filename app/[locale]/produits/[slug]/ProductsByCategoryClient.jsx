@@ -7,7 +7,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 /* -------------------- Consts -------------------- */
-const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 const API = `${BACKEND}/api`;
 const AUTOPLAY_MS = 4000;
 

@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { FiEdit2, FiSearch, FiXCircle, FiPlus, FiTrash2, FiX, FiCheck } from "react-icons/fi";
 import Pagination from "@/components/Pagination";
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
 const CARD_WRAPPER = "mx-auto w-full max-w-6xl px-3 sm:px-6";
 
 // ---------- Helpers ----------

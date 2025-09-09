@@ -14,7 +14,7 @@ import { useTranslations } from "next-intl";
 import Pagination from "@/components/Pagination";
 
 /* ---------------------------- API backend ---------------------------- */
-const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 const API = `${BACKEND}/api`;
 
 const CARD_WRAPPER = "mx-auto w-full max-w-6xl px-3 sm:px-6";

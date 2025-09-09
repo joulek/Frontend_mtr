@@ -10,7 +10,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { PhoneCall, Mail, MessageSquare, ChevronDown, CheckCircle, Send } from "lucide-react";
 
 /* ---------------------------- API backend ---------------------------- */
-const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 
 /* ---------- Anim helpers ---------- */
 const vSection = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: .5 } } };

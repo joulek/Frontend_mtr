@@ -3,7 +3,7 @@ import ProductsByCategoryClient from "./ProductsByCategoryClient";
 import { getTranslations } from "next-intl/server";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.mtr-industry.tn";
-const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 const API = `${BACKEND}/api`;
 
 function slugToWords(slug = "") {

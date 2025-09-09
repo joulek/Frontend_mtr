@@ -7,7 +7,7 @@ import Pagination from "@/components/Pagination";
 import { FiSearch, FiXCircle, FiFileText } from "react-icons/fi";
 import MultiDevisModal from "@/components/admin/devis/MultiDevisModal.jsx";
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8";
 const CACHE_KEY = "devisAutre.items.v1";
 
