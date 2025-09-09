@@ -1,15 +1,15 @@
 // app/[locale]/layout.tsx
-import '../globals.css';
-import { NextIntlClientProvider } from 'next-intl';
-import { notFound } from 'next/navigation';
-import { ReactNode } from 'react';
+import "../globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { notFound } from "next/navigation";
+import { ReactNode } from "react";
 
 // ⬇️ AJOUTS
-import CookieBanner from '@/components/CookieBanner';
-import AnalyticsGate from '@/components/AnalyticsGate';
+import CookieBanner from "@/components/CookieBanner";
+import AnalyticsGate from "@/components/AnalyticsGate";
 
 export function generateStaticParams() {
-  return [{ locale: 'fr' }, { locale: 'en' }];
+  return [{ locale: "fr" }, { locale: "en" }];
 }
 
 async function getMessages(locale: string) {
@@ -22,23 +22,39 @@ async function getMessages(locale: string) {
 
 export default async function LocaleLayout({
   children,
-  params
+  params,
 }: {
   children: ReactNode;
   params: Promise<{ locale: string }>; // Next 15
 }) {
-  const { locale } = await params;     // await le promise params
+  const { locale } = await params; // await le promise params
   const messages = await getMessages(locale);
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      {children}
+    <>
+      {/* ⬇️ Head local à ce layout (App Router) */}
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
 
-      {/* ⬇️ Bannière cookies visible si pas encore de consentement */}
-      <CookieBanner />
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        {children}
 
-      {/* ⬇️ Charge GA (ou autres scripts) seulement si consentement analytics = true */}
-      <AnalyticsGate />
-    </NextIntlClientProvider>
+        {/* ⬇️ Bannière cookies visible si pas encore de consentement */}
+        <CookieBanner />
+
+        {/* ⬇️ Charge GA (ou autres scripts) seulement si consentement analytics = true */}
+        <AnalyticsGate />
+      </NextIntlClientProvider>
+    </>
   );
 }
