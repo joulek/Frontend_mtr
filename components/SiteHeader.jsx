@@ -63,10 +63,19 @@ function pickProdName(p, locale) {
   );
 }
 
-const makeProductHref = (prod, locale) =>
-  `/${locale}/produits/${
-    prod?.slug || slugifySafe(pickProdName(prod, locale))
-  }`;
+const makeProductHref = (prod, locale) => {
+  const slug =
+    prod?.slug || slugifySafe(pickProdName(prod, locale));
+  const id =
+    prod?._id || prod?.id || prod?.productId;
+
+  // Détail: /produits/[slug]/[productId]
+  if (id) return `/${locale}/produits/${slug}/${id}`;
+
+  // Fallback (au cas où la liste ne renvoie pas l'id)
+  return `/${locale}/produits/${slug}`;
+};
+
 
 function swapLocaleInPath(path, nextLocale) {
   const [p, q] = (path || "/").split("?");
