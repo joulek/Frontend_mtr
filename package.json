@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "clean": "rimraf node_modules package-lock.json",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -27,6 +28,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/node": "24.2.0",
     "@types/react-dom": "^19",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^4",
     "typescript": "5.9.2"
   }
