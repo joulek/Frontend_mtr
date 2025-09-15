@@ -44,7 +44,7 @@ const handleSubmit = async (e) => {
 
       // Stocker le rôle et gérer les cookies
       localStorage.setItem("userRole", role);
-      document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${remember ? 30 : 1} * 24 * 60 * 60; SameSite=Lax`;
+      document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
 
       // Rediriger selon le rôle
       if (role === "admin") router.push(`/${locale}/admin`);
