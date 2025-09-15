@@ -17,54 +17,62 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const router = useRouter();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  const formData = new FormData(e.currentTarget);
-  const email = formData.get("email");
-  const password = formData.get("password");
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email");
+    const password = formData.get("password");
 
-  try {
-    const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
+    try {
+      const BACKEND =
+        process.env.NEXT_PUBLIC_BACKEND_URL ||
+        "https://backend-mtr.onrender.com";
 
-    const res = await fetch(`${BACKEND}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email: String(email), password: String(password), rememberMe: remember }),
-    });
+      const res = await fetch(`${BACKEND}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: String(email),
+          password: String(password),
+          rememberMe: remember,
+        }),
+      });
 
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data?.message || t("errors.loginFailed"));
-    } else {
-      const role = (data.role || data.user?.role || "").toString();
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.message || t("errors.loginFailed"));
+      } else {
+        const role = (data.role || data.user?.role || "").toString();
 
-      // Stocker le rôle et gérer les cookies
-      localStorage.setItem("userRole", role);
-      document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+        // Stocker le rôle et gérer les cookies
+        localStorage.setItem("userRole", role);
+        document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${
+          remember ? 30 : 1
+        } * 24 * 60 * 60; SameSite=Lax`;
 
-      // Rediriger selon le rôle
-      if (role === "admin") router.push(`/${locale}/admin`);
-      else if (role === "client") router.push(`/${locale}/client/devis`);  // Redirection vers la page de devis pour un client
-      else router.push(`/${locale}/home`);
+        // Rediriger selon le rôle
+        if (role === "admin") router.push(`/${locale}/admin`);
+        else if (role === "client")
+          router.push(
+            `/${locale}/client/devis`
+          ); // Redirection vers la page de devis pour un client
+        else router.push(`/${locale}/home`);
+      }
+    } catch {
+      setError(t("errors.network"));
+    } finally {
+      setLoading(false);
     }
-  } catch {
-    setError(t("errors.network"));
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
+  };
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] [background:radial-gradient(80%_60%_at_10%_0%,rgba(11,34,57,.06),transparent),radial-gradient(60%_40%_at_90%_10%,rgba(245,179,1,.07),transparent)]">
       {/* Header global */}
-      <SiteHeader  />
+      <SiteHeader />
 
       {/* Contenu */}
       <main className="px-4 py-10">
@@ -87,7 +95,7 @@ const handleSubmit = async (e) => {
               <Image
                 src="/logo_MTR.png"
                 alt="MTR — Manufacture Tunisienne des Ressorts"
-                width={270}      // ~ largeur par défaut desktop
+                width={270} // ~ largeur par défaut desktop
                 height={90}
                 className="drop-shadow-xl w-[200px] md:w-[240px] lg:w-[260px] h-auto"
                 priority
@@ -126,7 +134,6 @@ const handleSubmit = async (e) => {
                     htmlFor="email"
                     className="block font-semibold text-[#0B2239]"
                     style={{ fontFamily: "'Lora', serif" }}
-
                   >
                     {t("email")} <span className="text-red-500">*</span>
                   </label>
@@ -156,16 +163,18 @@ const handleSubmit = async (e) => {
                       name="password"
                       type={showPwd ? "text" : "password"}
                       autoComplete="current-password"
-                      className={`w-full rounded-xl border border-[#e6e8ee] bg-white py-3 text-[#0B2239] placeholder-[#7a8599] outline-none transition focus:border-[#F5B301] focus:ring-2 focus:ring-[#F5B301]/25 ${locale === "ar" ? "pl-10 pr-4" : "pr-10 pl-4"
-                        }`}
+                      className={`w-full rounded-xl border border-[#e6e8ee] bg-white py-3 text-[#0B2239] placeholder-[#7a8599] outline-none transition focus:border-[#F5B301] focus:ring-2 focus:ring-[#F5B301]/25 ${
+                        locale === "ar" ? "pl-10 pr-4" : "pr-10 pl-4"
+                      }`}
                       placeholder="********"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPwd((v) => !v)}
-                      className={`absolute inset-y-0 my-auto px-3 text-[#7a8599] ${locale === "ar" ? "left-3" : "right-3"
-                        }`}
+                      className={`absolute inset-y-0 my-auto px-3 text-[#7a8599] ${
+                        locale === "ar" ? "left-3" : "right-3"
+                      }`}
                       aria-label="Afficher / masquer le mot de passe"
                       style={{ fontFamily: "'Lora', serif" }}
                     >
@@ -211,7 +220,10 @@ const handleSubmit = async (e) => {
                   {loading ? t("loading") : t("loginBtn")}
                 </button>
 
-                <p className="text-center text-sm text-[#6b7280]" style={{ fontFamily: "'Lora', serif" }}>
+                <p
+                  className="text-center text-sm text-[#6b7280]"
+                  style={{ fontFamily: "'Lora', serif" }}
+                >
                   {t("noAccount")}{" "}
                   <Link
                     href={`/${locale}/register`}
