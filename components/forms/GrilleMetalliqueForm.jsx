@@ -1,8 +1,27 @@
+// components/forms/GrilleMetalliqueForm.jsx
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
 import grilleImg from "@/public/devis/grille.png";
+
+/* ====== Config & helpers ====== */
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+
+// lecture cookie sans RegExp (compatible Next/Webpack)
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const cookieStr = document.cookie || "";
+  const parts = cookieStr.split("; ");
+  for (const part of parts) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    const key = decodeURIComponent(part.slice(0, eq));
+    if (key === name) return decodeURIComponent(part.slice(eq + 1));
+  }
+  return null;
+}
 
 /* --- petite étoile rouge pour champs requis --- */
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
@@ -16,8 +35,19 @@ export default function GrilleMetalliqueForm() {
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
 
+  // session côté front (même logique que SiteHeader/AutreArticleForm)
+  const localRole =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("mtr_role") ||
+         localStorage.getItem("userRole") ||
+         getCookie("role"))
+      : null;
+  const isAuthenticated = Boolean(localRole) || Boolean(user?.authenticated);
+  const isClient = ((user?.role || localRole) === "client");
+
   const finishedRef = useRef(false);
   const alertRef = useRef(null);
+  const formRef = useRef(null);
 
   // Dropzone
   const [files, setFiles] = useState([]);
@@ -31,10 +61,7 @@ export default function GrilleMetalliqueForm() {
     const out = [];
     for (const f of arr) {
       const sig = `${f.name}|${f.size}|${f.lastModified || 0}`;
-      if (!seen.has(sig)) {
-        seen.add(sig);
-        out.push(f);
-      }
+      if (!seen.has(sig)) { seen.add(sig); out.push(f); }
     }
     return out;
   }
@@ -53,21 +80,9 @@ export default function GrilleMetalliqueForm() {
 
     if (merged.length > MAX_FILES) {
       const kept = merged.slice(0, MAX_FILES);
-      const ignoredCount = merged.length - kept.length;
-
       setFiles(kept);
       syncInputFiles(fileInputRef, kept);
-
-      // 🔔 message i18n
-      setErr(t("limit"));
-
-      console.warn("[Upload] Dépassement de la limite de fichiers:", {
-        incoming: incoming.length,
-        existing: files.length,
-        kept: kept.length,
-        ignored: ignoredCount,
-        max: MAX_FILES,
-      });
+      setErr(t("limit")); // i18n
       return;
     }
 
@@ -95,7 +110,7 @@ export default function GrilleMetalliqueForm() {
 
   const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
 
-  // --- Normaliser EN -> FR ---
+  // --- Normaliser EN -> FR (envoyé au backend en FR) ---
   const FR_MAT = ["Acier galvanisé", "Acier Noir", "Inox"];
   const EN_TO_FR_MAT = [
     { fr: "Acier galvanisé", en: ["Galvanized steel", "Galvanized steel wire", "Galvanised steel", "Galvanised steel wire", "Galvanization steel"] },
@@ -117,14 +132,14 @@ export default function GrilleMetalliqueForm() {
     if (frList.includes(v)) return;
     const low = String(v).toLowerCase().trim();
     for (const { fr, en } of groups) {
-      if (Array.isArray(en) && en.some(e => String(e).toLowerCase().trim() === low)) {
+      if (en.some(e => String(e).toLowerCase().trim() === low)) {
         fd.set(name, fr);
         return;
       }
     }
   }
 
-  // Récup session
+  // Récup session (confirm serveur)
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -146,35 +161,45 @@ export default function GrilleMetalliqueForm() {
     return () => clearTimeout(id);
   }, [ok]);
 
+  // reset complet UI
+  function resetUI() {
+    formRef.current?.reset();
+    setFiles([]);
+    setIsDragging(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    const form = e.currentTarget;
     setOk("");
     setErr("");
     finishedRef.current = false;
 
-    if (!user?.authenticated) {
-      setErr("Vous devez être connecté pour envoyer un devis.");
+    if (!isAuthenticated) {
+      setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
       return;
     }
-    if (user.role !== "client") {
-      setErr("Seuls les clients peuvent envoyer une demande de devis.");
+    if (!isClient) {
+      setErr(t.has("reservedClients") ? t("reservedClients") : "Seuls les clients peuvent envoyer une demande de devis.");
       return;
     }
 
     setLoading(true);
     try {
+      const form = e.currentTarget;
       const fd = new FormData(form);
       fd.append("type", "grille");
 
-      const userId = localStorage.getItem("id");
+      const userId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
       if (userId) fd.append("user", userId);
 
+      // normalisation EN->FR
       normalizeOne(fd, "matiere", FR_MAT, EN_TO_FR_MAT);
       normalizeOne(fd, "finition", FR_FIN, EN_TO_FR_FIN);
 
-      const res = await fetch("/api/devis/grille", {
+      // envoi direct backend (évite 401 côté proxy)
+      const res = await fetch(`${BACKEND}/api/devis/grille`, {
         method: "POST",
         body: fd,
         credentials: "include",
@@ -187,26 +212,29 @@ export default function GrilleMetalliqueForm() {
         finishedRef.current = true;
         setErr("");
         setOk(t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !");
-        form.reset();
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        resetUI();
         return;
       }
 
       const msg = payload?.message || `Erreur lors de l’envoi. (HTTP ${res.status})`;
       setErr(msg);
-    } catch (e) {
-      console.error("submit grille error:", e);
+    } catch (e2) {
       if (!finishedRef.current) {
-        const isAbort = e?.name === "AbortError";
-        setErr(isAbort ? "Délai dépassé, réessayez." : "Erreur réseau.");
+        setErr(e2?.name === "AbortError" ? "Délai dépassé, réessayez." : "Erreur réseau.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const disabled = loading || !user?.authenticated || user?.role !== "client";
+  const disabled = loading || !isAuthenticated || !isClient;
+  const buttonLabel = loading
+    ? (t.has("sending") ? t("sending") : "Envoi en cours…")
+    : !isAuthenticated
+      ? (t.has("loginToSend") ? t("loginToSend") : "Connectez-vous pour envoyer")
+      : !isClient
+        ? (t.has("reservedClients") ? t("reservedClients") : "Réservé aux clients")
+        : t("sendRequest");
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
@@ -217,7 +245,7 @@ export default function GrilleMetalliqueForm() {
         </h2>
       </div>
 
-      <form onSubmit={onSubmit}>
+      <form ref={formRef} onSubmit={onSubmit}>
         {/* Schéma */}
         <SectionTitle>{t("schema")}</SectionTitle>
         <div className="mb-6 flex justify-center">
@@ -244,27 +272,13 @@ export default function GrilleMetalliqueForm() {
           <Input name="D1" label={t("D1")} required />
           <Input name="quantite" label={t("quantity")} type="number" min="1" required />
 
-          <SelectBase
-            name="matiere"
-            label={t("material")}
-            options={materialOptions}
-            placeholder={selectPlaceholder}
-            required
-          />
-          <SelectBase
-            name="finition"
-            label={t("finish")}
-            options={finishOptions}
-            placeholder={selectPlaceholder}
-            required
-          />
+          <SelectBase name="matiere"  label={t("material")} options={materialOptions} placeholder={selectPlaceholder} required />
+          <SelectBase name="finition" label={t("finish")}   options={finishOptions}   placeholder={selectPlaceholder} required />
         </div>
 
         {/* Fichiers */}
         <SectionTitle className="mt-8">{t("docs")} <RequiredMark /></SectionTitle>
-        <p className="text-sm text-gray-500 mb-3">
-          {t("acceptedTypes")}
-        </p>
+        <p className="text-sm text-gray-500 mb-3">{t("acceptedTypes")}</p>
 
         <label
           htmlFor="docs"
@@ -277,19 +291,15 @@ export default function GrilleMetalliqueForm() {
         >
           {files.length === 0 ? (
             <div className="text-center">
-              <p className="text-base font-medium text-[#002147]">
-                {t("dropHere")}
-              </p>
-              <p className="text-sm text-gray-500 mb-3">
-                {t("4files")}
-              </p>
+              <p className="text-base font-medium text-[#002147]">{t("dropHere")}</p>
+              <p className="text-sm text-gray-500 mb-3">{t("4files")}</p>
             </div>
           ) : (
             <div className="w-full text-center">
               <p className="text-sm font-semibold text-[#002147] mb-2">
                 {files.length} fichier{files.length > 1 ? "s" : ""} sélectionné{files.length > 1 ? "s" : ""} :
               </p>
-              <p className="mx-auto max-w-[900px] truncate text:[15px] text-[#002147]">
+              <p className="mx-auto max-w-[900px] truncate text-[15px] text-[#002147]">
                 {files.map((f) => f.name).join(", ")}
               </p>
               <p className="text-xs text-[#002147]/70 mt-1">
@@ -326,18 +336,12 @@ export default function GrilleMetalliqueForm() {
                 ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                 : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
           >
-            {loading
-              ? "Envoi en cours…"
-              : !user?.authenticated
-                ? t("loginToSend")
-                : user?.role !== "client"
-                  ? t("loginToSend")
-                  : t("sendRequest")}
+            {buttonLabel}
           </button>
 
           <div ref={alertRef} aria-live="polite" className="mt-3">
             {loading ? (
-              <Alert type="info" message="Votre demande de devis est en cours d'envoi, veuillez patienter…" />
+              <Alert type="info" message={t.has("sending") ? t("sending") : "Votre demande de devis est en cours d'envoi…"} />
             ) : err ? (
               <Alert type="error" message={err} />
             ) : ok ? (
@@ -365,11 +369,9 @@ function SectionTitle({ children, className = "" }) {
 function Alert({ type = "info", message }) {
   const base = "w-full rounded-xl px-4 py-3 text-sm font-medium border flex items-start gap-2";
   const styles =
-    type === "error"
-      ? "bg-red-50 text-red-700 border-red-200"
-      : type === "success"
-        ? "bg-green-50 text-green-700 border-green-200"
-        : "bg-blue-50 text-blue-700 border-blue-200";
+    type === "error"   ? "bg-red-50 text-red-700 border-red-200" :
+    type === "success" ? "bg-green-50 text-green-700 border-green-200" :
+                         "bg-blue-50 text-blue-700 border-blue-200";
   return (
     <div className={`${base} ${styles}`}>
       <span className="mt-0.5">•</span>
@@ -422,8 +424,8 @@ function SelectBase({ label, name, options = [], required, placeholder = "Sélec
         }}
       >
         <option value="" style={{ color: "#64748b" }}>{placeholder}</option>
-        {options.map((o) => (
-          <option key={o} value={o} style={{ color: "#002147" }}>{o}</option>
+        {options.map((o, i) => (
+          <option key={`${o}-${i}`} value={o} style={{ color: "#002147" }}>{o}</option>
         ))}
       </select>
     </div>
