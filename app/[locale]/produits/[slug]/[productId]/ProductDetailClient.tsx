@@ -16,48 +16,49 @@ const pick = (obj: any, frKey: string, enKey: string, locale = "fr") =>
 
 /* ------------------------------- Utils image ------------------------------ */
 const PLACEHOLDER = "/placeholder.png";
-const BACKEND_HOST = "backend-mtr.onrender.com"; // host الصحيح
+const BACKEND_HOST = "backend-mtr.onrender.com";
 
 const toUrl = (src: any = "") => {
   try {
-    // 0) normalize
     if (!src) return PLACEHOLDER;
     if (typeof src === "object") {
       src = src?.url || src?.src || src?.path || src?.filename || src?.fileName || src?.name || "";
     }
     if (!src) return PLACEHOLDER;
+
     let s = String(src).trim().replace(/\\/g, "/");
 
-    // 1) data/blob
+    // data/blob
     if (/^(data|blob):/i.test(s)) return s;
 
-    // 2) assets من public
+    // assets publics
     if (s.startsWith("/placeholder") || s.startsWith("/images") || s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/")) {
       return s;
     }
 
-    // 3) absolute URL
+    // URL absolue
     if (/^https?:\/\//i.test(s)) {
       const u = new URL(s);
 
-      // 🔁 لو جاي من localhost/127 → بدّل الدومين وفرض https
+      // 👉 si l'URL vient de localhost/127.0.0.1 → remap domaine + https + **enlève le port**
       if (/(^|\.)(localhost|127\.0\.0\.1)$/i.test(u.hostname)) {
         u.protocol = "https:";
         u.hostname = BACKEND_HOST;
-        // ضامن path تحت /uploads
+        u.port = ""; // 🔥 très important: on supprime :4000
         if (!u.pathname.startsWith("/uploads/")) {
           u.pathname = `/uploads/${u.pathname.replace(/^\/+/, "")}`;
         }
         return u.toString();
       }
 
-      // لو هو نفس الـ backend لكن بـ http → نزّلو https
-      if (u.hostname === BACKEND_HOST && u.protocol !== "https:") {
+      // si même host mais protocole http, upgrade
+      if (u.hostname === BACKEND_HOST && u.protocol !== "https:")) {
         u.protocol = "https:";
+        u.port = ""; // par sécurité
         return u.toString();
       }
 
-      // لو الصفحة https والصورة http → جرّب نبدّل https
+      // si la page est https et l'image http → tenter https
       if (typeof window !== "undefined" && window.location.protocol === "https:" && u.protocol === "http:") {
         u.protocol = "https:";
         return u.toString();
@@ -66,7 +67,7 @@ const toUrl = (src: any = "") => {
       return u.toString();
     }
 
-    // 4) relative/filename → حطها تحت /uploads وعلى الدومين الصحيح
+    // chemin relatif / nom de fichier → /uploads + domaine backend
     const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
     return `https://${BACKEND_HOST}${path}`;
   } catch {
@@ -152,55 +153,55 @@ export default function ProductDetailPage() {
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [lightbox, setLightbox] = useState(false);
-useEffect(() => {
-  let alive = true;
-  (async () => {
-    try {
-      setLoading(true); setErr("");
-      let res = await fetch(`${API}/produits/${productId}`, { cache: "no-store" });
-      if (!res.ok) {
-        const res2 = await fetch(`${API}/products/${productId}`, { cache: "no-store" });
-        if (!res2.ok) throw new Error(`HTTP ${res.status} / ${res2.status}`);
-        res = res2;
-      }
-      const data = await res.json();
-      if (!alive) return;
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true); setErr("");
+        let res = await fetch(`${API}/produits/${productId}`, { cache: "no-store" });
+        if (!res.ok) {
+          const res2 = await fetch(`${API}/products/${productId}`, { cache: "no-store" });
+          if (!res2.ok) throw new Error(`HTTP ${res.status} / ${res2.status}`);
+          res = res2;
+        }
+        const data = await res.json();
+        if (!alive) return;
 
-      // 🔎 DEBUG يوري المصدر الحقيقي والصيغة بعد التصحيح
-      console.log("[IMG DEBUG] raw images =", data?.images);
-      if (Array.isArray(data?.images) && data.images[0]) {
-        const raw0 = typeof data.images[0] === "string"
-          ? data.images[0]
-          : data.images[0]?.url || data.images[0]?.src || data.images[0]?.path || data.images[0]?.filename || data.images[0]?.fileName || data.images[0]?.name || "";
+        console.log("[IMG DEBUG] raw images =", data?.images);
+        const raw0 = Array.isArray(data?.images) && data.images[0]
+          ? (typeof data.images[0] === "string"
+            ? data.images[0]
+            : data.images[0]?.url || data.images[0]?.src || data.images[0]?.path || data.images[0]?.filename || data.images[0]?.fileName || data.images[0]?.name || "")
+          : "";
         console.log("[IMG DEBUG] first resolved =", toUrl(raw0));
-      }
 
-      setProduct(data);
-    } catch {
-      if (alive) setErr("Impossible de charger ce produit.");
-    } finally {
-      if (alive) setLoading(false);
-    }
-  })();
-  return () => { alive = false; };
-}, [productId]); // ❗ ما نحطّوش product هنا
+        setProduct(data);
+      } catch {
+        if (alive) setErr("Impossible de charger ce produit.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [productId]); // ← pas de 'product' ici
+
 
   const name = product ? pick(product, "name_fr", "name_en", locale) : "";
   const desc = product ? pick(product, "description_fr", "description_en", locale) : "";
 
   const imagesRaw: any[] = Array.isArray(product?.images) && product.images.length ? product.images : [PLACEHOLDER];
   const imgUrl = (i: number) => {
-  const it = imagesRaw[i] ?? imagesRaw[0];
-  const raw =
-    typeof it === "string"
-      ? it
-      : it?.url || it?.src || it?.path || it?.filename || "";
+    const it = imagesRaw[i] ?? imagesRaw[0];
+    const raw =
+      typeof it === "string"
+        ? it
+        : it?.url || it?.src || it?.path || it?.filename || "";
 
-  // ⚡️ même logique que les catégories
-  return raw.startsWith("http")
-    ? raw
-    : `${BACKEND}${raw.startsWith("/") ? "" : "/"}${raw}`;
-};
+    // ⚡️ même logique que les catégories
+    return raw.startsWith("http")
+      ? raw
+      : `${BACKEND}${raw.startsWith("/") ? "" : "/"}${raw}`;
+  };
 
   const imgTitle = (i: number) => {
     const it = imagesRaw[i] ?? imagesRaw[0];
