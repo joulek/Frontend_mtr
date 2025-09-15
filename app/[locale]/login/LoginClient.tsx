@@ -18,45 +18,53 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email");
-    const password = formData.get("password");
+  const formData = new FormData(e.currentTarget);
+  const email = formData.get("email");
+  const password = formData.get("password");
 
-    try {
-      const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+  try {
+    const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 
-      const res = await fetch(`${BACKEND}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: String(email), password: String(password), rememberMe: remember }),
-      });
+    const res = await fetch(`${BACKEND}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email: String(email), password: String(password), rememberMe: remember }),
+    });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data?.message || t("errors.loginFailed"));
-      } else {
-        const role = data.role || data.user?.role || "";
-        try {
-          localStorage.setItem("userRole", role);
-          localStorage.setItem("mtr_role", role);
-          localStorage.setItem("rememberMe", remember ? "1" : "0");
-        } catch { }
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data?.message || t("errors.loginFailed"));
+    } else {
+      const role = (data.role || data.user?.role || "").toString();
 
-        if (role === "admin") router.push(`/${locale}/admin`);
-        else if (role === "client") router.push(`/${locale}?client=1`);
-        else router.push(`/${locale}/home`);
-      }
-    } catch {
-      setError(t("errors.network"));
-    } finally {
-      setLoading(false);
+      // ✅ garder une trace côté front (LS) + poser cookie `role` lisible par le middleware
+      try {
+        localStorage.setItem("userRole", role);
+        localStorage.setItem("mtr_role", role);
+        localStorage.setItem("rememberMe", remember ? "1" : "0");
+
+        // cookie `role` pour le guard Next (SameSite=Lax suffit car même site)
+        const maxAge = (remember ? 30 : 1) * 24 * 60 * 60; // secondes
+        document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+      } catch {}
+
+      // redirections
+      if (role === "admin") router.push(`/${locale}/admin`);
+      else if (role === "client") router.push(`/${locale}?client=1`);
+      else router.push(`/${locale}/home`);
     }
-  };
+  } catch {
+    setError(t("errors.network"));
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] [background:radial-gradient(80%_60%_at_10%_0%,rgba(11,34,57,.06),transparent),radial-gradient(60%_40%_at_90%_10%,rgba(245,179,1,.07),transparent)]">
