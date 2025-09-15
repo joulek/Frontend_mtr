@@ -25,40 +25,40 @@ const toUrl = (src: any = "") => {
       src = src?.url || src?.src || src?.path || src?.filename || src?.fileName || src?.name || "";
     }
     if (!src) return PLACEHOLDER;
-
     let s = String(src).trim().replace(/\\/g, "/");
 
     // data/blob
     if (/^(data|blob):/i.test(s)) return s;
 
     // assets publics
-    if (s.startsWith("/placeholder") || s.startsWith("/images") || s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/")) {
-      return s;
-    }
+    if (
+      s.startsWith("/placeholder") || s.startsWith("/images") ||
+      s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/")
+    ) return s;
 
     // URL absolue
     if (/^https?:\/\//i.test(s)) {
       const u = new URL(s);
 
-      // 👉 si l'URL vient de localhost/127.0.0.1 → remap domaine + https + **enlève le port**
+      // localhost/127 → remap domaine + https + SUPPRIMER port
       if (/(^|\.)(localhost|127\.0\.0\.1)$/i.test(u.hostname)) {
         u.protocol = "https:";
         u.hostname = BACKEND_HOST;
-        u.port = ""; // 🔥 très important: on supprime :4000
+        u.port = ""; // <- مهم
         if (!u.pathname.startsWith("/uploads/")) {
           u.pathname = `/uploads/${u.pathname.replace(/^\/+/, "")}`;
         }
         return u.toString();
       }
 
-      // si même host mais protocole http, upgrade
-      if (u.hostname === BACKEND_HOST && u.protocol !== "https:")) {
+      // même host mais http → upgrade
+      if (u.hostname === BACKEND_HOST && u.protocol !== "https:") {
         u.protocol = "https:";
-        u.port = ""; // par sécurité
+        u.port = "";
         return u.toString();
       }
 
-      // si la page est https et l'image http → tenter https
+      // page https و الصورة http → جرّب https
       if (typeof window !== "undefined" && window.location.protocol === "https:" && u.protocol === "http:") {
         u.protocol = "https:";
         return u.toString();
@@ -67,15 +67,13 @@ const toUrl = (src: any = "") => {
       return u.toString();
     }
 
-    // chemin relatif / nom de fichier → /uploads + domaine backend
+    // chemin relatif / filename
     const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
     return `https://${BACKEND_HOST}${path}`;
   } catch {
     return PLACEHOLDER;
   }
 };
-
-
 
 /* -------------------- Composant image cover + zoom (cards) -------------------- */
 function CardImage({
@@ -98,6 +96,7 @@ function CardImage({
         priority={priority}
         sizes={sizes}
         className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-110"
+        // unoptimized // ← فعّلها مؤقتاً لو ما ضبطتش next.config.js للصور الخارجية
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
     </div>
@@ -137,6 +136,7 @@ function ZoomCover({
         sizes={sizes}
         style={{ transformOrigin: `${origin.x}% ${origin.y}%` }}
         className="object-cover rounded-3xl transition-transform duration-500 ease-out group-hover:scale-[1.35]"
+        // unoptimized
       />
     </div>
   );
@@ -153,6 +153,7 @@ export default function ProductDetailPage() {
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -170,8 +171,8 @@ export default function ProductDetailPage() {
         console.log("[IMG DEBUG] raw images =", data?.images);
         const raw0 = Array.isArray(data?.images) && data.images[0]
           ? (typeof data.images[0] === "string"
-            ? data.images[0]
-            : data.images[0]?.url || data.images[0]?.src || data.images[0]?.path || data.images[0]?.filename || data.images[0]?.fileName || data.images[0]?.name || "")
+              ? data.images[0]
+              : data.images[0]?.url || data.images[0]?.src || data.images[0]?.path || data.images[0]?.filename || data.images[0]?.fileName || data.images[0]?.name || "")
           : "";
         console.log("[IMG DEBUG] first resolved =", toUrl(raw0));
 
@@ -183,24 +184,21 @@ export default function ProductDetailPage() {
       }
     })();
     return () => { alive = false; };
-  }, [productId]); // ← pas de 'product' ici
-
+  }, [productId]); // ← ما نضيفوش 'product' باش نتجنّب اللوب
 
   const name = product ? pick(product, "name_fr", "name_en", locale) : "";
   const desc = product ? pick(product, "description_fr", "description_en", locale) : "";
 
   const imagesRaw: any[] = Array.isArray(product?.images) && product.images.length ? product.images : [PLACEHOLDER];
+
+  // ❗ نستعمل toUrl هنا (ما نرجعوش لمنطق raw.startsWith("http"))
   const imgUrl = (i: number) => {
     const it = imagesRaw[i] ?? imagesRaw[0];
     const raw =
       typeof it === "string"
         ? it
-        : it?.url || it?.src || it?.path || it?.filename || "";
-
-    // ⚡️ même logique que les catégories
-    return raw.startsWith("http")
-      ? raw
-      : `${BACKEND}${raw.startsWith("/") ? "" : "/"}${raw}`;
+        : it?.url || it?.src || it?.path || it?.filename || it?.fileName || it?.name || "";
+    return toUrl(raw);
   };
 
   const imgTitle = (i: number) => {
@@ -209,10 +207,8 @@ export default function ProductDetailPage() {
     return pick(it, "title_fr", "title_en", locale) || name || "Image";
   };
 
-  // Colonnes dynamiques (1,2,3,4… en fonction du nombre d’images)
   const cols = Math.max(1, Math.ceil(Math.sqrt(imagesRaw.length || 1)));
 
-  // Navigation clavier dans la lightbox
   const onKey = useCallback((e: KeyboardEvent) => {
     if (!lightbox || !imagesRaw?.length) return;
     if (e.key === "ArrowRight") setActiveIdx((i) => (i + 1) % imagesRaw.length);
@@ -343,6 +339,7 @@ export default function ProductDetailPage() {
                 className="object-contain"
                 sizes="100vw"
                 priority
+                // unoptimized
               />
             </div>
           </motion.div>
