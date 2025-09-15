@@ -1,4 +1,3 @@
-// app/api/logout/route.js
 import { NextResponse } from "next/server";
 
 // (optionnel) exécution edge = latence plus faible
@@ -17,12 +16,13 @@ const COOKIE_BASE = {
 export async function POST() {
   const res = new NextResponse(null, {
     status: 204, // plus léger/rapide qu'un JSON
-    headers: { "Cache-Control": "no-store" },
+    headers: { "Cache-Control": "no-store", "Location": "/login" }, // redirection vers /login
   });
 
   const gone = { ...COOKIE_BASE, maxAge: 0, expires: new Date(0) };
   res.cookies.set("token", "", gone);
-  res.cookies.set("role",  "", gone);
+  res.cookies.set("role", "", gone);
+  res.cookies.set("rememberMe", "", gone); // Supprime aussi le cookie rememberMe si utilisé
   // supprime ici d'autres cookies d'auth si tu en as (refresh, etc.)
 
   return res;

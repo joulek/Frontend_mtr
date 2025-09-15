@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
   setLoading(true);
@@ -42,18 +42,23 @@ export default function LoginPage() {
     } else {
       const role = (data.role || data.user?.role || "").toString();
 
-      // ✅ garder une trace côté front (LS) + poser cookie `role` lisible par le middleware
+      // 🔐 Trace côté front + cookies lisibles par le middleware
       try {
         localStorage.setItem("userRole", role);
         localStorage.setItem("mtr_role", role);
         localStorage.setItem("rememberMe", remember ? "1" : "0");
 
-        // cookie `role` pour le guard Next (SameSite=Lax suffit car même site)
-        const maxAge = (remember ? 30 : 1) * 24 * 60 * 60; // secondes
+        const maxAge = (remember ? 30 : 1) * 24 * 60 * 60; // en secondes
+
+        // 👉 ces deux cookies servent juste au guard/middleware côté front
+        document.cookie = `mtr_auth=1; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+        document.cookie = `mtr_role=${encodeURIComponent(role || "client")}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+
+        // (facultatif si tu ne l’utilises pas ailleurs)
         document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
       } catch {}
 
-      // redirections
+      // Redirection selon le rôle
       if (role === "admin") router.push(`/${locale}/admin`);
       else if (role === "client") router.push(`/${locale}?client=1`);
       else router.push(`/${locale}/home`);
@@ -66,10 +71,11 @@ export default function LoginPage() {
 };
 
 
+
   return (
     <div className="min-h-screen bg-[#f5f7fb] [background:radial-gradient(80%_60%_at_10%_0%,rgba(11,34,57,.06),transparent),radial-gradient(60%_40%_at_90%_10%,rgba(245,179,1,.07),transparent)]">
       {/* Header global */}
-      <SiteHeader onLogout={undefined} />
+      <SiteHeader  />
 
       {/* Contenu */}
       <main className="px-4 py-10">
