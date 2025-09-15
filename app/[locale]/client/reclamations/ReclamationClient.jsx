@@ -535,7 +535,7 @@ export default function ReclamationClient() {
 
     if (form.dateLivraison) {
       const dl = fromISO(form.dateLivraison);
-      if (norm(dl) > norm(new Date()))) {
+      if (norm(dl) > norm(new Date())) {
         setMessage(`⚠️ ${t("errors.futureDate")}`);
         return;
       }
