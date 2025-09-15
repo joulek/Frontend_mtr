@@ -27,7 +27,7 @@ const handleSubmit = async (e) => {
   const password = formData.get("password");
 
   try {
-    const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+    const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
 
     const res = await fetch(`${BACKEND}/api/auth/login`, {
       method: "POST",
@@ -42,25 +42,13 @@ const handleSubmit = async (e) => {
     } else {
       const role = (data.role || data.user?.role || "").toString();
 
-      // 🔐 Trace côté front + cookies lisibles par le middleware
-      try {
-        localStorage.setItem("userRole", role);
-        localStorage.setItem("mtr_role", role);
-        localStorage.setItem("rememberMe", remember ? "1" : "0");
+      // Stocker le rôle et gérer les cookies
+      localStorage.setItem("userRole", role);
+      document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${remember ? 30 : 1} * 24 * 60 * 60; SameSite=Lax`;
 
-        const maxAge = (remember ? 30 : 1) * 24 * 60 * 60; // en secondes
-
-        // 👉 ces deux cookies servent juste au guard/middleware côté front
-        document.cookie = `mtr_auth=1; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-        document.cookie = `mtr_role=${encodeURIComponent(role || "client")}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-
-        // (facultatif si tu ne l’utilises pas ailleurs)
-        document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-      } catch {}
-
-      // Redirection selon le rôle
+      // Rediriger selon le rôle
       if (role === "admin") router.push(`/${locale}/admin`);
-      else if (role === "client") router.push(`/${locale}?client=1`);
+      else if (role === "client") router.push(`/${locale}/client/devis`);  // Redirection vers la page de devis pour un client
       else router.push(`/${locale}/home`);
     }
   } catch {
@@ -69,6 +57,7 @@ const handleSubmit = async (e) => {
     setLoading(false);
   }
 };
+
 
 
 
