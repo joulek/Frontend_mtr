@@ -4,11 +4,39 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
+const BACKEND =
+  (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 
-/* Helpers dates */
+/* -------------------- cookies / token -------------------- */
+function getCookie(name) {
+  if (typeof document === "undefined") return "";
+  const v = document.cookie.split("; ").find((c) => c.startsWith(name + "="));
+  return v ? decodeURIComponent(v.split("=")[1]) : "";
+}
+function pickAuthToken() {
+  // même logique que les autres formulaires
+  const fromCookie =
+    getCookie("token") ||
+    getCookie("authToken") ||
+    getCookie("access_token") ||
+    "";
+  if (fromCookie) return fromCookie;
+  try {
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("access_token") ||
+      ""
+    );
+  } catch {
+    return "";
+  }
+}
+
+/* -------------------- Helpers dates -------------------- */
 const pad = (n) => String(n).padStart(2, "0");
-const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const toISO = (d) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fromISO = (s) => {
   if (!s) return null;
   const [y, m, d] = s.split("-").map((x) => parseInt(x, 10));
@@ -23,7 +51,7 @@ const clampISOToToday = (iso) => {
   return norm(v) > today ? toISO(today) : toISO(v);
 };
 
-/* Base64 fichier */
+/* -------------------- Base64 fichier -------------------- */
 const fileToBase64 = (file) =>
   new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -32,15 +60,22 @@ const fileToBase64 = (file) =>
     r.readAsDataURL(file);
   });
 
-/* UI atoms */
-const RequiredMark = () => <span className="text-red-500" aria-hidden="true"> *</span>;
+/* -------------------- UI atoms -------------------- */
+const RequiredMark = () => (
+  <span className="text-red-500" aria-hidden="true">
+    {" "}
+    *
+  </span>
+);
 
 function SectionTitle({ children, className = "" }) {
   return (
     <div className={`mb-3 mt-6 ${className}`}>
       <div className="flex items-center gap-3">
         <span className="h-4 w-1.5 rounded-full bg-[#002147]" />
-        <h3 className="text-base md:text-lg font-semibold text-[#002147]">{children}</h3>
+        <h3 className="text-base md:text-lg font-semibold text-[#002147]">
+          {children}
+        </h3>
       </div>
       <div className="mt-2 h-px w-full bg-gradient-to-r from-[#002147]/20 via-gray-200 to-transparent" />
     </div>
@@ -48,7 +83,8 @@ function SectionTitle({ children, className = "" }) {
 }
 
 function Alert({ type = "info", message }) {
-  const base = "w-full rounded-xl px-3 py-2 text-sm font-medium border flex items-start gap-2";
+  const base =
+    "w-full rounded-xl px-3 py-2 text-sm font-medium border flex items-start gap-2";
   const styles =
     type === "error"
       ? "bg-red-50 text-red-700 border-red-200"
@@ -63,8 +99,16 @@ function Alert({ type = "info", message }) {
   );
 }
 
-/* Inputs contrôlés */
-function Input({ label, name, required, type = "text", min, placeholder, value, onChange }) {
+function Input({
+  label,
+  name,
+  required,
+  type = "text",
+  min,
+  placeholder,
+  value,
+  onChange,
+}) {
   return (
     <div className="space-y-1">
       {label && (
@@ -89,7 +133,15 @@ function Input({ label, name, required, type = "text", min, placeholder, value, 
   );
 }
 
-function SelectBase({ label, name, value, onChange, options = [], required, placeholder }) {
+function SelectBase({
+  label,
+  name,
+  value,
+  onChange,
+  options = [],
+  required,
+  placeholder,
+}) {
   return (
     <div className="space-y-1 w-full">
       {label && (
@@ -117,7 +169,9 @@ function SelectBase({ label, name, value, onChange, options = [], required, plac
           backgroundSize: "0.9rem 0.9rem",
         }}
       >
-        <option value="" style={{ color: "#64748b" }}>{placeholder}</option>
+        <option value="" style={{ color: "#64748b" }}>
+          {placeholder}
+        </option>
         {options.map((o) => (
           <option key={o.value} value={o.value} style={{ color: "#002147" }}>
             {o.label}
@@ -128,7 +182,7 @@ function SelectBase({ label, name, value, onChange, options = [], required, plac
   );
 }
 
-/* Date picker compact (avec i18n) */
+/* -------------------- Date picker compact -------------------- */
 function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }) {
   const [open, setOpen] = useState(false);
   const locale = useLocale();
@@ -144,21 +198,35 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
 
   const selected = fromISO(value);
   const [month, setMonth] = useState(
-    () => (selected ? new Date(selected.getFullYear(), selected.getMonth(), 1)
-                    : new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+    () =>
+      (selected
+        ? new Date(selected.getFullYear(), selected.getMonth(), 1)
+        : new Date(new Date().getFullYear(), new Date().getMonth(), 1))
   );
   const wrapRef = useRef(null);
 
   useEffect(() => {
-    const onDoc = (e) => { if (!wrapRef.current?.contains(e.target)) setOpen(false); };
+    const onDoc = (e) => {
+      if (!wrapRef.current?.contains(e.target)) setOpen(false);
+    };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const daysShort = t.raw("datepicker.daysShort") || ["Mo","Tu","We","Th","Fr","Sa","Su"];
-  const monthLabel = month.toLocaleDateString(locale || "fr-FR", { month: "long", year: "numeric" });
+  const daysShort = t.raw("datepicker.daysShort") || [
+    "Mo",
+    "Tu",
+    "We",
+    "Th",
+    "Fr",
+    "Sa",
+    "Su",
+  ];
+  const monthLabel = month.toLocaleDateString(locale || "fr-FR", {
+    month: "long",
+    year: "numeric",
+  });
 
-  // grille (lundi -> dimanche)
   const start = (() => {
     const d = new Date(month);
     const wd = (d.getDay() + 6) % 7; // lundi=0
@@ -172,7 +240,11 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
   });
 
   const isSameDay = (a, b) =>
-    a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    a &&
+    b &&
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 
   const maxMonth = new Date(maxD.getFullYear(), maxD.getMonth(), 1);
   const canGoNext = month < maxMonth;
@@ -181,7 +253,8 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
     <div className="space-y-1" ref={wrapRef}>
       {label && (
         <label className="block text-sm font-medium text-[#002147]">
-          {label}{required && <RequiredMark />}
+          {label}
+          {required && <RequiredMark />}
         </label>
       )}
 
@@ -197,9 +270,13 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
         title={t("datepicker.open")}
       >
         <span className={`${value ? "text-[#002147]" : "text-gray-400"}`}>
-          {value ? fromISO(value)?.toLocaleDateString(locale || "fr-FR") : t("datepicker.placeholder")}
+          {value
+            ? fromISO(value)?.toLocaleDateString(locale || "fr-FR")
+            : t("datepicker.placeholder")}
         </span>
-        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[#002147]/70">📅</span>
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[#002147]/70">
+          📅
+        </span>
       </button>
       <input type="hidden" name={name} value={value || ""} />
 
@@ -208,28 +285,45 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
           <div className="flex items-center justify-between px-1 pb-1">
             <button
               type="button"
-              onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+              onClick={() =>
+                setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))
+              }
               className="rounded-md px-1.5 py-0.5 text-sm hover:bg-gray-100"
               aria-label={t("datepicker.prevMonth")}
               title={t("datepicker.prevMonth")}
-            >‹</button>
+            >
+              ‹
+            </button>
 
-            <div className="font-semibold text-sm text-[#002147] capitalize">{monthLabel}</div>
+            <div className="font-semibold text-sm text-[#002147] capitalize">
+              {monthLabel}
+            </div>
 
             <button
               type="button"
               disabled={!canGoNext}
-              onClick={() => canGoNext && setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+              onClick={() =>
+                canGoNext &&
+                setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))
+              }
               className={`rounded-md px-1.5 py-0.5 text-sm ${
-                canGoNext ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed pointer-events-none"
+                canGoNext
+                  ? "hover:bg-gray-100"
+                  : "opacity-40 cursor-not-allowed pointer-events-none"
               }`}
               aria-label={t("datepicker.nextMonth")}
               title={t("datepicker.nextMonth")}
-            >›</button>
+            >
+              ›
+            </button>
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1">
-            {daysShort.map((d) => <div key={d} className="py-0.5">{d}</div>)}
+            {daysShort.map((d) => (
+              <div key={d} className="py-0.5">
+                {d}
+              </div>
+            ))}
           </div>
 
           <div className="grid grid-cols-7 gap-1">
@@ -239,11 +333,18 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
               const isSelected = selected && isSameDay(d, selected);
               const isFuture = norm(d) > maxD;
 
-              const baseDayCls = `py-1 rounded-md text-xs ${inMonth ? "text-[#002147]" : "text-gray-400"}`;
+              const baseDayCls = `py-1 rounded-md text-xs ${
+                inMonth ? "text-[#002147]" : "text-gray-400"
+              }`;
 
               if (isFuture) {
                 return (
-                  <div key={i} aria-disabled="true" tabIndex={-1} className={`${baseDayCls} opacity-40 cursor-not-allowed`}>
+                  <div
+                    key={i}
+                    aria-disabled="true"
+                    tabIndex={-1}
+                    className={`${baseDayCls} opacity-40 cursor-not-allowed`}
+                  >
                     {d.getDate()}
                   </div>
                 );
@@ -254,7 +355,9 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
                   key={i}
                   type="button"
                   onClick={() => {
-                    const pickedISO = toISO(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+                    const pickedISO = toISO(
+                      new Date(d.getFullYear(), d.getMonth(), d.getDate())
+                    );
                     onChange(clampISOToToday(pickedISO));
                     setOpen(false);
                   }}
@@ -269,8 +372,14 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
           </div>
 
           <div className="mt-1 flex items-center justify-between">
-            <button type="button" onClick={() => { onChange(""); setOpen(false); }}
-                    className="text-xs text-gray-600 hover:text-gray-800">
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+              }}
+              className="text-xs text-gray-600 hover:text-gray-800"
+            >
               {t("datepicker.clear")}
             </button>
             <button
@@ -292,7 +401,7 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
   );
 }
 
-/* ── Page ── */
+/* ===================== Page ===================== */
 export default function ReclamationClient() {
   const t = useTranslations("auth.client.reclamationForm");
   const locale = useLocale();
@@ -304,7 +413,13 @@ export default function ReclamationClient() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/session", { cache: "no-store", credentials: "include" });
+        const token = pickAuthToken();
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch("/api/session", {
+          cache: "no-store",
+          credentials: "include",
+          headers,
+        });
         const data = res.ok ? await res.json() : null;
         setSession(data || null);
       } catch {
@@ -321,7 +436,7 @@ export default function ReclamationClient() {
   const [message, setMessage] = useState("");
   const alertRef = useRef(null);
 
-  // Options traduites (les "value" restent canoniques pour le backend)
+  // Options traduites
   const typeDocOptions = t.raw("typeDocOptions") || [
     { value: "devis", label: "Devis" },
     { value: "bon_commande", label: "Bon de commande" },
@@ -401,15 +516,26 @@ export default function ReclamationClient() {
       router.push(`/${locale}/login?next=${next}`);
       return;
     }
-    if (!isClient) { setMessage(`❌ ${t("errors.clientOnly")}`); return; }
-    if (!form.numero.trim()) { setMessage(`⚠️ ${t("errors.documentNumberRequired")}`); return; }
-    if (form.nature === "autre" && !form.natureAutre.trim()) { setMessage(`⚠️ ${t("errors.natureOtherRequired")}`); return; }
-    if (form.attente === "autre" && !form.attenteAutre.trim()) { setMessage(`⚠️ ${t("errors.attenteOtherRequired")}`); return; }
+    if (!isClient) {
+      setMessage(`❌ ${t("errors.clientOnly")}`);
+      return;
+    }
+    if (!form.numero.trim()) {
+      setMessage(`⚠️ ${t("errors.documentNumberRequired")}`);
+      return;
+    }
+    if (form.nature === "autre" && !form.natureAutre.trim()) {
+      setMessage(`⚠️ ${t("errors.natureOtherRequired")}`);
+      return;
+    }
+    if (form.attente === "autre" && !form.attenteAutre.trim()) {
+      setMessage(`⚠️ ${t("errors.attenteOtherRequired")}`);
+      return;
+    }
 
-    // refuse une date future
     if (form.dateLivraison) {
       const dl = fromISO(form.dateLivraison);
-      if (norm(dl) > norm(new Date())) {
+      if (norm(dl) > norm(new Date()))) {
         setMessage(`⚠️ ${t("errors.futureDate")}`);
         return;
       }
@@ -426,18 +552,23 @@ export default function ReclamationClient() {
       );
 
       const parts = [];
-      if (form.nature === "autre") parts.push(`${t("fields.natureOther")}: ${form.natureAutre.trim()}`);
-      if (form.attente === "autre") parts.push(`${t("fields.attenteOther")}: ${form.attenteAutre.trim()}`);
+      if (form.nature === "autre")
+        parts.push(`${t("fields.natureOther")}: ${form.natureAutre.trim()}`);
+      if (form.attente === "autre")
+        parts.push(`${t("fields.attenteOther")}: ${form.attenteAutre.trim()}`);
       const description = parts.length ? parts.join(" | ") : undefined;
 
-      const localId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
+      const localId =
+        typeof window !== "undefined" ? localStorage.getItem("id") : null;
 
       const payload = {
         user: localId || null,
         commande: {
           typeDoc: form.typeDoc,
           numero: form.numero.trim(),
-          dateLivraison: form.dateLivraison ? fromISO(form.dateLivraison) : undefined,
+          dateLivraison: form.dateLivraison
+            ? fromISO(form.dateLivraison)
+            : undefined,
           referenceProduit: form.referenceProduit || undefined,
           quantite: form.quantite ? Number(form.quantite) : undefined,
         },
@@ -447,9 +578,15 @@ export default function ReclamationClient() {
         piecesJointes,
       };
 
+      const token = pickAuthToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
       const res = await fetch(`${BACKEND}/api/reclamations`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify(payload),
       });
@@ -477,18 +614,18 @@ export default function ReclamationClient() {
     }
   };
 
-  const disabled = loadingSession || submitting || !isAuthenticated || !isClient;
+  const disabled =
+    loadingSession || submitting || !isAuthenticated || !isClient;
 
+  /* -------------------- Render -------------------- */
   return (
-    <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
+    <section className="mx-auto max-w-5xl px-3 sm:px-6 lg:px-8 py-6">
       {/* Titre */}
       <div className="text-center mb-5">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#002147]">
           {t("title")}
         </h1>
-        <p className="mt-1.5 text-sm text-gray-600">
-          {t("subtitle")}
-        </p>
+        <p className="mt-1.5 text-sm text-gray-600">{t("subtitle")}</p>
       </div>
 
       {/* Carte */}
@@ -518,7 +655,9 @@ export default function ReclamationClient() {
               label={t("fields.dateLivraison")}
               name="dateLivraison"
               value={form.dateLivraison}
-              onChange={(val) => setField("dateLivraison", clampISOToToday(val))}
+              onChange={(val) =>
+                setField("dateLivraison", clampISOToToday(val))
+              }
               maxDate={new Date()}
               t={t}
             />
@@ -587,12 +726,19 @@ export default function ReclamationClient() {
 
           <label
             htmlFor="files"
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => onDrop(e)}
             className={`flex flex-col items-center justify-center cursor-pointer rounded-2xl text-center transition
                         min-h-[110px] md:min-h-[130px] p-5 bg-white
-                        border-2 border-dashed ${isDragging ? "border-yellow-500 ring-2 ring-yellow-300" : "border-yellow-500"}`}
+                        border-2 border-dashed ${
+                          isDragging
+                            ? "border-yellow-500 ring-2 ring-yellow-300"
+                            : "border-yellow-500"
+                        }`}
             aria-label={t("aria.dropzone")}
             title={t("aria.dropzone")}
           >
@@ -609,7 +755,11 @@ export default function ReclamationClient() {
                   {files.map((f) => f.name).join(", ")}
                 </p>
                 <p className="text-[11px] text-[#002147]/70 mt-1">
-                  {t("files.total", { kb: (files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0) })}
+                  {t("files.total", {
+                    kb: (
+                      files.reduce((s, f) => s + f.size, 0) / 1024
+                    ).toFixed(0),
+                  })}
                 </p>
               </div>
             )}
@@ -627,7 +777,13 @@ export default function ReclamationClient() {
           <div ref={alertRef} aria-live="polite" className="mt-4">
             {message && (
               <Alert
-                type={message.startsWith("✅") ? "success" : message.startsWith("⚠️") ? "info" : "error"}
+                type={
+                  message.startsWith("✅")
+                    ? "success"
+                    : message.startsWith("⚠️")
+                    ? "info"
+                    : "error"
+                }
                 message={message}
               />
             )}
@@ -638,13 +794,17 @@ export default function ReclamationClient() {
               type="submit"
               disabled={disabled}
               className={`w-full rounded-xl font-semibold py-3 transition-all
-                ${disabled
-                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
+                ${
+                  disabled
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"
+                }`}
               aria-label={t("aria.submit")}
               title={
-                !isAuthenticated ? t("tooltips.mustLogin")
-                  : !isClient ? t("tooltips.clientOnly")
+                !isAuthenticated
+                  ? t("tooltips.mustLogin")
+                  : !isClient
+                  ? t("tooltips.clientOnly")
                   : t("aria.submit")
               }
             >
