@@ -6,13 +6,22 @@ import { useTranslations } from "next-intl";
 
 /* ====== Config & helpers (whome-style) ====== */
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+// remplace TOUTE la fonction getCookie par ceci
 function getCookie(name) {
   if (typeof document === "undefined") return null;
-  const m = document.cookie.match(
-    new RegExp("(^|; )" + name.replace(/[-[\\]{}()*+?.,\\\\^$|#\\s]/g, "\\$&") + "=([^;]*)")
-  );
-  return m ? decodeURIComponent(m[2]) : null;
+  const cookieStr = document.cookie || "";
+  const parts = cookieStr.split("; ");
+  for (const part of parts) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    const key = decodeURIComponent(part.slice(0, eq));
+    if (key === name) {
+      return decodeURIComponent(part.slice(eq + 1));
+    }
+  }
+  return null;
 }
+
 
 /* --- petite étoile rouge pour champs requis --- */
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
