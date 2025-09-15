@@ -20,6 +20,19 @@ function getCookie(name) {
   }
   return null;
 }
+function snapshotAuth(user) {
+  // On lit tout ce que SiteHeader lit
+  const lsRole =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("mtr_role") ||
+         localStorage.getItem("userRole") ||
+         getCookie("role"))
+      : null;
+  const role = (user?.role || lsRole || "").toString();
+  const isAuthenticated = Boolean(lsRole) || Boolean(user?.authenticated);
+  const isClient = role === "client";
+  return { isAuthenticated, isClient, role };
+}
 
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
 
@@ -30,6 +43,12 @@ export default function CompressionForm() {
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
+
+  // 👉 état dérivé “solide” pour éviter les incohérences durant le render
+  const [{ isAuthenticated, isClient }, setAuth] = useState({
+    isAuthenticated: false,
+    isClient: false,
+  });
 
   const finishedRef = useRef(false);
   const alertRef = useRef(null);
@@ -79,25 +98,26 @@ export default function CompressionForm() {
   const extremityOptions = EXTREMITIES.map((value, i) => ({ value, label: extremityLabels[i] ?? value }));
 
   const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
-  /* ------------------------------------------------------------------------ */
 
-  // ====== Session serveur (confirme l’état) ======
+  // ====== Session serveur + snapshot auth cohérente ======
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setUser(data || null))
-      .catch(() => setUser(null));
+      .then((data) => {
+        setUser(data || null);
+        setAuth(snapshotAuth(data || null));
+      })
+      .catch(() => {
+        setUser(null);
+        setAuth(snapshotAuth(null));
+      });
   }, []);
 
-  // ====== Session côté front (même logique que l’autre form / SiteHeader) ======
-  const localRole =
-    typeof window !== "undefined"
-      ? (localStorage.getItem("mtr_role") ||
-         localStorage.getItem("userRole") ||
-         getCookie("role"))
-      : null;
-  const isAuthenticated = Boolean(localRole) || Boolean(user?.authenticated);
-  const isClient = ((user?.role || localRole) === "client");
+  // Si quelque chose (cookie/LS) change pendant la vie du composant
+  useEffect(() => {
+    setAuth(snapshotAuth(user));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role, user?.authenticated]);
 
   useEffect(() => {
     if (alertRef.current && (loading || ok || err)) {
@@ -114,21 +134,18 @@ export default function CompressionForm() {
   function handleFileList(list, { append = true } = {}) {
     const incoming = Array.from(list || []);
     if (incoming.length === 0) return;
-
     const base = append ? (files || []) : [];
     const merged = uniqueBySignature([...base, ...incoming]);
-
     if (merged.length > MAX_FILES) {
       const kept = merged.slice(0, MAX_FILES);
       setFiles(kept);
       syncInputFiles(fileInputRef, kept);
-      setErr(t("limit")); // "Limite dépassée, maximum 4 fichiers."
+      setErr(t("limit"));
       return;
     }
     setFiles(merged);
     syncInputFiles(fileInputRef, merged);
   }
-
   function onDrop(e) {
     e.preventDefault();
     setIsDragging(false);
@@ -143,7 +160,7 @@ export default function CompressionForm() {
     setErr("");
     finishedRef.current = false;
 
-    // ✅ utilise la même logique d’auth que l’autre form
+    // ✅ on s’appuie uniquement sur l’état dérivé (fiable)
     if (!isAuthenticated) {
       setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
       return;
@@ -161,11 +178,10 @@ export default function CompressionForm() {
       const userId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
       if (userId) fd.append("user", userId);
 
-      // Normalisation au cas où l’UI renvoie les labels
+      // Normalisation si des labels partent au lieu des valeurs
       const mat = fd.get("matiere");
       const wind = fd.get("enroulement");
       const ext = fd.get("extremite");
-
       if (!MATERIAL_VALUES.includes(mat)) {
         const i = materialLabels.indexOf(mat);
         if (i >= 0 && MATERIAL_VALUES[i]) fd.set("matiere", MATERIAL_VALUES[i]);
@@ -192,6 +208,7 @@ export default function CompressionForm() {
         finishedRef.current = true;
         setErr("");
         setOk(t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !");
+        // reset complet
         form.reset();
         setFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -209,7 +226,7 @@ export default function CompressionForm() {
     }
   };
 
-  /* ====== Bouton & libellé dynamiques (auth cookies/LS) ====== */
+  /* ====== Bouton & libellé dynamiques ====== */
   const disabled = loading || !isAuthenticated || !isClient;
   const buttonLabel = loading
     ? (t.has("sending") ? t("sending") : "Envoi en cours…")
@@ -371,11 +388,9 @@ function Alert({ type = "info", message }) {
 function Input({ label, name, required, type = "text", min }) {
   return (
     <div className="space-y-1">
-      {label && (
-        <label className="block font-medium text-[#002147]">
-          {label}{required && <RequiredMark />}
-        </label>
-      )}
+      <label className="block font-medium text-[#002147]">
+        {label}{required && <RequiredMark />}
+      </label>
       <input
         name={name}
         type={type}
@@ -390,11 +405,9 @@ function Input({ label, name, required, type = "text", min }) {
 function SelectBase({ label, name, options = [], required, placeholder = "Sélectionnez…" }) {
   return (
     <div className="space-y-1 w-full">
-      {label && (
-        <label className="block font-medium text-[#002147]">
-          {label}{required && <RequiredMark />}
-        </label>
-      )}
+      <label className="block font-medium text-[#002147]">
+        {label}{required && <RequiredMark />}
+      </label>
       <select
         name={name}
         required={required}
