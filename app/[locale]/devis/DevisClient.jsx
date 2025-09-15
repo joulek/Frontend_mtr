@@ -1,104 +1,109 @@
-// app/[locale]/admin/devis/AdminDevisSelector.jsx (أو وين موجود عندك)
 "use client";
-
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
-// Pages admin (listes)
-import DevisCompressionList from "@/components/admin/devis/DevisCompressionList";
-import DevisTractionList from "@/components/admin/devis/DevisTractionList";
-import DevisTorsionList from "@/components/admin/devis/DevisTorsionList";
-import DevisAutreList from "@/components/admin/devis/DevisAutreList";
-import DevisFillList from "@/components/admin/devis/DevisFillList";
-import DevisGrilleList from "@/components/admin/devis/DevisGrilleList";
+import CompressionForm from "@/components/forms/CompressionForm";
+import TractionForm from "@/components/forms/TractionForm";
+import TorsionForm from "@/components/forms/TorsionForm";
+import FilDresseForm from "@/components/forms/FilDresseForm";
+import GrilleMetalliqueForm from "@/components/forms/GrilleMetalliqueForm";
+import AutreArticleForm from "@/components/forms/AutreArticleForm";
 
-// ❌ نحّينا imports متاع الصور من public
-// ❌ ونحّينا import Image من "next/image"
+import compressionImg from "@/public/devis/compression_logo.png";
+import tractionImg from "@/public/devis/ressort_traction_1.jpg";
+import torsionImg from "@/public/devis/torsion_ressorts.png";
+import fillImg from "@/public/devis/dresser.png";
+import grillImg from "@/public/devis/grille.png";
+import autreImg from "@/public/devis/autre.jpg";
 
-export default function AdminDevisSelector() {
-  const t = useTranslations("auth.admin.devisAdmin");
+
+
+
+export default function DevisPage() {
   const [type, setType] = useState("compression");
+  const t = useTranslations("auth.devis");
 
-  const tl = (k) =>
-    t.has(`types.${k}`)
-      ? t(`types.${k}`)
-      : {
-          compression: "Compression",
-          traction: "Traction",
-          torsion: "Torsion",
-          fill: "Fil dressé coupé",
-          grille: "Grille métallique",
-          autre: "Autre article",
-        }[k];
-
-  // ✅ نستعمل مسارات نصّية من مجلد public
   const TYPES = [
-    { key: "compression", img: "/devis/compression_logo.png" },
-    { key: "traction",    img: "/devis/ressort_traction_1.jpg" },
-    { key: "torsion",     img: "/devis/torsion_ressorts.png" },
-    { key: "fill",        img: "/devis/dresser.png" },
-    { key: "grille",      img: "/devis/grille.png" },
-    { key: "autre",       img: "/devis/autre.jpg" },
+    { key: "compression", label: t("types.compression") || "", img: compressionImg },
+    { key: "traction", label: t("types.traction") || "", img: tractionImg },
+    { key: "torsion", label: t("types.torsion") || "", img: torsionImg },
+    { key: "fil", label: t("types.fil") || "", img: fillImg },
+    { key: "grille", label: t("types.grille") || "", img: grillImg },
+    { key: "autre", label: t("types.autre") || "",  img: autreImg },
   ];
 
-  const renderPage = () => {
+  const renderForm = () => {
     switch (type) {
-      case "compression":
-        return <DevisCompressionList />;
-      case "traction":
-        return <DevisTractionList />;
-      case "torsion":
-        return <DevisTorsionList />;
-      case "fill":
-        return <DevisFillList />;
-      case "grille":
-        return <DevisGrilleList />;
-      case "autre":
-        return <DevisAutreList />;
-      default:
-        return null;
+      case "compression": return <CompressionForm />;
+      case "traction": return <TractionForm />;
+      case "torsion": return <TorsionForm />;
+      case "fil": return <FilDresseForm />;
+      case "grille": return <GrilleMetalliqueForm />;
+      case "autre": return <AutreArticleForm />;
+      default: return null;
     }
   };
 
   return (
-    <div className="p-6">
-      <h1 className="mb-6 sm:mb-8 text-3xl font-extrabold tracking-tight text-[#002147] text-center">
-        {t("title")}
-      </h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#002147] text-center">{t("title")}</h1>
+        <p className="text-gray-600 mt-1 text-center">{t("subtitle")}</p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {TYPES.map(({ key, img }) => {
-          const active = type === key;
-          const label = tl(key);
+        {/* Liste des types */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {TYPES.map(({ key, label, Icon, img }) => {
+            const active = type === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setType(key)}
+                className={[
+                  "rounded-xl border p-4 text-left transition group h-full",
+                  active ? "border-[#ffb400] bg-[#fff7e6] shadow"
+                         : "border-gray-200 bg-white hover:border-[#ffb400]/60 hover:shadow-md"
+                ].join(" ")}
+              >
+                <div className="flex items-center gap-3 h-full">
+                  {/* Image si présente, sinon icône */}
+                  {img ? (
+                    <div className={`relative w-10 h-10 overflow-hidden rounded-lg ring-1 ${active ? "ring-[#ffb400]" : "ring-gray-200"}`}>
+                      <Image
+                        src={img}
+                        alt={label}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        priority={false}
+                      />
+                    </div>
+                  ) : (
+                    <span
+                      className={[
+                        "inline-flex items-center justify-center rounded-lg p-2",
+                        active ? "bg-[#ffb400]/15 text-[#b36b00]" : "bg-gray-100 text-gray-700"
+                      ].join(" ")}
+                      aria-hidden
+                    >
+                      {Icon ? <Icon className="w-5 h-5" /> : null}
+                    </span>
+                  )}
 
-          return (
-            <button
-              key={key}
-              onClick={() => setType(key)}
-              className={`rounded-xl border p-4 flex items-center gap-3 justify-start transition ${
-                active
-                  ? "border-yellow-500 bg-yellow-50 shadow"
-                  : "border-gray-200 bg-white hover:border-yellow-400"
-              }`}
-            >
-              {/* ✅ <img> بسيطة، بلا sharp ولا blur */}
-              <img
-                src={img}
-                alt={label}
-                className="w-10 h-10 object-cover overflow-hidden rounded-lg ring-1 ring-gray-200"
-                loading="lazy"
-                width={40}
-                height={40}
-              />
-              <span className="font-semibold text-[#0B1E3A] text-left">
-                {label}
-              </span>
-            </button>
-          );
-        })}
+                  <div className="flex items-center">
+                    <div className="font-semibold text-[#002147]">{label}</div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Formulaire affiché */}
+        <div className="mt-8 bg-white rounded-2xl shadow p-6">
+          {renderForm()}
+        </div>
       </div>
-
-      <div className="mt-8 bg-white rounded-lg shadow p-6">{renderPage()}</div>
     </div>
   );
 }
