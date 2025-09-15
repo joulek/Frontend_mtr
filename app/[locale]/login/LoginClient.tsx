@@ -27,15 +27,14 @@ export default function LoginPage() {
     const password = formData.get("password");
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, password, rememberMe: remember }),
-        }
-      );
+      const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+
+      const res = await fetch(`${BACKEND}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: String(email), password: String(password), rememberMe: remember }),
+      });
 
       const data = await res.json();
       if (!res.ok) {
