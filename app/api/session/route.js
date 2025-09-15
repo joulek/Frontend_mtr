@@ -1,20 +1,16 @@
-// app/api/session/route.js
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req) {
-  // Cookies visibles 3ala domaine el FRONT
-  const role   = req.cookies.get("role")?.value || null;   // posé au login côté front
-  const token  = req.cookies.get("token")?.value || null;  // peut être vide si backend est sur autre domaine
-  const consent = req.cookies.get("mtr_consent")?.value || null;
+export async function GET(request) {
+  const token = request.cookies.get("token")?.value || "";
+  const role  = request.cookies.get("role")?.value || "";
 
-  // Considère l'utilisateur connecté si AU MOINS role existe
-  const authenticated = Boolean(role || token);
+  // اعتبره لوجيّن كان فما token "أو" role (خاطر role نحطّوه من الفرونت)
+  const authenticated = Boolean(token || role);
 
   return NextResponse.json(
-    { authenticated, role, consent: consent ? "set" : "none" },
+    { authenticated, role: role || "" },
     { headers: { "Cache-Control": "no-store" } }
   );
 }

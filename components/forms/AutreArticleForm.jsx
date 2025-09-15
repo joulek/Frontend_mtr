@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 /* --- petite étoile rouge pour champs requis --- */
-const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
+const RequiredMark = () => (
+  <span className="text-red-500" aria-hidden>
+    {" "}
+    *
+  </span>
+);
 
 export default function AutreArticleForm() {
   const t = useTranslations("auth.autreForm");
@@ -15,10 +20,10 @@ export default function AutreArticleForm() {
   const [user, setUser] = useState(null);
 
   // ✅ lis rôle من localStorage باش ما نعتمدوش كان على الكوكي cross-site
-  const localRole = typeof window !== "undefined" ? localStorage.getItem("mtr_role") : null;
-  const isAuthenticated = user?.authenticated || Boolean(localRole);
+  const localRole =
+    typeof window !== "undefined" ? localStorage.getItem("mtr_role") : null;
+  const isAuthenticated = (user?.authenticated ?? false) || Boolean(localRole);
   const isClient = (user?.role || localRole) === "client";
-
   const alertRef = useRef(null);
   const finishedRef = useRef(false);
 
@@ -59,7 +64,9 @@ export default function AutreArticleForm() {
     ? matOptionsRaw
     : [...matOptionsRaw, otherLabel];
 
-  const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
+  const selectPlaceholder = t.has("selectPlaceholder")
+    ? t("selectPlaceholder")
+    : "Sélectionnez…";
 
   // ✅ mapping EN -> FR si labels انجليزية توصل للباك
   const EN_MAT = [
@@ -72,7 +79,12 @@ export default function AutreArticleForm() {
     "Spring steel",
     "Stainless steel",
   ];
-  const FR_MAT = ["Acier galvanisé", "Acier Noir", "Acier ressort", "Acier inoxydable"];
+  const FR_MAT = [
+    "Acier galvanisé",
+    "Acier Noir",
+    "Acier ressort",
+    "Acier inoxydable",
+  ];
   function normalizeMatiere(fd) {
     const v = fd.get("matiere");
     if (!v) return;
@@ -95,10 +107,18 @@ export default function AutreArticleForm() {
 
   // Récup session depuis /api/session (تخدم حتى كان الكوكي مش مقروء على الفرونت)
   useEffect(() => {
-    fetch("/api/session", { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setUser(data || null))
-      .catch(() => setUser(null));
+    (async () => {
+      try {
+        const res = await fetch("/api/session", {
+          cache: "no-store",
+          credentials: "include", // مهم!
+        });
+        const data = res.ok ? await res.json() : null;
+        setUser(data || null);
+      } catch {
+        setUser(null);
+      }
+    })();
   }, []);
 
   // Scroll vers l’alerte
@@ -120,7 +140,7 @@ export default function AutreArticleForm() {
     const incoming = Array.from(list || []);
     if (incoming.length === 0) return;
 
-    const base = append ? (files || []) : [];
+    const base = append ? files || [] : [];
     const merged = uniqueBySignature([...base, ...incoming]);
 
     if (merged.length > MAX_FILES) {
@@ -138,7 +158,8 @@ export default function AutreArticleForm() {
   function onDrop(e) {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files, { append: true });
+    if (e.dataTransfer?.files?.length)
+      handleFileList(e.dataTransfer.files, { append: true });
   }
 
   /* ------- Submit ------- */
@@ -150,11 +171,19 @@ export default function AutreArticleForm() {
 
     // ✅ نعتمد على isAuthenticated/isClient الجدد
     if (!isAuthenticated) {
-      setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
+      setErr(
+        t.has("loginToSend")
+          ? t("loginToSend")
+          : "Vous devez être connecté pour envoyer un devis."
+      );
       return;
     }
     if (!isClient) {
-      setErr(t.has("reservedClients") ? t("reservedClients") : "Seuls les clients peuvent envoyer une demande de devis.");
+      setErr(
+        t.has("reservedClients")
+          ? t("reservedClients")
+          : "Seuls les clients peuvent envoyer une demande de devis."
+      );
       return;
     }
 
@@ -164,11 +193,11 @@ export default function AutreArticleForm() {
 
       // lecture & nettoyage
       const designation = (fd.get("designation") || "").toString().trim();
-      const dimensions  = (fd.get("dimensions")  || "").toString().trim();
-      const exigences   = (fd.get("exigences")   || "").toString().trim();
-      const remarques   = (fd.get("remarques")   || "").toString().trim();
-      const descLibre   = (fd.get("description") || "").toString().trim();
-      const qRaw        = (fd.get("quantite")    || "").toString().trim();
+      const dimensions = (fd.get("dimensions") || "").toString().trim();
+      const exigences = (fd.get("exigences") || "").toString().trim();
+      const remarques = (fd.get("remarques") || "").toString().trim();
+      const descLibre = (fd.get("description") || "").toString().trim();
+      const qRaw = (fd.get("quantite") || "").toString().trim();
       const qte = Math.max(1, Number.isFinite(Number(qRaw)) ? Number(qRaw) : 1);
       fd.set("quantite", String(qte));
 
@@ -179,14 +208,15 @@ export default function AutreArticleForm() {
       }
 
       // titre + description par défaut للباك
-      const matiere   = (fd.get("matiere") || "").toString().trim();
-      const titre     = designation || (matiere ? `Article (${matiere})` : "Article");
+      const matiere = (fd.get("matiere") || "").toString().trim();
+      const titre =
+        designation || (matiere ? `Article (${matiere})` : "Article");
       let description = descLibre;
       if (!description) {
         const parts = [];
         if (dimensions) parts.push(`Dimensions : ${dimensions}`);
-        if (exigences)  parts.push(`Exigences : ${exigences}`);
-        if (remarques)  parts.push(`Remarques : ${remarques}`);
+        if (exigences) parts.push(`Exigences : ${exigences}`);
+        if (remarques) parts.push(`Remarques : ${remarques}`);
         description = parts.join("\n");
       }
       fd.set("titre", titre);
@@ -203,12 +233,16 @@ export default function AutreArticleForm() {
       });
 
       let payload = null;
-      try { payload = await res.json(); } catch {}
+      try {
+        payload = await res.json();
+      } catch {}
 
       if (res.ok) {
         finishedRef.current = true;
         setErr("");
-        setOk(t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !");
+        setOk(
+          t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !"
+        );
         e.currentTarget.reset();
         setFiles([]);
         setSelectedMat("");
@@ -216,7 +250,8 @@ export default function AutreArticleForm() {
         return;
       }
 
-      const msg = payload?.message || `Erreur lors de l’envoi. (HTTP ${res.status})`;
+      const msg =
+        payload?.message || `Erreur lors de l’envoi. (HTTP ${res.status})`;
       setErr(msg);
     } catch (e2) {
       if (!finishedRef.current) setErr("Erreur réseau.");
@@ -232,10 +267,14 @@ export default function AutreArticleForm() {
   const buttonLabel = loading
     ? t("sending")
     : !isAuthenticated
-      ? (t.has("loginToSend") ? t("loginToSend") : "Connectez-vous pour envoyer")
-      : !isClient
-        ? (t.has("reservedClients") ? t("reservedClients") : "Réservé aux clients")
-        : t("sendRequest");
+    ? t.has("loginToSend")
+      ? t("loginToSend")
+      : "Connectez-vous pour envoyer"
+    : !isClient
+    ? t.has("reservedClients")
+      ? t("reservedClients")
+      : "Réservé aux clients"
+    : t("sendRequest");
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
@@ -250,8 +289,14 @@ export default function AutreArticleForm() {
         <SectionTitle>{t("mainInfo")}</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <Input name="designation" label={t("designation")} required />
-          <Input name="dimensions"  label={t("dimensions")} />
-          <Input name="quantite"    label={t("quantity")} type="number" min="1" required />
+          <Input name="dimensions" label={t("dimensions")} />
+          <Input
+            name="quantite"
+            label={t("quantity")}
+            type="number"
+            min="1"
+            required
+          />
 
           {/* Select Matière contrôlé */}
           <SelectBase
@@ -268,7 +313,11 @@ export default function AutreArticleForm() {
           {selectedMat === otherLabel && (
             <Input
               name="matiere_autre"
-              label={t.has("materialOtherLabel") ? t("materialOtherLabel") : "Autre matière (précisez)"}
+              label={
+                t.has("materialOtherLabel")
+                  ? t("materialOtherLabel")
+                  : "Autre matière (précisez)"
+              }
               required
             />
           )}
@@ -287,28 +336,39 @@ export default function AutreArticleForm() {
 
         <label
           htmlFor="docs"
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={onDrop}
           className={`flex flex-col items-center justify-center cursor-pointer rounded-2xl text-center transition
                       min-h-[160px] md:min-h-[200px] p-8 bg-white
-                      border-2 border-dashed ${isDragging ? "border-yellow-500 ring-2 ring-yellow-300" : "border-yellow-500"}`}
+                      border-2 border-dashed ${
+                        isDragging
+                          ? "border-yellow-500 ring-2 ring-yellow-300"
+                          : "border-yellow-500"
+                      }`}
         >
           {files.length === 0 ? (
             <div className="text-center">
-              <p className="text-base font-medium text-[#002147]">{t("dropHere")}</p>
+              <p className="text-base font-medium text-[#002147]">
+                {t("dropHere")}
+              </p>
               <p className="text-sm text-gray-500 mb-3">{t("4files")}</p>
             </div>
           ) : (
             <div className="w-full text-center">
               <p className="text-sm font-semibold text-[#002147] mb-2">
-                {files.length} fichier{files.length > 1 ? "s" : ""} sélectionné{files.length > 1 ? "s" : ""} :
+                {files.length} fichier{files.length > 1 ? "s" : ""} sélectionné
+                {files.length > 1 ? "s" : ""} :
               </p>
               <p className="mx-auto max-w-[900px] truncate text-[15px] text-[#002147]">
                 {files.map((f) => f.name).join(", ")}
               </p>
               <p className="text-xs text-[#002147]/70 mt-1">
-                {(files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0)} Ko au total
+                {(files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0)} Ko
+                au total
               </p>
             </div>
           )}
@@ -337,9 +397,11 @@ export default function AutreArticleForm() {
             type="submit"
             disabled={disabled}
             className={`w-full rounded-xl font-semibold py-3 transition-all
-              ${disabled
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
+              ${
+                disabled
+                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"
+              }`}
           >
             {buttonLabel}
           </button>
@@ -372,13 +434,14 @@ function SectionTitle({ children, className = "" }) {
   );
 }
 function Alert({ type = "info", message }) {
-  const base   = "w-full rounded-xl px-4 py-3 text-sm font-medium border flex items-start gap-2";
+  const base =
+    "w-full rounded-xl px-4 py-3 text-sm font-medium border flex items-start gap-2";
   const styles =
     type === "error"
       ? "bg-red-50 text-red-700 border-red-200"
       : type === "success"
-        ? "bg-green-50 text-green-700 border-green-200"
-        : "bg-blue-50 text-blue-700 border-blue-200";
+      ? "bg-green-50 text-green-700 border-green-200"
+      : "bg-blue-50 text-blue-700 border-blue-200";
   return (
     <div className={`${base} ${styles}`}>
       <span className="mt-0.5">•</span>
@@ -391,7 +454,8 @@ function Input({ label, name, required, type = "text", min }) {
     <div className="space-y-1">
       {label && (
         <label className="block font-medium text-[#002147]">
-          {label}{required && <RequiredMark />}
+          {label}
+          {required && <RequiredMark />}
         </label>
       )}
       <input
@@ -401,16 +465,26 @@ function Input({ label, name, required, type = "text", min }) {
         required={required}
         className="w-full rounded-xl border border-gray-200 px-4 py-2.5
                    text-[#002147] placeholder:text-gray-400
-                   focus:outline-none focus:ring-2 focus:ring-[#002147]/30 focus:border-[#002147]" />
+                   focus:outline-none focus:ring-2 focus:ring-[#002147]/30 focus:border-[#002147]"
+      />
     </div>
   );
 }
-function SelectBase({ label, name, options = [], required, placeholder, value, onChange }) {
+function SelectBase({
+  label,
+  name,
+  options = [],
+  required,
+  placeholder,
+  value,
+  onChange,
+}) {
   return (
     <div className="space-y-1 w-full">
       {label && (
         <label className="block font-medium text-[#002147]">
-          {label}{required && <RequiredMark />}
+          {label}
+          {required && <RequiredMark />}
         </label>
       )}
       <select
@@ -432,9 +506,13 @@ function SelectBase({ label, name, options = [], required, placeholder, value, o
           backgroundSize: "1rem 1rem",
         }}
       >
-        <option value="" style={{ color: "#64748b" }}>{placeholder}</option>
+        <option value="" style={{ color: "#64748b" }}>
+          {placeholder}
+        </option>
         {options.map((o) => (
-          <option key={o} value={o} style={{ color: "#002147" }}>{o}</option>
+          <option key={o} value={o} style={{ color: "#002147" }}>
+            {o}
+          </option>
         ))}
       </select>
     </div>
@@ -449,7 +527,8 @@ function TextArea({ label, name }) {
         rows={4}
         className="w-full rounded-xl border border-gray-200 px-4 py-2.5
                    text-[#002147] placeholder:text-gray-400
-                   focus:outline-none focus:ring-2 focus:ring-[#002147]/30 focus:border-[#002147]" />
+                   focus:outline-none focus:ring-2 focus:ring-[#002147]/30 focus:border-[#002147]"
+      />
     </div>
   );
 }
