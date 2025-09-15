@@ -1,9 +1,27 @@
 // components/forms/TorsionForm.jsx
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import torsionImg from "@/public/devis/torsion.png";
+
+/* ====== Config & helpers ====== */
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+
+// lecture cookie sans RegExp (compatible Next/Webpack)
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const cookieStr = document.cookie || "";
+  const parts = cookieStr.split("; ");
+  for (const part of parts) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    const key = decodeURIComponent(part.slice(0, eq));
+    if (key === name) return decodeURIComponent(part.slice(eq + 1));
+  }
+  return null;
+}
 
 /* --- petite étoile rouge pour champs requis --- */
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
@@ -16,8 +34,19 @@ export default function TorsionForm() {
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
 
-  const finishedRef = useRef(false);
+  // session côté front (même logique que Autre/Compression/Grille)
+  const localRole =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("mtr_role") ||
+         localStorage.getItem("userRole") ||
+         getCookie("role"))
+      : null;
+  const isAuthenticated = Boolean(localRole) || Boolean(user?.authenticated);
+  const isClient = ((user?.role || localRole) === "client");
+
   const alertRef = useRef(null);
+  const finishedRef = useRef(false);
+  const formRef = useRef(null);      // reset complet
 
   // Dropzone
   const [files, setFiles] = useState([]);
@@ -26,27 +55,21 @@ export default function TorsionForm() {
 
   /* ===================== Limite fichiers ===================== */
   const MAX_FILES = 4;
-
   function uniqueBySignature(arr = []) {
     const seen = new Set();
     const out = [];
     for (const f of arr) {
       const sig = `${f.name}|${f.size}|${f.lastModified || 0}`;
-      if (!seen.has(sig)) {
-        seen.add(sig);
-        out.push(f);
-      }
+      if (!seen.has(sig)) { seen.add(sig); out.push(f); }
     }
     return out;
   }
-
   function syncInputFiles(inputRef, filesArr = []) {
     if (!inputRef?.current) return;
     const dt = new DataTransfer();
     filesArr.forEach((f) => dt.items.add(f));
     inputRef.current.files = dt.files;
   }
-
   function handleFileList(list, { append = true } = {}) {
     const incoming = Array.from(list || []);
     if (incoming.length === 0) return;
@@ -56,44 +79,32 @@ export default function TorsionForm() {
 
     if (merged.length > MAX_FILES) {
       const kept = merged.slice(0, MAX_FILES);
-      const ignoredCount = merged.length - kept.length;
-
       setFiles(kept);
       syncInputFiles(fileInputRef, kept);
       setErr(t("limit"));
-
-      console.warn("[Upload] Dépassement de la limite de fichiers:", {
-        incoming: incoming.length,
-        existing: files.length,
-        kept: kept.length,
-        ignored: ignoredCount,
-        max: MAX_FILES,
-      });
       return;
     }
-
     setFiles(merged);
     syncInputFiles(fileInputRef, merged);
+  }
+  function onDrop(e) {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files);
   }
   /* =========================================================== */
 
   // ----- i18n options -----
-  const windingOptions = t.raw("windingOptions") || [];
   const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
+  const windingOptionsRaw = t.raw("windingOptions") || ["Enroulement gauche", "Enroulement droite"];
 
-  /* ===================== Matière: value ≠ label (fix enum) =====================
-
-     Le backend attend EXACTEMENT l'une de ces 4 valeurs:
+  /* ===================== Matière: value ≠ label (enum backend) =====================
+     Backend attend EXACTEMENT :
        - "Fil ressort noir SH"
        - "Fil ressort noir SM"
        - "Fil ressort galvanisé"
        - "Fil ressort inox"
-
-     On construit ci-dessous des options { value, label }:
-       - value = valeur canonique (exact enum backend)
-       - label = ce que tu veux afficher (peut contenir (SM), (SH), etc.)
-     ========================================================================== */
-
+     ============================================================================== */
   const MATERIAL_CANON = [
     {
       value: "Fil ressort noir SH",
@@ -125,15 +136,12 @@ export default function TorsionForm() {
     },
   ];
 
-  // Récupère d'éventuels libellés i18n (qui peuvent contenir SM/SH combinés) et les "explose" proprement.
+  // récup libellés i18n et sépare si SM/SH combinés
   const rawMaterialLabels = t.raw("materialOptions") || [];
   function splitCombined(label) {
     const s = String(label);
     if (/\bSM\b.*\bSH\b|\bSH\b.*\bSM\b|SM\/SH|SM,\s*SH/i.test(s)) {
-      // EN vs FR
-      if (/black|spring wire/i.test(s)) {
-        return ["Black spring wire SH", "Black spring wire SM"];
-      }
+      if (/black|spring wire/i.test(s)) return ["Black spring wire SH", "Black spring wire SM"];
       return ["Fil ressort noir SH", "Fil ressort noir SM"];
     }
     return [s];
@@ -143,7 +151,6 @@ export default function TorsionForm() {
       ? rawMaterialLabels.flatMap(splitCombined)
       : MATERIAL_CANON.map((x) => x.value);
 
-  // Mappe chaque label d'UI vers la valeur canonique du backend.
   const materialOptionsUI = Array.from(new Set(expandedMaterialLabels)).map((lab) => {
     const canon = MATERIAL_CANON.find((m) =>
       m.labels.map((x) => x.toLowerCase()).includes(String(lab).toLowerCase())
@@ -151,8 +158,7 @@ export default function TorsionForm() {
     return { value: canon ? canon.value : String(lab), label: String(lab) };
   });
 
-  // --------------------------------------------------------------------
-  //  ✅ Normalisation EN/variantes -> FR EXACT (sécurité supplémentaire)
+  // Normalisation sécurité (si jamais un label part au lieu de la value canon)
   const FR_MATIERES = [
     "Fil ressort noir SH",
     "Fil ressort noir SM",
@@ -165,10 +171,8 @@ export default function TorsionForm() {
     "Galvanized spring wire",
     "Stainless steel spring wire",
   ];
-
   const FR_ENROULEMENTS = ["Enroulement gauche", "Enroulement droite"];
   const EN_ENROULEMENTS = ["Left winding", "Right winding"];
-
   const EXTRA_SYNONYMS = {
     matiere: {
       "fil ressort noir sm": "Fil ressort noir SM",
@@ -189,35 +193,23 @@ export default function TorsionForm() {
       right: "Enroulement droite",
     },
   };
-
   function normalizeField(fd, name, frList, enList, extras = {}) {
     let v = fd.get(name);
     if (!v) return;
     if (frList.includes(v)) return;
 
     let i = enList.indexOf(v);
-    if (i >= 0) {
-      fd.set(name, frList[i]);
-      return;
-    }
+    if (i >= 0) { fd.set(name, frList[i]); return; }
+
     const low = String(v).toLowerCase().trim();
     const enLow = enList.map((s) => s.toLowerCase());
     i = enLow.indexOf(low);
-    if (i >= 0) {
-      fd.set(name, frList[i]);
-      return;
-    }
+    if (i >= 0) { fd.set(name, frList[i]); return; }
+
     if (extras[low]) fd.set(name, extras[low]);
   }
-  function normalizeDual(fd, baseName, frList, enList, extras = {}) {
-    const a = baseName;
-    const b = `spec.${baseName}`;
-    if (fd.has(b)) normalizeField(fd, b, frList, enList, extras);
-    if (fd.has(a)) normalizeField(fd, a, frList, enList, extras);
-  }
-  // --------------------------------------------------------------------
 
-  // Récup session
+  /* ===== Session serveur (confirm) ===== */
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -239,42 +231,45 @@ export default function TorsionForm() {
     return () => clearTimeout(id);
   }, [ok]);
 
-  function onDrop(e) {
-    e.preventDefault();
+  // reset complet UI
+  function resetUI() {
+    formRef.current?.reset();
+    setFiles([]);
     setIsDragging(false);
-    if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  /* ===================== Submit ===================== */
   const onSubmit = async (e) => {
     e.preventDefault();
-
-    const form = e.currentTarget;
     setOk("");
     setErr("");
     finishedRef.current = false;
 
-    if (!user?.authenticated) {
-      setErr("Vous devez être connecté pour envoyer un devis.");
+    if (!isAuthenticated) {
+      setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
       return;
     }
-    if (user.role !== "client") {
-      setErr("Seuls les clients peuvent envoyer une demande de devis.");
+    if (!isClient) {
+      setErr(t.has("reservedClients") ? t("reservedClients") : "Seuls les clients peuvent envoyer une demande de devis.");
       return;
     }
 
     setLoading(true);
     try {
+      const form = e.currentTarget;
       const fd = new FormData(form);
       fd.append("type", "torsion");
 
-      const userId = localStorage.getItem("id");
+      const userId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
       if (userId) fd.append("user", userId);
 
-      // ✅ Normalisation vers les valeurs FR exactes attendues par le backend
-      normalizeDual(fd, "matiere", FR_MATIERES, EN_MATIERES, EXTRA_SYNONYMS.matiere);
-      normalizeDual(fd, "enroulement", FR_ENROULEMENTS, EN_ENROULEMENTS, EXTRA_SYNONYMS.enroulement);
+      // Normalisation (sécurité)
+      normalizeField(fd, "matiere", FR_MATIERES, EN_MATIERES, EXTRA_SYNONYMS.matiere);
+      normalizeField(fd, "enroulement", FR_ENROULEMENTS, EN_ENROULEMENTS, EXTRA_SYNONYMS.enroulement);
 
-      const res = await fetch("/api/devis/torsion", {
+      // envoi direct backend (évite 401 via route proxy)
+      const res = await fetch(`${BACKEND}/api/devis/torsion`, {
         method: "POST",
         body: fd,
         credentials: "include",
@@ -287,26 +282,30 @@ export default function TorsionForm() {
         finishedRef.current = true;
         setErr("");
         setOk(t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !");
-        form.reset();
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        resetUI(); // vide tous les champs + fichiers
         return;
       }
 
       const msg = payload?.message || `Erreur lors de l’envoi. (HTTP ${res.status})`;
       setErr(msg);
-    } catch (e) {
-      console.error("submit torsion error:", e);
+    } catch (e2) {
       if (!finishedRef.current) {
-        const isAbort = e?.name === "AbortError";
-        setErr(isAbort ? "Délai dépassé, réessayez." : "Erreur réseau.");
+        setErr(e2?.name === "AbortError" ? "Délai dépassé, réessayez." : "Erreur réseau.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const disabled = loading || !user?.authenticated || user?.role !== "client";
+  /* ------- Bouton + label dynamiques ------- */
+  const disabled = loading || !isAuthenticated || !isClient;
+  const buttonLabel = loading
+    ? (t.has("sending") ? t("sending") : "Envoi en cours…")
+    : !isAuthenticated
+      ? (t.has("loginToSend") ? t("loginToSend") : "Connectez-vous pour envoyer")
+      : !isClient
+        ? (t.has("reservedClients") ? t("reservedClients") : "Réservé aux clients")
+        : t("sendRequest");
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
@@ -317,7 +316,7 @@ export default function TorsionForm() {
         </h2>
       </div>
 
-      <form onSubmit={onSubmit}>
+      <form ref={formRef} onSubmit={onSubmit}>
         {/* Schéma */}
         <SectionTitle>{t("schema")}</SectionTitle>
         <div className="mb-6 flex justify-center">
@@ -343,11 +342,11 @@ export default function TorsionForm() {
           <Input name="L2" label={t("L2")} required />
           <Input name="quantite" label={t("quantity")} type="number" min="1" required />
 
-          {/* Matière: UI labels (peuvent contenir SM/SH) mais value = enum exact */}
+          {/* Matière */}
           <SelectBase
             name="matiere"
             label={t("material")}
-            options={materialOptionsUI}  // <-- {label, value}
+            options={materialOptionsUI}   // { value, label }
             placeholder={selectPlaceholder}
             required
           />
@@ -356,17 +355,15 @@ export default function TorsionForm() {
           <SelectBase
             name="enroulement"
             label={t("windingDirection")}
-            options={windingOptions}
+            options={windingOptionsRaw}   // peut être array de strings
             placeholder={selectPlaceholder}
             required
           />
         </div>
 
         {/* Fichiers */}
-        <SectionTitle className="mt-8">{t("docs")} </SectionTitle>
-        <p className="text-sm text-gray-500 mb-3">
-          {t("acceptedTypes")}
-        </p>
+        <SectionTitle className="mt-8">{t("docs")}</SectionTitle>
+        <p className="text-sm text-gray-500 mb-3">{t("acceptedTypes")}</p>
 
         <label
           htmlFor="docs"
@@ -379,12 +376,8 @@ export default function TorsionForm() {
         >
           {files.length === 0 ? (
             <div className="text-center">
-              <p className="text-base font-medium text-[#002147]">
-                {t("dropHere")}
-              </p>
-              <p className="text-sm text-gray-500 mb-3">
-                {t("4files")}
-              </p>
+              <p className="text-base font-medium text-[#002147]">{t("dropHere")}</p>
+              <p className="text-sm text-gray-500 mb-3">{t("4files")}</p>
             </div>
           ) : (
             <div className="w-full text-center">
@@ -428,19 +421,12 @@ export default function TorsionForm() {
                 ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                 : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
           >
-            {loading
-              ? "Envoi en cours…"
-              : !user?.authenticated
-                ? t("loginToSend")
-                : user?.role !== "client"
-                  ? t("loginToSend")
-                  : t("sendRequest")}
+            {buttonLabel}
           </button>
 
-          {/* ALERTES SOUS LE BOUTON */}
-          <div ref={alertRef} aria-live="polite" className="mt-3">
+        <div ref={alertRef} aria-live="polite" className="mt-3">
             {loading ? (
-              <Alert type="info" message="Votre demande de devis est en cours d'envoi, veuillez patienter…" />
+              <Alert type="info" message={t.has("sending") ? t("sending") : "Votre demande est en cours d'envoi…"} />
             ) : err ? (
               <Alert type="error" message={err} />
             ) : ok ? (
@@ -468,11 +454,9 @@ function SectionTitle({ children, className = "" }) {
 function Alert({ type = "info", message }) {
   const base = "w-full rounded-xl px-4 py-3 text-sm font-medium border flex items-start gap-2";
   const styles =
-    type === "error"
-      ? "bg-red-50 text-red-700 border-red-200"
-      : type === "success"
-        ? "bg-green-50 text-green-700 border-green-200"
-        : "bg-blue-50 text-blue-700 border-blue-200";
+    type === "error"   ? "bg-red-50 text-red-700 border-red-200" :
+    type === "success" ? "bg-green-50 text-green-700 border-green-200" :
+                         "bg-blue-50 text-blue-700 border-blue-200";
   return (
     <div className={`${base} ${styles}`}>
       <span className="mt-0.5">•</span>
@@ -525,12 +509,12 @@ function SelectBase({ label, name, options = [], required, placeholder = "Sélec
         }}
       >
         <option value="" style={{ color: "#64748b" }}>{placeholder}</option>
-        {options.map((o) => {
-          const val = typeof o === "string" ? o : o.value;
-          const lab = typeof o === "string" ? o : o.label;
+        {options.map((o, idx) => {
+          const value = typeof o === "string" ? o : o.value;
+          const label = typeof o === "string" ? o : o.label;
           return (
-            <option key={val} value={val} style={{ color: "#002147" }}>
-              {lab}
+            <option key={`${value}-${idx}`} value={value} style={{ color: "#002147" }}>
+              {label}
             </option>
           );
         })}
