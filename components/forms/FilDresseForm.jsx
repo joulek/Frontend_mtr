@@ -1,11 +1,28 @@
 // components/forms/FilDresseForm.jsx
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import schemaImg from "@/public/devis/dresser.png";
 
-/* --- petite étoile rouge pour champs requis --- */
+/* ====== Config & helpers ====== */
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+
+// lecture cookie sans RegExp (compatible Next/Webpack)
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const cookieStr = document.cookie || "";
+  const parts = cookieStr.split("; ");
+  for (const part of parts) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    const key = decodeURIComponent(part.slice(0, eq));
+    if (key === name) return decodeURIComponent(part.slice(eq + 1));
+  }
+  return null;
+}
+
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
 
 export default function FilDresseForm() {
@@ -16,15 +33,26 @@ export default function FilDresseForm() {
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
 
-  const finishedRef = useRef(false);
+  // session côté front (même logique que SiteHeader)
+  const localRole =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("mtr_role") ||
+         localStorage.getItem("userRole") ||
+         getCookie("role"))
+      : null;
+  const isAuthenticated = Boolean(localRole) || Boolean(user?.authenticated);
+  const isClient = ((user?.role || localRole) === "client");
+
   const alertRef = useRef(null);
+  const finishedRef = useRef(false);
+  const formRef = useRef(null);
 
   // Dropzone
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  /* ===================== Limite fichiers ===================== */
+  /* ===== Limite fichiers ===== */
   const MAX_FILES = 4;
 
   function uniqueBySignature(arr = []) {
@@ -32,10 +60,7 @@ export default function FilDresseForm() {
     const out = [];
     for (const f of arr) {
       const sig = `${f.name}|${f.size}|${f.lastModified || 0}`;
-      if (!seen.has(sig)) {
-        seen.add(sig);
-        out.push(f);
-      }
+      if (!seen.has(sig)) { seen.add(sig); out.push(f); }
     }
     return out;
   }
@@ -56,61 +81,41 @@ export default function FilDresseForm() {
 
     if (merged.length > MAX_FILES) {
       const kept = merged.slice(0, MAX_FILES);
-      const ignoredCount = merged.length - kept.length;
-
       setFiles(kept);
       syncInputFiles(fileInputRef, kept);
-
-      setErr(t("limit")); // message traduit
-      console.warn("[Upload] Dépassement de la limite fichiers:", {
-        incoming: incoming.length,
-        existing: files.length,
-        kept: kept.length,
-        ignored: ignoredCount,
-        max: MAX_FILES,
-      });
+      setErr(t("limit")); // "Limite dépassée, maximum 4 fichiers."
       return;
     }
 
     setFiles(merged);
     syncInputFiles(fileInputRef, merged);
   }
-  /* =========================================================== */
 
-  // i18n/options (⚠️ valeurs canoniques attendues par le backend)
+  function onDrop(e) {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files, { append: true });
+  }
+
+  /* ===== i18n/options (valeurs canoniques envoyées au backend) ===== */
   const lengthUnitOptions = [
     { value: "mm", label: "mm" },
-    { value: "m", label: "m" },
+    { value: "m",  label: "m"  },
   ];
 
   const unitLabels = t.raw("unitOptions") || ["pièces", "kg"];
   const qtyUnitOptions = [
     { value: "pieces", label: unitLabels[0] ?? "pièces" },
-    { value: "kg", label: unitLabels[1] ?? "kg" },
+    { value: "kg",     label: unitLabels[1] ?? "kg"     },
   ];
 
-  const matLabels = t.raw("materialChecks") || [
-    "Acier galvanisé",
-    "Acier Noir",
-    "Acier ressort",
-    "Acier inoxydable",
-  ];
-  const MAT_VALUES = [
-    "Acier galvanisé",
-    "Acier Noir",
-    "Acier ressort",
-    "Acier inoxydable",
-  ];
-  const materialOptions = MAT_VALUES.map((value, i) => ({
-    value,
-    label: matLabels[i] ?? value,
-  }));
+  const MAT_VALUES = ["Acier galvanisé", "Acier Noir", "Acier ressort", "Acier inoxydable"];
+  const matLabels = t.raw("materialChecks") || MAT_VALUES;
+  const materialOptions = MAT_VALUES.map((value, i) => ({ value, label: matLabels[i] ?? value }));
 
-  const selectPlaceholder = t.has("selectPlaceholder")
-    ? t("selectPlaceholder")
-    : "Sélectionnez…";
+  const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
 
-  // Récup session
+  /* ===== Session (côté serveur) pour confirmer ===== */
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -118,50 +123,54 @@ export default function FilDresseForm() {
       .catch(() => setUser(null));
   }, []);
 
+  // Scroll vers l’alerte
   useEffect(() => {
     if (alertRef.current && (loading || ok || err)) {
       alertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [loading, ok, err]);
 
+  // Auto-hide succès
   useEffect(() => {
     if (!ok) return;
     const id = setTimeout(() => setOk(""), 5000);
     return () => clearTimeout(id);
   }, [ok]);
 
-  function onDrop(e) {
-    e.preventDefault();
+  /* ------- Reset total UI après envoi ------- */
+  function resetUI() {
+    formRef.current?.reset();
+    setFiles([]);
     setIsDragging(false);
-    if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  /* ------- Submit ------- */
   const onSubmit = async (e) => {
     e.preventDefault();
-
-    const form = e.currentTarget;
     setOk("");
     setErr("");
     finishedRef.current = false;
 
-    if (!user?.authenticated) {
+    if (!isAuthenticated) {
       setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
       return;
     }
-    if (user.role !== "client") {
+    if (!isClient) {
       setErr(t.has("reservedClients") ? t("reservedClients") : "Seuls les clients peuvent envoyer une demande de devis.");
       return;
     }
 
     setLoading(true);
     try {
-      const fd = new FormData(form);
+      const fd = new FormData(e.currentTarget);
       fd.append("type", "filDresse");
 
-      const userId = localStorage.getItem("id");
+      const userId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
       if (userId) fd.append("user", userId);
 
-      const res = await fetch("/api/devis/filDresse", {
+      // envoi direct backend (évite 401 via proxy)
+      const res = await fetch(`${BACKEND}/api/devis/filDresse`, {
         method: "POST",
         body: fd,
         credentials: "include",
@@ -174,37 +183,40 @@ export default function FilDresseForm() {
         finishedRef.current = true;
         setErr("");
         setOk(t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !");
-        form.reset();
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        resetUI(); // vide tout
         return;
       }
 
       const msg = payload?.message || `Erreur lors de l’envoi. (HTTP ${res.status})`;
       setErr(msg);
-    } catch (e) {
-      console.error("submit filDresse error:", e);
+    } catch (e2) {
       if (!finishedRef.current) {
-        const isAbort = e?.name === "AbortError";
-        setErr(isAbort ? "Délai dépassé, réessayez." : (t.has("networkError") ? t("networkError") : "Erreur réseau."));
+        setErr(e2?.name === "AbortError" ? "Délai dépassé, réessayez." : (t.has("networkError") ? t("networkError") : "Erreur réseau."));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const disabled = loading || !user?.authenticated || user?.role !== "client";
+  /* ------- Bouton + label dynamiques ------- */
+  const disabled = loading || !isAuthenticated || !isClient;
+  const buttonLabel = loading
+    ? (t.has("sending") ? t("sending") : "Envoi en cours…")
+    : !isAuthenticated
+      ? (t.has("loginToSend") ? t("loginToSend") : "Connectez-vous pour envoyer")
+      : !isClient
+        ? (t.has("reservedClients") ? t("reservedClients") : "Réservé aux clients")
+        : t("sendRequest");
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
-      {/* Titre */}
       <div className="text-center mb-6">
         <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#002147]">
           {t.has("title") ? t("title") : "Fil Dressé"}
         </h2>
       </div>
 
-      <form onSubmit={onSubmit}>
+      <form ref={formRef} onSubmit={onSubmit}>
         {/* Schéma */}
         <SectionTitle>{t("schema")}</SectionTitle>
         <div className="mb-6 flex justify-center">
@@ -283,8 +295,9 @@ export default function FilDresseForm() {
                 ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                 : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
           >
-            {loading ? t("sending") : t("sendRequest")}
+            {loading ? t("sending") : buttonLabel}
           </button>
+
           <div ref={alertRef} aria-live="polite" className="mt-3">
             {loading ? (
               <Alert type="info" message={t("sending")} />
@@ -315,18 +328,28 @@ function SectionTitle({ children, className = "" }) {
 function Alert({ type = "info", message }) {
   const base = "w-full rounded-xl px-4 py-3 text-sm font-medium border flex items-start gap-2";
   const styles =
-    type === "error"
-      ? "bg-red-50 text-red-700 border-red-200"
-      : type === "success"
-        ? "bg-green-50 text-green-700 border-green-200"
-        : "bg-blue-50 text-blue-700 border-blue-200";
-  return <div className={`${base} ${styles}`}><span className="mt-0.5">•</span><span>{message}</span></div>;
+    type === "error"   ? "bg-red-50 text-red-700 border-red-200" :
+    type === "success" ? "bg-green-50 text-green-700 border-green-200" :
+                         "bg-blue-50 text-blue-700 border-blue-200";
+  return (
+    <div className={`${base} ${styles}`}>
+      <span className="mt-0.5">•</span>
+      <span>{message}</span>
+    </div>
+  );
 }
 function Input({ label, name, required, type = "text", min }) {
   return (
     <div className="space-y-1">
       <label className="block font-medium text-[#002147]">{label}{required && <RequiredMark />}</label>
-      <input name={name} type={type} min={min} required={required} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-[#002147]" />
+      <input
+        name={name}
+        type={type}
+        min={min}
+        required={required}
+        className="w-full rounded-xl border border-gray-200 px-4 py-2.5
+                   text-[#002147] placeholder:text-gray-400
+                   focus:outline-none focus:ring-2 focus:ring-[#002147]/30 focus:border-[#002147]" />
     </div>
   );
 }
@@ -367,7 +390,12 @@ function TextArea({ label, name }) {
   return (
     <div className="space-y-1">
       <label className="block font-medium text-[#002147]">{label}</label>
-      <textarea name={name} rows={4} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-[#002147]" />
+      <textarea
+        name={name}
+        rows={4}
+        className="w-full rounded-xl border border-gray-200 px-4 py-2.5
+                   text-[#002147] placeholder:text-gray-400
+                   focus:outline-none focus:ring-2 focus:ring-[#002147]/30 focus:border-[#002147]" />
     </div>
   );
 }
