@@ -31,6 +31,8 @@ export default function CompressionForm() {
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
+  const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+
 
   // ⚠️ même calcul que dans AutreArticleForm (pas d’état dérivé asynchrone)
   const localRole =
@@ -189,7 +191,7 @@ export default function CompressionForm() {
         if (i >= 0) fd.set("extremite", EXTREMITIES[i]);
       }
 
-      const res = await fetch("/api/devis/compression", {
+      const res = await fetch(`${BACKEND}/api/devis/compression`, {
         method: "POST",
         body: fd,
         credentials: "include",
