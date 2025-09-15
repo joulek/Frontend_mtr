@@ -1,7 +1,18 @@
 // components/forms/AutreArticleForm.jsx
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+
+/* ====== Config & helpers (whome-style) ====== */
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(
+    new RegExp("(^|; )" + name.replace(/[-[\\]{}()*+?.,\\\\^$|#\\s]/g, "\\$&") + "=([^;]*)")
+  );
+  return m ? decodeURIComponent(m[2]) : null;
+}
 
 /* --- petite étoile rouge pour champs requis --- */
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
@@ -14,10 +25,15 @@ export default function AutreArticleForm() {
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
 
-  // ✅ lis rôle من localStorage باش ما نعتمدوش كان على الكوكي cross-site
-  const localRole = typeof window !== "undefined" ? localStorage.getItem("mtr_role") : null;
-  const isAuthenticated = user?.authenticated || Boolean(localRole);
-  const isClient = (user?.role || localRole) === "client";
+  // ✅ Détection session côté front (même logique que SiteHeader)
+  const localRole =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("mtr_role") ||
+         localStorage.getItem("userRole") ||
+         getCookie("role"))
+      : null;
+  const isAuthenticated = Boolean(localRole) || Boolean(user?.authenticated);
+  const isClient = ((user?.role || localRole) === "client");
 
   const alertRef = useRef(null);
   const finishedRef = useRef(false);
@@ -49,9 +65,8 @@ export default function AutreArticleForm() {
     filesArr.forEach((f) => dt.items.add(f));
     inputRef.current.files = dt.files;
   }
-  /* ================================== */
 
-  // ======= Matière : options + gestion d' "Autre" =======
+  /* ======= Matière : options + gestion d' "Autre" ======= */
   const otherLabel = t.has("other") ? t("other") : "Autre";
   const [selectedMat, setSelectedMat] = useState("");
   const matOptionsRaw = t.raw("materialOptions") || [];
@@ -61,7 +76,7 @@ export default function AutreArticleForm() {
 
   const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
 
-  // ✅ mapping EN -> FR si labels انجليزية توصل للباك
+  // ✅ mapping EN -> FR si labels anglais arrivent au backend
   const EN_MAT = [
     "Galvanized steel wire",
     "Black steel wire",
@@ -91,9 +106,8 @@ export default function AutreArticleForm() {
       fd.set("matiere", FR_MAT[frIndex]);
     }
   }
-  // ------------------------------------------------------
 
-  // Récup session depuis /api/session (تخدم حتى كان الكوكي مش مقروء على الفرونت)
+  // Récup session côté serveur (si le cookie est lisible côté front, ça confirmera)
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -148,7 +162,6 @@ export default function AutreArticleForm() {
     setErr("");
     finishedRef.current = false;
 
-    // ✅ نعتمد على isAuthenticated/isClient الجدد
     if (!isAuthenticated) {
       setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
       return;
@@ -172,13 +185,13 @@ export default function AutreArticleForm() {
       const qte = Math.max(1, Number.isFinite(Number(qRaw)) ? Number(qRaw) : 1);
       fd.set("quantite", String(qte));
 
-      // Si "Autre" est choisi، بدّل القيمة بالنص
+      // Si "Autre" est choisi, remplace par texte libre
       if (fd.get("matiere") === otherLabel) {
         const custom = (fd.get("matiere_autre") || "").toString().trim();
         if (custom) fd.set("matiere", custom);
       }
 
-      // titre + description par défaut للباك
+      // titre + description fallback
       const matiere   = (fd.get("matiere") || "").toString().trim();
       const titre     = designation || (matiere ? `Article (${matiere})` : "Article");
       let description = descLibre;
@@ -192,11 +205,11 @@ export default function AutreArticleForm() {
       fd.set("titre", titre);
       fd.set("description", description);
 
-      // normalisation EN -> FR
+      // Normalisation EN -> FR
       normalizeMatiere(fd);
 
-      // (الملفات توصّل تلقائيا من <input name="docs" multiple />)
-      const res = await fetch("/api/devis/autre", {
+      // 👉 Envoi direct au backend (évite le 401 sur /api/devis/autre front)
+      const res = await fetch(`${BACKEND}/api/devis/autre`, {
         method: "POST",
         body: fd,
         credentials: "include",
@@ -218,17 +231,15 @@ export default function AutreArticleForm() {
 
       const msg = payload?.message || `Erreur lors de l’envoi. (HTTP ${res.status})`;
       setErr(msg);
-    } catch (e2) {
+    } catch {
       if (!finishedRef.current) setErr("Erreur réseau.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ الزر يتفعّل كان وقت إلّي المستخدِم "client" (سيشن أو localStorage)
+  // Bouton actif seulement si client connecté
   const disabled = loading || !isAuthenticated || !isClient;
-
-  // نص الزر ديناميكي (اختياري)
   const buttonLabel = loading
     ? t("sending")
     : !isAuthenticated
