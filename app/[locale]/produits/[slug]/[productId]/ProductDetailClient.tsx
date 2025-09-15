@@ -7,7 +7,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ------------------------------- Config API ------------------------------- */
-const BACKEND =  "https://backend-mtr.onrender.com";
+const BACKEND = "https://backend-mtr.onrender.com";
 const API = `${BACKEND}/api`;
 
 /* ------------------------------- Utils texte ------------------------------ */
@@ -17,30 +17,54 @@ const pick = (obj: any, frKey: string, enKey: string, locale = "fr") =>
 /* ------------------------------- Utils image ------------------------------ */
 const PLACEHOLDER = "/placeholder.png";
 
+const BACKEND_HOST = "backend-mtr.onrender.com";
+
 const toUrl = (src: any = "") => {
-  if (!src) return PLACEHOLDER;
-  if (typeof src === "object") src = src?.url || src?.src || src?.path || "";
-  if (!src) return PLACEHOLDER;
+  try {
+    // 0) Normalise l'entrée
+    if (!src) return PLACEHOLDER;
+    if (typeof src === "object") src = src?.url || src?.src || src?.path || src?.filename || src?.fileName || src?.name || "";
+    if (!src) return PLACEHOLDER;
+    let s = String(src).trim().replace(/\\/g, "/");
 
-  // data:/blob:
-  if (/^(data|blob):/i.test(src)) return src;
+    // 1) Data/blob → OK
+    if (/^(data|blob):/i.test(s)) return s;
 
-  // normaliser backslashes
-  const s = String(src).replace(/\\/g, "/");
+    // 2) Assets locaux (Next public)
+    if (s.startsWith("/placeholder") || s.startsWith("/images") || s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/")) {
+      return s;
+    }
 
-  // chemins publics côté Next
-  if (
-    s.startsWith("/placeholder") || s.startsWith("/images") || s.startsWith("/icons") ||
-    s.startsWith("/logo") || s.startsWith("/_next/")
-  ) return s;
+    // 3) Cas absolu: http/https
+    if (/^https?:\/\//i.test(s)) {
+      try {
+        const u = new URL(s);
+        // ⚠️ Force HTTPS si même host que ton backend
+        if (u.hostname === BACKEND_HOST && u.protocol !== "https:") {
+          u.protocol = "https:";
+          return u.toString();
+        }
+        // Si la page est https et l'image http (autre host) → upgrade to https (tentative safe)
+        if (typeof window !== "undefined" && window.location.protocol === "https:" && u.protocol === "http:") {
+          u.protocol = "https:";
+          return u.toString();
+        }
+        return u.toString();
+      } catch {
+        // Si URL invalide, on tombe en relatif géré plus bas
+      }
+    }
 
-  // absolu
-  if (/^https?:\/\//i.test(s)) return s;
+    // 4) Cas relatif/filename → on met sous /uploads
+    const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
 
-  // /uploads côté backend
-  const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
-  return `${BACKEND}${path}`;
+    // 5) Compose l'URL absolue backend (toujours HTTPS)
+    return `https://${BACKEND_HOST}${path}`;
+  } catch {
+    return PLACEHOLDER;
+  }
 };
+
 
 /* -------------------- Composant image cover + zoom (cards) -------------------- */
 function CardImage({
@@ -133,6 +157,16 @@ export default function ProductDetailPage() {
         const data = await res.json();
         if (!alive) return;
         setProduct(data);
+        if (product?.images) {
+          // eslint-disable-next-line no-console
+          console.log("[IMG DEBUG] raw images =", product.images);
+          // eslint-disable-next-line no-console
+          console.log("[IMG DEBUG] first resolved =", toUrl(
+            typeof product.images[0] === "string"
+              ? product.images[0]
+              : product.images[0]?.url || product.images[0]?.src || product.images[0]?.path || product.images[0]?.filename || product.images[0]?.fileName || product.images[0]?.name || ""
+          ));
+        }
       } catch (e) {
         if (alive) setErr("Impossible de charger ce produit.");
       } finally {
@@ -140,7 +174,7 @@ export default function ProductDetailPage() {
       }
     })();
     return () => { alive = false; };
-  }, [productId]);
+  }, [productId,product]);
 
   const name = product ? pick(product, "name_fr", "name_en", locale) : "";
   const desc = product ? pick(product, "description_fr", "description_en", locale) : "";
