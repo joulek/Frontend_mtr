@@ -1,5 +1,6 @@
 // components/forms/CompressionForm.jsx
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -7,7 +8,7 @@ import Image from "next/image";
 import schemaImg from "@/public/devis/compression01.png";
 import typeImg from "@/public/devis/compression02.png";
 
-/* ===== Helpers auth (comme AutreArticleForm) ===== */
+/* ===== Helpers auth (identique à AutreArticleForm) ===== */
 function getCookie(name) {
   if (typeof document === "undefined") return null;
   const cookieStr = document.cookie || "";
@@ -20,19 +21,6 @@ function getCookie(name) {
   }
   return null;
 }
-function snapshotAuth(user) {
-  // On lit tout ce que SiteHeader lit
-  const lsRole =
-    typeof window !== "undefined"
-      ? (localStorage.getItem("mtr_role") ||
-         localStorage.getItem("userRole") ||
-         getCookie("role"))
-      : null;
-  const role = (user?.role || lsRole || "").toString();
-  const isAuthenticated = Boolean(lsRole) || Boolean(user?.authenticated);
-  const isClient = role === "client";
-  return { isAuthenticated, isClient, role };
-}
 
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
 
@@ -44,21 +32,26 @@ export default function CompressionForm() {
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
 
-  // 👉 état dérivé “solide” pour éviter les incohérences durant le render
-  const [{ isAuthenticated, isClient }, setAuth] = useState({
-    isAuthenticated: false,
-    isClient: false,
-  });
+  // ⚠️ même calcul que dans AutreArticleForm (pas d’état dérivé asynchrone)
+  const localRole =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("mtr_role") ||
+         localStorage.getItem("userRole") ||
+         getCookie("role"))
+      : null;
+  const isAuthenticated = Boolean(localRole) || Boolean(user?.authenticated);
+  const isClient = ((user?.role || localRole) === "client");
 
-  const finishedRef = useRef(false);
   const alertRef = useRef(null);
+  const finishedRef = useRef(false);
+  const formRef = useRef(null);       // pour reset complet
 
   // Dropzone
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  /* ====== Limitation à 4 fichiers ====== */
+  /* ===== Limitation à 4 fichiers (comme Autre) ===== */
   const MAX_FILES = 4;
   function uniqueBySignature(arr = []) {
     const seen = new Set();
@@ -76,7 +69,7 @@ export default function CompressionForm() {
     inputRef.current.files = dt.files;
   }
 
-  /* ---------- i18n OPTIONS (labels) + valeurs envoyées au backend ---------- */
+  /* ---------- i18n OPTIONS + valeurs backend ---------- */
   const MATERIAL_VALUES = [
     "Fil ressort noir SH",
     "Fil ressort noir SM",
@@ -99,43 +92,44 @@ export default function CompressionForm() {
 
   const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
 
-  // ====== Session serveur + snapshot auth cohérente ======
+  /* ===== Session serveur (confirm) ===== */
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        setUser(data || null);
-        setAuth(snapshotAuth(data || null));
-      })
-      .catch(() => {
-        setUser(null);
-        setAuth(snapshotAuth(null));
-      });
+      .then((data) => setUser(data || null))
+      .catch(() => setUser(null));
   }, []);
 
-  // Si quelque chose (cookie/LS) change pendant la vie du composant
-  useEffect(() => {
-    setAuth(snapshotAuth(user));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.role, user?.authenticated]);
-
+  // Scroll vers l’alerte
   useEffect(() => {
     if (alertRef.current && (loading || ok || err)) {
       alertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [loading, ok, err]);
 
+  // Auto-hide succès
   useEffect(() => {
     if (!ok) return;
     const id = setTimeout(() => setOk(""), 5000);
     return () => clearTimeout(id);
   }, [ok]);
 
+  /* ------- Reset total UI après envoi ------- */
+  function resetUI() {
+    formRef.current?.reset();
+    setFiles([]);
+    setIsDragging(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  /* ------- Gestion fichiers ------- */
   function handleFileList(list, { append = true } = {}) {
     const incoming = Array.from(list || []);
     if (incoming.length === 0) return;
+
     const base = append ? (files || []) : [];
     const merged = uniqueBySignature([...base, ...incoming]);
+
     if (merged.length > MAX_FILES) {
       const kept = merged.slice(0, MAX_FILES);
       setFiles(kept);
@@ -143,24 +137,23 @@ export default function CompressionForm() {
       setErr(t("limit"));
       return;
     }
+
     setFiles(merged);
     syncInputFiles(fileInputRef, merged);
   }
   function onDrop(e) {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files);
+    if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files, { append: true });
   }
 
+  /* ------- Submit ------- */
   const onSubmit = async (e) => {
     e.preventDefault();
-
-    const form = e.currentTarget;
     setOk("");
     setErr("");
     finishedRef.current = false;
 
-    // ✅ on s’appuie uniquement sur l’état dérivé (fiable)
     if (!isAuthenticated) {
       setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
       return;
@@ -172,13 +165,14 @@ export default function CompressionForm() {
 
     setLoading(true);
     try {
+      const form = e.currentTarget;
       const fd = new FormData(form);
       fd.append("type", "compression");
 
       const userId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
       if (userId) fd.append("user", userId);
 
-      // Normalisation si des labels partent au lieu des valeurs
+      // Normalisation si des labels partent
       const mat = fd.get("matiere");
       const wind = fd.get("enroulement");
       const ext = fd.get("extremite");
@@ -208,10 +202,7 @@ export default function CompressionForm() {
         finishedRef.current = true;
         setErr("");
         setOk(t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !");
-        // reset complet
-        form.reset();
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        resetUI(); // <-- vide tous les champs + fichiers
         return;
       }
 
@@ -222,11 +213,11 @@ export default function CompressionForm() {
         setErr(e2?.name === "AbortError" ? "Délai dépassé, réessayez." : "Erreur réseau.");
       }
     } finally {
-      setLoading(false);
+    setLoading(false);
     }
   };
 
-  /* ====== Bouton & libellé dynamiques ====== */
+  /* ------- Bouton + label dynamiques ------- */
   const disabled = loading || !isAuthenticated || !isClient;
   const buttonLabel = loading
     ? (t.has("sending") ? t("sending") : "Envoi en cours…")
@@ -244,7 +235,7 @@ export default function CompressionForm() {
         </h2>
       </div>
 
-      <form onSubmit={onSubmit}>
+      <form ref={formRef} onSubmit={onSubmit}>
         <SectionTitle>{t("schema")}</SectionTitle>
 
         <div className="mb-6 flex justify-center">
