@@ -6,27 +6,83 @@ import { useParams, useRouter } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import { motion, AnimatePresence } from "framer-motion";
 
+/* ------------------------------- Config API ------------------------------- */
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 const API = `${BACKEND}/api`;
 
-const pick = (obj, frKey, enKey, locale = "fr") =>
+/* ------------------------------- Utils texte ------------------------------ */
+const pick = (obj: any, frKey: string, enKey: string, locale = "fr") =>
   (locale?.startsWith("en") ? obj?.[enKey] : obj?.[frKey]) || obj?.[frKey] || obj?.[enKey] || "";
 
-const toUrl = (src = "") => {
-  if (!src) return "/placeholder.png";
+/* ------------------------------- Utils image ------------------------------ */
+const PLACEHOLDER = "/placeholder.png";
+
+const toUrl = (src: any = "") => {
+  if (!src) return PLACEHOLDER;
+  if (typeof src === "object") src = src?.url || src?.src || src?.path || "";
+  if (!src) return PLACEHOLDER;
+
+  // data:/blob:
   if (/^(data|blob):/i.test(src)) return src;
+
+  // normaliser backslashes
   const s = String(src).replace(/\\/g, "/");
-  if (s.startsWith("/placeholder") || s.startsWith("/images") || s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/"))
-    return s;
+
+  // chemins publics côté Next
+  if (
+    s.startsWith("/placeholder") || s.startsWith("/images") || s.startsWith("/icons") ||
+    s.startsWith("/logo") || s.startsWith("/_next/")
+  ) return s;
+
+  // absolu
   if (/^https?:\/\//i.test(s)) return s;
+
+  // /uploads côté backend
   const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
   return `${BACKEND}${path}`;
 };
 
-/* ========= Zoom au survol qui suit la souris ========= */
-function ZoomImage({ src, alt, priority, sizes }) {
+/* -------------------- Composant image cover + zoom (cards) -------------------- */
+function CardImage({
+  src,
+  alt = "",
+  sizes = "(max-width:640px) 88vw, (max-width:1024px) 62vw, 40vw",
+  priority = false,
+}: {
+  src: string;
+  alt?: string;
+  sizes?: string;
+  priority?: boolean;
+}) {
+  return (
+    <div className="absolute inset-0 overflow-hidden rounded-3xl">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        priority={priority}
+        sizes={sizes}
+        className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-110"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
+    </div>
+  );
+}
+
+/* --------- Variante cover + zoom qui suit la souris (grille produit) -------- */
+function ZoomCover({
+  src,
+  alt = "",
+  sizes = "(max-width: 768px) 100vw, 33vw",
+  priority = false,
+}: {
+  src: string;
+  alt?: string;
+  sizes?: string;
+  priority?: boolean;
+}) {
   const [origin, setOrigin] = useState({ x: 50, y: 50 });
-  const onMove = (e) => {
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -36,7 +92,7 @@ function ZoomImage({ src, alt, priority, sizes }) {
     <div
       onMouseMove={onMove}
       onMouseLeave={() => setOrigin({ x: 50, y: 50 })}
-      className="absolute inset-0 overflow-hidden rounded-2xl cursor-zoom-in"
+      className="absolute inset-0 overflow-hidden rounded-3xl cursor-zoom-in"
     >
       <Image
         src={src}
@@ -45,17 +101,18 @@ function ZoomImage({ src, alt, priority, sizes }) {
         priority={priority}
         sizes={sizes}
         style={{ transformOrigin: `${origin.x}% ${origin.y}%` }}
-        className="object-contain bg-white rounded-2xl transition-transform duration-500 ease-out group-hover:scale-[1.35]"
+        className="object-cover rounded-3xl transition-transform duration-500 ease-out group-hover:scale-[1.35]"
       />
     </div>
   );
 }
 
+/* ---------------------------------- Page ---------------------------------- */
 export default function ProductDetailPage() {
-  const { locale, slug, productId } = useParams();
+  const { locale, slug, productId } = useParams() as { locale: string; slug: string; productId: string };
   const router = useRouter();
 
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -76,7 +133,7 @@ export default function ProductDetailPage() {
         const data = await res.json();
         if (!alive) return;
         setProduct(data);
-      } catch {
+      } catch (e) {
         if (alive) setErr("Impossible de charger ce produit.");
       } finally {
         if (alive) setLoading(false);
@@ -88,26 +145,28 @@ export default function ProductDetailPage() {
   const name = product ? pick(product, "name_fr", "name_en", locale) : "";
   const desc = product ? pick(product, "description_fr", "description_en", locale) : "";
 
-  const imagesRaw = Array.isArray(product?.images) && product.images.length ? product.images : ["/placeholder.png"];
-  const imgUrl = (i) => {
+  const imagesRaw: any[] = Array.isArray(product?.images) && product.images.length ? product.images : [PLACEHOLDER];
+  const imgUrl = (i: number) => {
     const it = imagesRaw[i] ?? imagesRaw[0];
     return toUrl(typeof it === "string" ? it : it?.url || it?.src || it?.path || "");
   };
-  const imgTitle = (i) => {
+  const imgTitle = (i: number) => {
     const it = imagesRaw[i] ?? imagesRaw[0];
-    if (typeof it === "string") return name;
-    return pick(it, "title_fr", "title_en", locale) || name;
+    if (typeof it === "string") return name || "Image";
+    return pick(it, "title_fr", "title_en", locale) || name || "Image";
   };
 
-  // 👉 nombre de colonnes : 1, 2, 3, 4... en fonction du nombre d’images (1, 4, 9, 16…)
+  // Colonnes dynamiques (1,2,3,4… en fonction du nombre d’images)
   const cols = Math.max(1, Math.ceil(Math.sqrt(imagesRaw.length || 1)));
 
-  const onKey = useCallback((e) => {
+  // Navigation clavier dans la lightbox
+  const onKey = useCallback((e: KeyboardEvent) => {
     if (!lightbox || !imagesRaw?.length) return;
     if (e.key === "ArrowRight") setActiveIdx((i) => (i + 1) % imagesRaw.length);
     if (e.key === "ArrowLeft") setActiveIdx((i) => (i - 1 + imagesRaw.length) % imagesRaw.length);
     if (e.key === "Escape") setLightbox(false);
   }, [lightbox, imagesRaw]);
+
   useEffect(() => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -115,7 +174,7 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader onLogout={undefined} />
       <main className="bg-slate-50 min-h-screen relative overflow-x-hidden">
         {/* décor confiné */}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -176,8 +235,8 @@ export default function ProductDetailPage() {
                     aria-label={`Agrandir l’image ${i + 1}`}
                   >
                     <div className="pointer-events-none absolute inset-0 rounded-3xl ring-0 ring-[#F5B301]/0 group-hover:ring-[4px] group-hover:ring-[#F5B301]/25 transition-all duration-300" />
-                    <div className="relative h-[260px] md:h-[300px] xl:h-[340px] p-2 md:p-3">
-                      <ZoomImage
+                    <div className="relative h-[260px] md:h-[300px] xl:h-[340px]">
+                      <ZoomCover
                         src={imgUrl(i)}
                         alt={imgTitle(i)}
                         priority={i === 0}
@@ -224,7 +283,14 @@ export default function ProductDetailPage() {
             )}
 
             <div className="absolute inset-0 p-10" onClick={(e) => e.stopPropagation()}>
-              <Image src={imgUrl(activeIdx)} alt={imgTitle(activeIdx)} fill className="object-contain" sizes="100vw" priority />
+              <Image
+                src={imgUrl(activeIdx)}
+                alt={imgTitle(activeIdx)}
+                fill
+                className="object-contain"
+                sizes="100vw"
+                priority
+              />
             </div>
           </motion.div>
         )}
