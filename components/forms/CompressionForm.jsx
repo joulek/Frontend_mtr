@@ -1,3 +1,4 @@
+// components/forms/CompressionForm.jsx
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -6,7 +7,21 @@ import Image from "next/image";
 import schemaImg from "@/public/devis/compression01.png";
 import typeImg from "@/public/devis/compression02.png";
 
-const RequiredMark = () => <span className="text-red-500" aria-hidden="true"> *</span>;
+/* ===== Helpers auth (comme AutreArticleForm) ===== */
+function getCookie(name) {
+  if (typeof document === "undefined") return null;
+  const cookieStr = document.cookie || "";
+  const parts = cookieStr.split("; ");
+  for (const part of parts) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    const key = decodeURIComponent(part.slice(0, eq));
+    if (key === name) return decodeURIComponent(part.slice(eq + 1));
+  }
+  return null;
+}
+
+const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
 
 export default function CompressionForm() {
   const t = useTranslations("auth.compressionForm");
@@ -24,73 +39,65 @@ export default function CompressionForm() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  /* ===================== AJOUTS POUR LIMITER À 4 FICHIERS ===================== */
+  /* ====== Limitation à 4 fichiers ====== */
   const MAX_FILES = 4;
-
   function uniqueBySignature(arr = []) {
     const seen = new Set();
     const out = [];
     for (const f of arr) {
       const sig = `${f.name}|${f.size}|${f.lastModified || 0}`;
-      if (!seen.has(sig)) {
-        seen.add(sig);
-        out.push(f);
-      }
+      if (!seen.has(sig)) { seen.add(sig); out.push(f); }
     }
     return out;
   }
-
   function syncInputFiles(inputRef, filesArr = []) {
     if (!inputRef?.current) return;
     const dt = new DataTransfer();
     filesArr.forEach((f) => dt.items.add(f));
     inputRef.current.files = dt.files;
   }
-  /* ========================================================================== */
 
   /* ---------- i18n OPTIONS (labels) + valeurs envoyées au backend ---------- */
-  // ✅ Valeurs stables attendues par le backend (SM et SH séparés)
   const MATERIAL_VALUES = [
     "Fil ressort noir SH",
     "Fil ressort noir SM",
     "Fil ressort galvanisé",
     "Fil ressort inox",
   ];
-
-  // Labels affichés (traductions) — si non fournis on affiche les valeurs ci-dessus
   let materialLabels = t.raw("materialOptions");
   if (!Array.isArray(materialLabels) || materialLabels.length < MATERIAL_VALUES.length) {
     materialLabels = MATERIAL_VALUES;
   }
-  const materialOptions = MATERIAL_VALUES.map((value, i) => ({
-    value,
-    label: materialLabels[i] ?? value,
-  }));
+  const materialOptions = MATERIAL_VALUES.map((value, i) => ({ value, label: materialLabels[i] ?? value }));
 
   const WIND_VALUES = ["Enroulement gauche", "Enroulement droite"];
   const windLabels = t.raw("windingOptions") || WIND_VALUES;
-  const windOptions = WIND_VALUES.map((value, i) => ({
-    value,
-    label: windLabels[i] ?? value,
-  }));
+  const windOptions = WIND_VALUES.map((value, i) => ({ value, label: windLabels[i] ?? value }));
 
   const EXTREMITIES = ["ERM", "EL", "ELM", "ERNM"];
   const extremityLabels = t.raw("extremityOptions") || EXTREMITIES;
-  const extremityOptions = EXTREMITIES.map((value, i) => ({
-    value,
-    label: extremityLabels[i] ?? value,
-  }));
+  const extremityOptions = EXTREMITIES.map((value, i) => ({ value, label: extremityLabels[i] ?? value }));
 
   const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
   /* ------------------------------------------------------------------------ */
 
-  // Récup session
+  // ====== Session serveur (confirme l’état) ======
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setUser(data || null))
       .catch(() => setUser(null));
   }, []);
+
+  // ====== Session côté front (même logique que l’autre form / SiteHeader) ======
+  const localRole =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("mtr_role") ||
+         localStorage.getItem("userRole") ||
+         getCookie("role"))
+      : null;
+  const isAuthenticated = Boolean(localRole) || Boolean(user?.authenticated);
+  const isClient = ((user?.role || localRole) === "client");
 
   useEffect(() => {
     if (alertRef.current && (loading || ok || err)) {
@@ -108,34 +115,19 @@ export default function CompressionForm() {
     const incoming = Array.from(list || []);
     if (incoming.length === 0) return;
 
-    // fusion avec l'existant (ou remplacement si append=false)
     const base = append ? (files || []) : [];
     const merged = uniqueBySignature([...base, ...incoming]);
 
     if (merged.length > MAX_FILES) {
       const kept = merged.slice(0, MAX_FILES);
-      const ignoredCount = merged.length - kept.length;
-
       setFiles(kept);
       syncInputFiles(fileInputRef, kept);
-
-      // 🔔 message unique via i18n
-      setErr(t("limit"));
-
-      console.warn("[Upload] Dépassement de la limite de fichiers:", {
-        incoming: incoming.length,
-        existing: files.length,
-        kept: kept.length,
-        ignored: ignoredCount,
-        max: MAX_FILES,
-      });
+      setErr(t("limit")); // "Limite dépassée, maximum 4 fichiers."
       return;
     }
-
     setFiles(merged);
     syncInputFiles(fileInputRef, merged);
   }
-
 
   function onDrop(e) {
     e.preventDefault();
@@ -151,12 +143,13 @@ export default function CompressionForm() {
     setErr("");
     finishedRef.current = false;
 
-    if (!user?.authenticated) {
-      setErr("Vous devez être connecté pour envoyer un devis.");
+    // ✅ utilise la même logique d’auth que l’autre form
+    if (!isAuthenticated) {
+      setErr(t.has("loginToSend") ? t("loginToSend") : "Vous devez être connecté pour envoyer un devis.");
       return;
     }
-    if (user.role !== "client") {
-      setErr("Seuls les clients peuvent envoyer une demande de devis.");
+    if (!isClient) {
+      setErr(t.has("reservedClients") ? t("reservedClients") : "Seuls les clients peuvent envoyer une demande de devis.");
       return;
     }
 
@@ -165,10 +158,10 @@ export default function CompressionForm() {
       const fd = new FormData(form);
       fd.append("type", "compression");
 
-      const userId = localStorage.getItem("id");
+      const userId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
       if (userId) fd.append("user", userId);
 
-      // Normalisation de sécurité (si un label est renvoyé à la place de la valeur)
+      // Normalisation au cas où l’UI renvoie les labels
       const mat = fd.get("matiere");
       const wind = fd.get("enroulement");
       const ext = fd.get("extremite");
@@ -193,7 +186,7 @@ export default function CompressionForm() {
       });
 
       let payload = null;
-      try { payload = await res.json(); } catch { }
+      try { payload = await res.json(); } catch {}
 
       if (res.ok) {
         finishedRef.current = true;
@@ -207,18 +200,24 @@ export default function CompressionForm() {
 
       const msg = payload?.message || `Erreur lors de l’envoi. (HTTP ${res.status})`;
       setErr(msg);
-    } catch (e) {
-      console.error("submit compression error:", e);
+    } catch (e2) {
       if (!finishedRef.current) {
-        const isAbort = e?.name === "AbortError";
-        setErr(isAbort ? "Délai dépassé, réessayez." : "Erreur réseau.");
+        setErr(e2?.name === "AbortError" ? "Délai dépassé, réessayez." : "Erreur réseau.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const disabled = loading || !user?.authenticated || user?.role !== "client";
+  /* ====== Bouton & libellé dynamiques (auth cookies/LS) ====== */
+  const disabled = loading || !isAuthenticated || !isClient;
+  const buttonLabel = loading
+    ? (t.has("sending") ? t("sending") : "Envoi en cours…")
+    : !isAuthenticated
+      ? (t.has("loginToSend") ? t("loginToSend") : "Connectez-vous pour envoyer")
+      : !isClient
+        ? (t.has("reservedClients") ? t("reservedClients") : "Réservé aux clients")
+        : t("sendRequest");
 
   return (
     <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
@@ -244,37 +243,19 @@ export default function CompressionForm() {
 
         <SectionTitle>{t("maindim")}</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <Input name="d" label={t("diameterWire")} required />
-          <Input name="DE" label={t("diameterExt")} required />
-          <Input name="H" label={t("boreDiameter")} />
-          <Input name="S" label={t("guideDiameter")} />
+          <Input name="d"  label={t("diameterWire")}  required />
+          <Input name="DE" label={t("diameterExt")}  required />
+          <Input name="H"  label={t("boreDiameter")} />
+          <Input name="S"  label={t("guideDiameter")} />
           <Input name="DI" label={t("diameterInt")} required />
-          <Input name="Lo" label={t("freeLength")} required />
+          <Input name="Lo" label={t("freeLength")}  required />
           <Input name="nbSpires" label={t("totalCoils")} required />
           <Input name="pas" label={t("pitch")} required />
           <Input name="quantite" label={t("quantity")} type="number" min="1" required />
 
-          <SelectBase
-            name="matiere"
-            label={t("material")}
-            options={materialOptions}
-            placeholder={selectPlaceholder}
-            required
-          />
-          <SelectBase
-            name="enroulement"
-            label={t("windingDirection")}
-            options={windOptions}
-            placeholder={selectPlaceholder}
-            required
-          />
-          <SelectBase
-            name="extremite"
-            label={t("extremityType")}
-            options={extremityOptions}
-            placeholder={selectPlaceholder}
-            required
-          />
+          <SelectBase name="matiere"     label={t("material")}        options={materialOptions}  placeholder={selectPlaceholder} required />
+          <SelectBase name="enroulement" label={t("windingDirection")} options={windOptions}      placeholder={selectPlaceholder} required />
+          <SelectBase name="extremite"   label={t("extremityType")}    options={extremityOptions} placeholder={selectPlaceholder} required />
         </div>
 
         <div className="mt-4 flex justify-center">
@@ -344,18 +325,12 @@ export default function CompressionForm() {
                 ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                 : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
           >
-            {loading
-              ? "Envoi en cours…"
-              : !user?.authenticated
-                ? t("loginToSend")
-                : user?.role !== "client"
-                  ? t("loginToSend")
-                  : t("sendRequest")}
+            {buttonLabel}
           </button>
 
           <div ref={alertRef} aria-live="polite" className="mt-3">
             {loading ? (
-              <Alert type="info" message="Votre demande de devis est en cours d'envoi, veuillez patienter…" />
+              <Alert type="info" message={t.has("sending") ? t("sending") : "Votre demande est en cours d’envoi…"} />
             ) : err ? (
               <Alert type="error" message={err} />
             ) : ok ? (
@@ -368,6 +343,7 @@ export default function CompressionForm() {
   );
 }
 
+/* === UI helpers === */
 function SectionTitle({ children, className = "" }) {
   return (
     <div className={`mb-3 mt-4 ${className}`}>
@@ -382,11 +358,9 @@ function SectionTitle({ children, className = "" }) {
 function Alert({ type = "info", message }) {
   const base = "w-full rounded-xl px-4 py-3 text-sm font-medium border flex items-start gap-2";
   const styles =
-    type === "error"
-      ? "bg-red-50 text-red-700 border-red-200"
-      : type === "success"
-        ? "bg-green-50 text-green-700 border-green-200"
-        : "bg-blue-50 text-blue-700 border-blue-200";
+    type === "error"   ? "bg-red-50 text-red-700 border-red-200" :
+    type === "success" ? "bg-green-50 text-green-700 border-green-200" :
+                         "bg-blue-50 text-blue-700 border-blue-200";
   return (
     <div className={`${base} ${styles}`}>
       <span className="mt-0.5">•</span>

@@ -4,9 +4,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-/* ====== Config & helpers (whome-style) ====== */
+/* ====== Config & helpers ====== */
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
-// remplace TOUTE la fonction getCookie par ceci
+
+// lecture cookie sans RegExp (compatible Next/Webpack)
 function getCookie(name) {
   if (typeof document === "undefined") return null;
   const cookieStr = document.cookie || "";
@@ -15,13 +16,10 @@ function getCookie(name) {
     const eq = part.indexOf("=");
     if (eq === -1) continue;
     const key = decodeURIComponent(part.slice(0, eq));
-    if (key === name) {
-      return decodeURIComponent(part.slice(eq + 1));
-    }
+    if (key === name) return decodeURIComponent(part.slice(eq + 1));
   }
   return null;
 }
-
 
 /* --- petite étoile rouge pour champs requis --- */
 const RequiredMark = () => <span className="text-red-500" aria-hidden> *</span>;
@@ -34,7 +32,7 @@ export default function AutreArticleForm() {
   const [err, setErr] = useState("");
   const [user, setUser] = useState(null);
 
-  // ✅ Détection session côté front (même logique que SiteHeader)
+  // session côté front (même logique que SiteHeader)
   const localRole =
     typeof window !== "undefined"
       ? (localStorage.getItem("mtr_role") ||
@@ -46,6 +44,7 @@ export default function AutreArticleForm() {
 
   const alertRef = useRef(null);
   const finishedRef = useRef(false);
+  const formRef = useRef(null);          // << ref du formulaire
 
   // Dropzone
   const [files, setFiles] = useState([]);
@@ -85,7 +84,7 @@ export default function AutreArticleForm() {
 
   const selectPlaceholder = t.has("selectPlaceholder") ? t("selectPlaceholder") : "Sélectionnez…";
 
-  // ✅ mapping EN -> FR si labels anglais arrivent au backend
+  // mapping EN -> FR si labels anglais arrivent au backend
   const EN_MAT = [
     "Galvanized steel wire",
     "Black steel wire",
@@ -116,7 +115,7 @@ export default function AutreArticleForm() {
     }
   }
 
-  // Récup session côté serveur (si le cookie est lisible côté front, ça confirmera)
+  // Récup session (confirme côté serveur)
   useEffect(() => {
     fetch("/api/session", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -137,6 +136,15 @@ export default function AutreArticleForm() {
     const id = setTimeout(() => setOk(""), 5000);
     return () => clearTimeout(id);
   }, [ok]);
+
+  /* ------- Reset total UI après envoi ------- */
+  function resetUI() {
+    formRef.current?.reset();       // inputs non contrôlés
+    setSelectedMat("");             // select contrôlé
+    setFiles([]);                   // dropzone
+    setIsDragging(false);
+    if (fileInputRef.current) fileInputRef.current.value = ""; // input file natif
+  }
 
   /* ------- Gestion fichiers ------- */
   function handleFileList(list, { append = true } = {}) {
@@ -217,7 +225,7 @@ export default function AutreArticleForm() {
       // Normalisation EN -> FR
       normalizeMatiere(fd);
 
-      // 👉 Envoi direct au backend (évite le 401 sur /api/devis/autre front)
+      // envoi direct backend (évite 401 via route proxy)
       const res = await fetch(`${BACKEND}/api/devis/autre`, {
         method: "POST",
         body: fd,
@@ -231,10 +239,7 @@ export default function AutreArticleForm() {
         finishedRef.current = true;
         setErr("");
         setOk(t.has("sendSuccess") ? t("sendSuccess") : "Demande envoyée. Merci !");
-        e.currentTarget.reset();
-        setFiles([]);
-        setSelectedMat("");
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        resetUI();                  // << vide tout après succès
         return;
       }
 
@@ -265,7 +270,7 @@ export default function AutreArticleForm() {
         </h2>
       </div>
 
-      <form onSubmit={onSubmit}>
+      <form ref={formRef} onSubmit={onSubmit}>
         {/* Champs principaux */}
         <SectionTitle>{t("mainInfo")}</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
