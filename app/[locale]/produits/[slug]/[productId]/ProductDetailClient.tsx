@@ -27,38 +27,32 @@ const toUrl = (src: any = "") => {
     if (!src) return PLACEHOLDER;
     let s = String(src).trim().replace(/\\/g, "/");
 
-    // data/blob
     if (/^(data|blob):/i.test(s)) return s;
 
-    // assets publics
     if (
       s.startsWith("/placeholder") || s.startsWith("/images") ||
       s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/")
     ) return s;
 
-    // URL absolue
     if (/^https?:\/\//i.test(s)) {
       const u = new URL(s);
 
-      // localhost/127 → remap domaine + https + SUPPRIMER port
       if (/(^|\.)(localhost|127\.0\.0\.1)$/i.test(u.hostname)) {
         u.protocol = "https:";
         u.hostname = BACKEND_HOST;
-        u.port = ""; // <- مهم
+        u.port = "";
         if (!u.pathname.startsWith("/uploads/")) {
           u.pathname = `/uploads/${u.pathname.replace(/^\/+/, "")}`;
         }
         return u.toString();
       }
 
-      // même host mais http → upgrade
       if (u.hostname === BACKEND_HOST && u.protocol !== "https:") {
         u.protocol = "https:";
         u.port = "";
         return u.toString();
       }
 
-      // page https و الصورة http → جرّب https
       if (typeof window !== "undefined" && window.location.protocol === "https:" && u.protocol === "http:") {
         u.protocol = "https:";
         return u.toString();
@@ -67,7 +61,6 @@ const toUrl = (src: any = "") => {
       return u.toString();
     }
 
-    // chemin relatif / filename
     const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
     return `https://${BACKEND_HOST}${path}`;
   } catch {
@@ -96,7 +89,6 @@ function CardImage({
         priority={priority}
         sizes={sizes}
         className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-110"
-        // unoptimized // ← فعّلها مؤقتاً لو ما ضبطتش next.config.js للصور الخارجية
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
     </div>
@@ -136,7 +128,6 @@ function ZoomCover({
         sizes={sizes}
         style={{ transformOrigin: `${origin.x}% ${origin.y}%` }}
         className="object-cover rounded-3xl transition-transform duration-500 ease-out group-hover:scale-[1.35]"
-        // unoptimized
       />
     </div>
   );
@@ -184,14 +175,13 @@ export default function ProductDetailPage() {
       }
     })();
     return () => { alive = false; };
-  }, [productId]); // ← ما نضيفوش 'product' باش نتجنّب اللوب
+  }, [productId]);
 
   const name = product ? pick(product, "name_fr", "name_en", locale) : "";
   const desc = product ? pick(product, "description_fr", "description_en", locale) : "";
 
   const imagesRaw: any[] = Array.isArray(product?.images) && product.images.length ? product.images : [PLACEHOLDER];
 
-  // ❗ نستعمل toUrl هنا (ما نرجعوش لمنطق raw.startsWith("http"))
   const imgUrl = (i: number) => {
     const it = imagesRaw[i] ?? imagesRaw[0];
     const raw =
@@ -250,12 +240,12 @@ export default function ProductDetailPage() {
             {!!desc && <p className="mt-5 max-w-4xl text-slate-700 leading-relaxed">{desc}</p>}
           </motion.header>
 
-          {/* Grille d’images — colonnes dynamiques */}
+          {/* Grille d’images — 1 colonne en mobile, dynamique dès md */}
           <section className="mt-10">
             {loading ? (
               <div
-                className="grid gap-6"
-                style={{ gridTemplateColumns: `repeat(${Math.max(2, cols)}, minmax(0,1fr))` }}
+                className="grid grid-cols-1 md:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))] gap-6"
+                style={{ ["--cols" as any]: Math.max(2, cols) }}
               >
                 {Array.from({ length: Math.max(4, cols * cols) }).map((_, i) => (
                   <div key={i} className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm">
@@ -269,8 +259,8 @@ export default function ProductDetailPage() {
                 whileInView="show"
                 viewport={{ once: true, amount: 0.15 }}
                 variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
-                className="grid gap-6"
-                style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
+                className="grid grid-cols-1 md:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))] gap-6"
+                style={{ ["--cols" as any]: cols }}
               >
                 {imagesRaw.map((_, i) => (
                   <motion.button
@@ -339,7 +329,6 @@ export default function ProductDetailPage() {
                 className="object-contain"
                 sizes="100vw"
                 priority
-                // unoptimized
               />
             </div>
           </motion.div>
