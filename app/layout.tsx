@@ -6,9 +6,7 @@ export const metadata: Metadata = {
   description: 'Espace client – MTR',
   icons: {
     icon: 'public/favicon.ico',          // public/favicon.ico
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png' // optionnel si tu l’as
-  },
+    shortcut: '/favicon.ico'  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
