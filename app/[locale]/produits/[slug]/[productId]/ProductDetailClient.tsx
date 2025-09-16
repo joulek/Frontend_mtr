@@ -162,8 +162,8 @@ export default function ProductDetailPage() {
         console.log("[IMG DEBUG] raw images =", data?.images);
         const raw0 = Array.isArray(data?.images) && data.images[0]
           ? (typeof data.images[0] === "string"
-              ? data.images[0]
-              : data.images[0]?.url || data.images[0]?.src || data.images[0]?.path || data.images[0]?.filename || data.images[0]?.fileName || data.images[0]?.name || "")
+            ? data.images[0]
+            : data.images[0]?.url || data.images[0]?.src || data.images[0]?.path || data.images[0]?.filename || data.images[0]?.fileName || data.images[0]?.name || "")
           : "";
         console.log("[IMG DEBUG] first resolved =", toUrl(raw0));
 
@@ -301,10 +301,18 @@ export default function ProductDetailPage() {
             onClick={() => setLightbox(false)}
           >
             <button
-              onClick={() => setLightbox(false)}
-              className="absolute right-4 top-4 h-10 w-10 rounded-full bg-white/90 text-[#0B2239] shadow grid place-items-center"
-              aria-label="Fermer"
-            >✕</button>
+              onClick={(e) => { e.stopPropagation(); setLightbox(false); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setLightbox(false); }
+              }}
+              className="absolute right-4 top-4 h-10 w-10 rounded-full bg-white/90 text-[#0B2239] shadow grid place-items-center focus:outline-none focus:ring-2 focus:ring-[#F5B301]"
+              aria-label="Fermer la visionneuse"
+              type="button"
+              tabIndex={0}
+            >
+              ✕
+            </button>
+
 
             {imagesRaw.length > 1 && (
               <>
