@@ -12,7 +12,10 @@ const API = `${BACKEND}/api`;
 
 /* ------------------------------- Utils texte ------------------------------ */
 const pick = (obj: any, frKey: string, enKey: string, locale = "fr") =>
-  (locale?.startsWith("en") ? obj?.[enKey] : obj?.[frKey]) || obj?.[frKey] || obj?.[enKey] || "";
+  (locale?.startsWith("en") ? obj?.[enKey] : obj?.[frKey]) ||
+  obj?.[frKey] ||
+  obj?.[enKey] ||
+  "";
 
 /* ------------------------------- Utils image ------------------------------ */
 const PLACEHOLDER = "/placeholder.png";
@@ -22,7 +25,14 @@ const toUrl = (src: any = "") => {
   try {
     if (!src) return PLACEHOLDER;
     if (typeof src === "object") {
-      src = src?.url || src?.src || src?.path || src?.filename || src?.fileName || src?.name || "";
+      src =
+        src?.url ||
+        src?.src ||
+        src?.path ||
+        src?.filename ||
+        src?.fileName ||
+        src?.name ||
+        "";
     }
     if (!src) return PLACEHOLDER;
     let s = String(src).trim().replace(/\\/g, "/");
@@ -30,9 +40,13 @@ const toUrl = (src: any = "") => {
     if (/^(data|blob):/i.test(s)) return s;
 
     if (
-      s.startsWith("/placeholder") || s.startsWith("/images") ||
-      s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/")
-    ) return s;
+      s.startsWith("/placeholder") ||
+      s.startsWith("/images") ||
+      s.startsWith("/icons") ||
+      s.startsWith("/logo") ||
+      s.startsWith("/_next/")
+    )
+      return s;
 
     if (/^https?:\/\//i.test(s)) {
       const u = new URL(s);
@@ -53,7 +67,11 @@ const toUrl = (src: any = "") => {
         return u.toString();
       }
 
-      if (typeof window !== "undefined" && window.location.protocol === "https:" && u.protocol === "http:") {
+      if (
+        typeof window !== "undefined" &&
+        window.location.protocol === "https:" &&
+        u.protocol === "http:"
+      ) {
         u.protocol = "https:";
         return u.toString();
       }
@@ -61,7 +79,9 @@ const toUrl = (src: any = "") => {
       return u.toString();
     }
 
-    const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
+    const path = s.startsWith("/uploads/")
+      ? s
+      : `/uploads/${s.replace(/^\/+/, "")}`;
     return `https://${BACKEND_HOST}${path}`;
   } catch {
     return PLACEHOLDER;
@@ -135,7 +155,11 @@ function ZoomCover({
 
 /* ---------------------------------- Page ---------------------------------- */
 export default function ProductDetailPage() {
-  const { locale, slug, productId } = useParams() as { locale: string; slug: string; productId: string };
+  const { locale, slug, productId } = useParams() as {
+    locale: string;
+    slug: string;
+    productId: string;
+  };
   const router = useRouter();
 
   const [product, setProduct] = useState<any>(null);
@@ -149,23 +173,20 @@ export default function ProductDetailPage() {
     let alive = true;
     (async () => {
       try {
-        setLoading(true); setErr("");
-        let res = await fetch(`${API}/produits/${productId}`, { cache: "no-store" });
+        setLoading(true);
+        setErr("");
+        let res = await fetch(`${API}/produits/${productId}`, {
+          cache: "no-store",
+        });
         if (!res.ok) {
-          const res2 = await fetch(`${API}/products/${productId}`, { cache: "no-store" });
+          const res2 = await fetch(`${API}/products/${productId}`, {
+            cache: "no-store",
+          });
           if (!res2.ok) throw new Error(`HTTP ${res.status} / ${res2.status}`);
           res = res2;
         }
         const data = await res.json();
         if (!alive) return;
-
-        console.log("[IMG DEBUG] raw images =", data?.images);
-        const raw0 = Array.isArray(data?.images) && data.images[0]
-          ? (typeof data.images[0] === "string"
-            ? data.images[0]
-            : data.images[0]?.url || data.images[0]?.src || data.images[0]?.path || data.images[0]?.filename || data.images[0]?.fileName || data.images[0]?.name || "")
-          : "";
-        console.log("[IMG DEBUG] first resolved =", toUrl(raw0));
 
         setProduct(data);
       } catch {
@@ -174,20 +195,33 @@ export default function ProductDetailPage() {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [productId]);
 
   const name = product ? pick(product, "name_fr", "name_en", locale) : "";
-  const desc = product ? pick(product, "description_fr", "description_en", locale) : "";
+  const desc = product
+    ? pick(product, "description_fr", "description_en", locale)
+    : "";
 
-  const imagesRaw: any[] = Array.isArray(product?.images) && product.images.length ? product.images : [PLACEHOLDER];
+  const imagesRaw: any[] =
+    Array.isArray(product?.images) && product.images.length
+      ? product.images
+      : [PLACEHOLDER];
 
   const imgUrl = (i: number) => {
     const it = imagesRaw[i] ?? imagesRaw[0];
     const raw =
       typeof it === "string"
         ? it
-        : it?.url || it?.src || it?.path || it?.filename || it?.fileName || it?.name || "";
+        : it?.url ||
+          it?.src ||
+          it?.path ||
+          it?.filename ||
+          it?.fileName ||
+          it?.name ||
+          "";
     return toUrl(raw);
   };
 
@@ -199,12 +233,17 @@ export default function ProductDetailPage() {
 
   const cols = Math.max(1, Math.ceil(Math.sqrt(imagesRaw.length || 1)));
 
-  const onKey = useCallback((e: KeyboardEvent) => {
-    if (!lightbox || !imagesRaw?.length) return;
-    if (e.key === "ArrowRight") setActiveIdx((i) => (i + 1) % imagesRaw.length);
-    if (e.key === "ArrowLeft") setActiveIdx((i) => (i - 1 + imagesRaw.length) % imagesRaw.length);
-    if (e.key === "Escape") setLightbox(false);
-  }, [lightbox, imagesRaw]);
+  const onKey = useCallback(
+    (e: KeyboardEvent) => {
+      if (!lightbox || !imagesRaw?.length) return;
+      if (e.key === "ArrowRight")
+        setActiveIdx((i) => (i + 1) % imagesRaw.length);
+      if (e.key === "ArrowLeft")
+        setActiveIdx((i) => (i - 1 + imagesRaw.length) % imagesRaw.length);
+      if (e.key === "Escape") setLightbox(false);
+    },
+    [lightbox, imagesRaw]
+  );
 
   useEffect(() => {
     window.addEventListener("keydown", onKey);
@@ -223,21 +262,44 @@ export default function ProductDetailPage() {
 
         <div className="w-full mx-auto max-w-7xl px-4 pt-8 pb-24">
           {/* Fil d’Ariane */}
-          <motion.nav initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-slate-500 mb-6">
-            <button onClick={() => router.push(`/${locale}`)} className="hover:underline">Accueil</button>
+          <motion.nav
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-slate-500 mb-6"
+          >
+            <button
+              onClick={() => router.push(`/${locale}`)}
+              className="hover:underline"
+            >
+              Accueil
+            </button>
             <span className="mx-2">/</span>
-            <button onClick={() => router.push(`/${locale}/produits/${slug}`)} className="hover:underline capitalize">
+            <button
+              onClick={() => router.push(`/${locale}/produits/${slug}`)}
+              className="hover:underline capitalize"
+            >
               {String(slug || "").replace(/-/g, " ")}
             </button>
             <span className="mx-2">/</span>
-            <span className="text-slate-700 font-semibold">{name || "Produit"}</span>
+            <span className="text-slate-700 font-semibold">
+              {name || "Produit"}
+            </span>
           </motion.nav>
 
           {/* Titre + description */}
-          <motion.header initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#0B2239]">{name || "—"}</h1>
+          <motion.header
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#0B2239]">
+              {name || "—"}
+            </h1>
             <div className="mt-3 h-[6px] w-40 rounded-full bg-gradient-to-r from-[#F5B301] via-[#F5B301] to-transparent" />
-            {!!desc && <p className="mt-5 max-w-4xl text-slate-700 leading-relaxed">{desc}</p>}
+            {!!desc && (
+              <p className="mt-5 max-w-4xl text-slate-700 leading-relaxed">
+                {desc}
+              </p>
+            )}
           </motion.header>
 
           {/* Grille d’images — 1 colonne en mobile, dynamique dès md */}
@@ -248,7 +310,10 @@ export default function ProductDetailPage() {
                 style={{ ["--cols" as any]: Math.max(2, cols) }}
               >
                 {Array.from({ length: Math.max(4, cols * cols) }).map((_, i) => (
-                  <div key={i} className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm">
+                  <div
+                    key={i}
+                    className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm"
+                  >
                     <div className="h-[260px] md:h-[300px] xl:h-[340px] bg-slate-200 animate-pulse rounded-3xl" />
                   </div>
                 ))}
@@ -258,7 +323,10 @@ export default function ProductDetailPage() {
                 initial="hidden"
                 whileInView="show"
                 viewport={{ once: true, amount: 0.15 }}
-                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+                variants={{
+                  hidden: {},
+                  show: { transition: { staggerChildren: 0.06 } },
+                }}
                 className="grid grid-cols-1 md:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))] gap-6"
                 style={{ ["--cols" as any]: cols }}
               >
@@ -266,8 +334,14 @@ export default function ProductDetailPage() {
                   <motion.button
                     key={i}
                     type="button"
-                    onClick={() => { setActiveIdx(i); setLightbox(true); }}
-                    variants={{ hidden: { opacity: 0, y: 14, scale: 0.985 }, show: { opacity: 1, y: 0, scale: 1 } }}
+                    onClick={() => {
+                      setActiveIdx(i);
+                      setLightbox(true);
+                    }}
+                    variants={{
+                      hidden: { opacity: 0, y: 14, scale: 0.985 },
+                      show: { opacity: 1, y: 0, scale: 1 },
+                    }}
                     whileHover={{ y: -5, scale: 1.005 }}
                     whileTap={{ scale: 0.99 }}
                     className="group relative overflow-hidden rounded-3xl bg-white/95 ring-1 ring-slate-200 shadow-md hover:shadow-2xl transition-all duration-300 focus:outline-none"
@@ -288,7 +362,11 @@ export default function ProductDetailPage() {
             )}
           </section>
 
-          {err && <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{err}</div>}
+          {err && (
+            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+              {err}
+            </div>
+          )}
         </div>
       </main>
 
@@ -296,40 +374,57 @@ export default function ProductDetailPage() {
       <AnimatePresence>
         {lightbox && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black/90 overflow-hidden"
             onClick={() => setLightbox(false)}
           >
+            {/* bouton fermer */}
             <button
-              onClick={(e) => { e.stopPropagation(); setLightbox(false); }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setLightbox(false); }
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightbox(false);
               }}
-              className="absolute right-4 top-4 h-10 w-10 rounded-full bg-white/90 text-[#0B2239] shadow grid place-items-center focus:outline-none focus:ring-2 focus:ring-[#F5B301]"
+              className="absolute right-4 top-4 z-[200] h-10 w-10 rounded-full bg-white/90 text-[#0B2239] shadow grid place-items-center focus:outline-none focus:ring-2 focus:ring-[#F5B301]"
               aria-label="Fermer la visionneuse"
               type="button"
-              tabIndex={0}
             >
               ✕
             </button>
 
-
             {imagesRaw.length > 1 && (
               <>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setActiveIdx((i) => (i - 1 + imagesRaw.length) % imagesRaw.length); }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-[#0B2239] shadow"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveIdx(
+                      (i) => (i - 1 + imagesRaw.length) % imagesRaw.length
+                    );
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-[150] rounded-full bg-white/90 px-3 py-2 text-[#0B2239] shadow"
                   aria-label="Précédent"
-                >‹</button>
+                >
+                  ‹
+                </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setActiveIdx((i) => (i + 1) % imagesRaw.length); }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-[#0B2239] shadow"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveIdx((i) => (i + 1) % imagesRaw.length);
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-[150] rounded-full bg-white/90 px-3 py-2 text-[#0B2239] shadow"
                   aria-label="Suivant"
-                >›</button>
+                >
+                  ›
+                </button>
               </>
             )}
 
-            <div className="absolute inset-0 p-10" onClick={(e) => e.stopPropagation()}>
+            {/* image */}
+            <div
+              className="absolute inset-0 p-10 z-[100]"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Image
                 src={imgUrl(activeIdx)}
                 alt={imgTitle(activeIdx)}
