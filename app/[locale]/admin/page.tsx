@@ -24,10 +24,10 @@ import {
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
 
 /* -------------------- helpers -------------------- */
-function iso(d) {
+function iso(d: Date) {
   return d.toISOString().slice(0, 10);
 }
-function fmt(n) {
+function fmt(n: any) {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
   return new Intl.NumberFormat().format(n);
 }
@@ -40,7 +40,7 @@ export default function AdminDashboardPage() {
   const pathname = usePathname();
 
   const [authLoading, setAuthLoading] = useState(true);
-  const [role, setRole] = useState(null);
+  const [role, setRole] = useState<string | null>(null);
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function AdminDashboardPage() {
 
   if (!allowed) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <Callout type="warn" title={t("accessDenied.title")}>
           {t("accessDenied.body", { role: role || "?" })}
         </Callout>
@@ -87,13 +87,13 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="p-4 lg:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold text-[#002147] text-center tracking-tight">
+    <div className="p-3 sm:p-4 lg:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="space-y-1 px-1 sm:px-0">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#002147] text-center tracking-tight">
             {t("header.title")}
           </h1>
-          <p className="text-[#002147]/80 text-center">
+          <p className="text-xs sm:text-base text-[#002147]/80 text-center">
             {t("header.subtitle")}
           </p>
         </div>
@@ -115,10 +115,10 @@ function DashboardBody() {
   const [to, setTo] = useState(() => iso(new Date()));
   const [minOrders, setMinOrders] = useState(3);
 
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [httpCode, setHttpCode] = useState(null);
+  const [httpCode, setHttpCode] = useState<number | null>(null);
 
   const qs = useMemo(() => {
     const p = new URLSearchParams({ from, to, minOrders: String(minOrders), limit: "10" });
@@ -134,7 +134,7 @@ function DashboardBody() {
       setHttpCode(r.status);
       if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`);
       setData(await r.json());
-    } catch (e) {
+    } catch (e: any) {
       setError(e?.message || "Network error");
     } finally {
       setLoading(false);
@@ -144,7 +144,7 @@ function DashboardBody() {
     load(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qs]);
 
-  function quick(days) {
+  function quick(days: number) {
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - (days - 1));
@@ -161,7 +161,7 @@ function DashboardBody() {
     sky: "#0EA5E9",
     slate: "#64748B",
     mint: "#34D399",
-  };
+  } as const;
 
   const donutData = useMemo(() => {
     const k = data?.kpis || {};
@@ -175,11 +175,11 @@ function DashboardBody() {
 
   // === Ticks entiers pour Y (Nouveaux clients / Réclamations) ===
   const maxNewClients = useMemo(
-    () => Math.max(0, ...((data?.series?.newClientsByDay || []).map((d) => d.count || 0))),
+    () => Math.max(0, ...((data?.series?.newClientsByDay || []).map((d: any) => d.count || 0))),
     [data]
   );
   const maxClaims = useMemo(
-    () => Math.max(0, ...((data?.series?.claimsByDay || []).map((d) => d.count || 0))),
+    () => Math.max(0, ...((data?.series?.claimsByDay || []).map((d: any) => d.count || 0))),
     [data]
   );
   const upperNew = Math.max(3, Math.ceil(maxNewClients));
@@ -197,7 +197,7 @@ function DashboardBody() {
       t("loyal.csv.header.lastOrder"),
     ];
     const lines = [header.join(",")];
-    rows.forEach((r) => {
+    rows.forEach((r: any) => {
       const typeLabel = r.accountType
         ? r.accountType === "company"
           ? t("loyal.accountTypes.company")
@@ -205,13 +205,15 @@ function DashboardBody() {
           ? t("loyal.accountTypes.person")
           : r.accountType
         : "-";
-      lines.push([
-        r.clientId,
-        (r.name || "").replace(/,/g, " "),
-        String(typeLabel).replace(/,/g, " "),
-        r.orders,
-        r.lastOrder,
-      ].join(","));
+      lines.push(
+        [
+          r.clientId,
+          (r.name || "").replace(/,/g, " "),
+          String(typeLabel).replace(/,/g, " "),
+          r.orders,
+          r.lastOrder,
+        ].join(",")
+      );
     });
     const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -225,16 +227,16 @@ function DashboardBody() {
   return (
     <div className="space-y-6">
       {/* Bandeau filtres */}
-      <div className="bg-gradient-to-r from-[#002147] to-[#0b3e8b] text-white rounded-2xl shadow-xl">
-        <div className="p-4">
+      <div className="rounded-2xl bg-gradient-to-r from-[#002147] to-[#0b3e8b] text-white shadow-xl">
+        <div className="p-3 sm:p-4">
           <div className="flex flex-col md:flex-row md:items-end gap-3">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 flex-1">
               <Field label={t("filters.from")}>
                 <input
                   type="date"
                   value={from}
                   onChange={(e) => setFrom(e.target.value)}
-                  className="w-full rounded-xl px-3 py-2 bg-white text-[#002147] border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  className="w-full rounded-xl px-3 py-2 bg-white text-[#002147] text-sm sm:text-base border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
                 />
               </Field>
 
@@ -243,7 +245,7 @@ function DashboardBody() {
                   type="date"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  className="w-full rounded-xl px-3 py-2 bg-white text-[#002147] border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  className="w-full rounded-xl px-3 py-2 bg-white text-[#002147] text-sm sm:text-base border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
                 />
               </Field>
 
@@ -253,7 +255,7 @@ function DashboardBody() {
                   min={1}
                   value={minOrders}
                   onChange={(e) => setMinOrders(+e.target.value || 1)}
-                  className="w-full rounded-xl px-3 py-2 bg-white text-[#002147] border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  className="w-full rounded-xl px-3 py-2 bg-white text-[#002147] text-sm sm:text-base border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
                 />
               </Field>
 
@@ -261,14 +263,14 @@ function DashboardBody() {
                 <button
                   onClick={load}
                   disabled={loading}
-                  className="mt-auto w-full rounded-xl px-4 py-2 bg-white text-[#002147] font-semibold border border-white/30 hover:bg-white/90 active:scale-[.99] transition"
+                  className="mt-auto w-full rounded-xl px-4 py-2 bg-white text-[#002147] font-semibold border border-white/30 hover:bg-white/90 active:scale-[.99] transition text-sm sm:text-base"
                 >
                   {loading ? t("common.loading") : t("filters.refresh")}
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 md:ml-auto">
+            <div className="flex flex-wrap gap-2 md:ml-auto pt-1">
               <QuickBtn onClick={() => quick(7)}>{t("filters.quick.7d")}</QuickBtn>
               <QuickBtn onClick={() => quick(30)}>{t("filters.quick.30d")}</QuickBtn>
               <QuickBtn onClick={() => quick(90)}>{t("filters.quick.90d")}</QuickBtn>
@@ -289,11 +291,13 @@ function DashboardBody() {
         </Callout>
       )}
       {error && httpCode !== 401 && httpCode !== 403 && (
-        <Callout type="error" title={t("errors.generic.title")}>{String(error)}</Callout>
+        <Callout type="error" title={t("errors.generic.title")}>
+          {String(error)}
+        </Callout>
       )}
 
       {/* KPI Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard
           title={t("kpi.totalClients")}
           value={fmt(data?.kpis?.totalClients)}
@@ -315,18 +319,18 @@ function DashboardBody() {
       </div>
 
       {/* Charts row */}
-      <div className="grid xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
         <Card title={t("charts.ordersPerDay")} className="xl:col-span-2">
           {loading ? (
             <SkeletonChart />
           ) : (
-            <div className="h-72">
+            <div className="h-64 sm:h-72 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data?.series?.ordersByDay || []} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.35} />
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} angle={-20} textAnchor="end" height={50} />
                   <YAxis width={36} tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v) => [v, t("labels.orders")]} />
+                  <Tooltip formatter={(v) => [v as any, t("labels.orders")]} />
                   <Legend verticalAlign="top" height={24} />
                   <Bar dataKey="count" name={t("labels.ordersShort")} radius={[6, 6, 0, 0]} fill="#002147" />
                 </BarChart>
@@ -339,7 +343,7 @@ function DashboardBody() {
           {loading ? (
             <SkeletonChart />
           ) : (
-            <div className="h-72">
+            <div className="h-64 sm:h-72 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data?.series?.newClientsByDay || []} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
@@ -357,7 +361,7 @@ function DashboardBody() {
                     domain={[0, upperNew]}
                     ticks={ticksNew}
                   />
-                  <Tooltip formatter={(v) => [v, t("labels.clients")]} />
+                  <Tooltip formatter={(v) => [v as any, t("labels.clients")]} />
                   <Area type="monotone" dataKey="count" stroke="#0EA5E9" fill="url(#gradClients)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -369,22 +373,22 @@ function DashboardBody() {
           {loading ? (
             <SkeletonChart />
           ) : (
-            <div className="h-72 relative">
+            <div className="relative h-64 sm:h-72 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={donutData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={4}>
+                  <Pie data={donutData} dataKey="value" nameKey="name" innerRadius={56} outerRadius={88} paddingAngle={4}>
                     {donutData.map((e, i) => (
                       <Cell key={i} fill={e.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v, n) => [v, n]} />
+                  <Tooltip formatter={(v: any, n: any) => [v, n]} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <div className="text-xs text-slate-500">{t("labels.total")}</div>
-                  <div className="text-2xl font-semibold text-slate-900">{fmt(totalDonut)}</div>
+                  <div className="text-xl sm:text-2xl font-semibold text-slate-900">{fmt(totalDonut)}</div>
                 </div>
               </div>
             </div>
@@ -393,12 +397,12 @@ function DashboardBody() {
       </div>
 
       {/* Second row */}
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card title={t("charts.claimsPerDay")}>
           {loading ? (
             <SkeletonChart />
           ) : (
-            <div className="h-72">
+            <div className="h-64 sm:h-72 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data?.series?.claimsByDay || []} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.35} />
@@ -410,7 +414,7 @@ function DashboardBody() {
                     domain={[0, upperClaims]}
                     ticks={ticksClaims}
                   />
-                  <Tooltip formatter={(v) => [v, t("labels.claimsShort")]} />
+                  <Tooltip formatter={(v) => [v as any, t("labels.claimsShort")]} />
                   <Line type="monotone" dataKey="count" stroke="#EF4444" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
@@ -421,13 +425,17 @@ function DashboardBody() {
         <Card
           title={t("loyal.title", { min: minOrders })}
           actions={
-            <button onClick={exportLoyalCSV} className="text-sm px-3 py-1.5 rounded-lg border-2 border-amber-300 hover:bg-amber-50">
+            <button
+              onClick={exportLoyalCSV}
+              className="rounded-lg border-2 border-amber-300 px-3 py-1.5 text-sm hover:bg-amber-50"
+            >
               {t("loyal.exportCsv")}
             </button>
           }
         >
-          <div className="overflow-x-visible overflow-y-auto">
-            <table className="w-full table-fixed text-sm">
+          {/* >>> mobile-friendly table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-[680px] w-full text-xs sm:text-sm">
               <colgroup>
                 <col style={{ width: "40%" }} />
                 <col style={{ width: "24%" }} />
@@ -443,10 +451,13 @@ function DashboardBody() {
                 </tr>
               </thead>
               <tbody>
-                {(data?.loyalClients || []).map((r, i) => (
-                  <tr key={r.clientId + i} className="border-b last:border-b-0 hover:bg-amber-50/40 border-amber-100">
+                {(data?.loyalClients || []).map((r: any, i: number) => (
+                  <tr
+                    key={r.clientId + i}
+                    className="border-b border-amber-100 last:border-b-0 hover:bg-amber-50/40"
+                  >
                     <Td className="break-words">
-                      <span className="block truncate md:whitespace-normal md:truncate-0">{r.name || r.clientId}</span>
+                      <span className="block truncate sm:whitespace-normal">{r.name || r.clientId}</span>
                     </Td>
                     <Td className="capitalize">
                       {r.accountType
@@ -462,7 +473,7 @@ function DashboardBody() {
                       {r.lastOrder ? (
                         <>
                           <span className="block">{new Date(r.lastOrder).toLocaleDateString()}</span>
-                          <span className="block text-xs">
+                          <span className="block text-[11px] sm:text-xs">
                             {new Date(r.lastOrder).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
                         </>
@@ -489,47 +500,59 @@ function DashboardBody() {
 }
 
 /* -------------------- UI blocks -------------------- */
-function Field({ label, children }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs/relaxed opacity-90 mb-1">{label}</label>
+      <label className="mb-1 block text-[11px] sm:text-xs/relaxed opacity-90">{label}</label>
       {children}
     </div>
   );
 }
 
-function Card({ title, actions, className = "", children }) {
+function Card({
+  title,
+  actions,
+  className = "",
+  children,
+}: {
+  title: string;
+  actions?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className={`relative bg-white/95 backdrop-blur rounded-2xl border-2 border-amber-300 ring-1 ring-amber-200 shadow-md ${className}`}>
-      <div className="flex items-center justify-between gap-3 px-4 pt-3">
+    <div
+      className={`relative rounded-2xl border-2 border-amber-300 bg-white/95 ring-1 ring-amber-200 shadow-md backdrop-blur ${className}`}
+    >
+      <div className="flex items-center justify-between gap-3 px-3 sm:px-4 pt-3">
         <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
         {actions}
       </div>
-      <div className="p-4">{children}</div>
-      <span className="pointer-events-none absolute -top-3 -left-3 h-6 w-6 rounded-full bg-amber-300/30 blur-md" />
+      <div className="p-3 sm:p-4">{children}</div>
+      <span className="pointer-events-none absolute -left-3 -top-3 h-6 w-6 rounded-full bg-amber-300/30 blur-md" />
       <span className="pointer-events-none absolute -bottom-3 -right-3 h-6 w-6 rounded-full bg-amber-300/30 blur-md" />
     </div>
   );
 }
-function Th({ className = "", children }) {
-  return <th className={`py-2 pr-3 text-left text-xs font-semibold text-slate-700 ${className}`}>{children}</th>;
+function Th({ className = "", children }: { className?: string; children: React.ReactNode }) {
+  return <th className={`py-2 pr-3 text-left text-[11px] sm:text-xs font-semibold text-slate-700 ${className}`}>{children}</th>;
 }
-function Td({ className = "", children }) {
+function Td({ className = "", children }: { className?: string; children: React.ReactNode }) {
   return <td className={`py-2 pr-3 ${className}`}>{children}</td>;
 }
-function KpiCard({ title, value, sub, accent = "from-sky-500 to-blue-600" }) {
+function KpiCard({ title, value, sub, accent = "from-sky-500 to-blue-600" }: { title: string; value: string; sub?: string; accent?: string }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-amber-300 ring-1 ring-amber-200 bg-white shadow-md">
       <div className={`absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br ${accent} opacity-20`} />
-      <div className="p-4 relative">
+      <div className="relative p-4">
         <div className="text-xs text-slate-600">{title}</div>
-        <div className="text-3xl font-semibold mt-1 text-slate-900">{value}</div>
-        {sub && <div className="text-xs text-slate-500 mt-1">{sub}</div>}
+        <div className="mt-1 text-2xl sm:text-3xl font-semibold text-slate-900">{value}</div>
+        {sub && <div className="mt-1 text-xs text-slate-500">{sub}</div>}
       </div>
     </div>
   );
 }
-function Callout({ type = "info", title, children }) {
+function Callout({ type = "info", title, children }: { type?: "info" | "error" | "warn"; title: string; children: React.ReactNode }) {
   const palette =
     type === "error"
       ? "bg-red-50 border-red-300 text-red-800"
@@ -538,24 +561,24 @@ function Callout({ type = "info", title, children }) {
       : "bg-blue-50 border-blue-300 text-blue-800";
   return (
     <div className={`rounded-xl border-2 p-3 ${palette}`}>
-      <div className="font-semibold mb-1">{title}</div>
+      <div className="mb-1 font-semibold">{title}</div>
       <div className="text-sm">{children}</div>
     </div>
   );
 }
-function PageLoader({ label = "…" }) {
+function PageLoader({ label = "…" }: { label?: string }) {
   return (
-    <div className="p-6">
-      <div className="animate-pulse grid gap-3">
-        <div className="h-8 w-48 bg-slate-200 rounded" />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="p-3 sm:p-6">
+      <div className="grid animate-pulse gap-3">
+        <div className="h-8 w-48 rounded bg-slate-200" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 bg-slate-200 rounded-2xl" />
+            <div key={i} className="h-24 rounded-2xl bg-slate-200" />
           ))}
         </div>
-        <div className="grid xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-72 bg-slate-200 rounded-2xl" />
+            <div key={i} className="h-64 sm:h-72 rounded-2xl bg-slate-200" />
           ))}
         </div>
       </div>
@@ -564,11 +587,14 @@ function PageLoader({ label = "…" }) {
   );
 }
 function SkeletonChart() {
-  return <div className="h-72 w-full animate-pulse rounded-xl bg-slate-100" />;
+  return <div className="h-64 sm:h-72 md:h-80 w-full animate-pulse rounded-xl bg-slate-100" />;
 }
-function QuickBtn({ onClick, children }) {
+function QuickBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} className="rounded-xl border-2 border-amber-300 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 text-sm backdrop-blur transition">
+    <button
+      onClick={onClick}
+      className="rounded-xl border-2 border-amber-300 bg-white/10 px-3 py-1.5 text-xs sm:text-sm text-white backdrop-blur transition hover:bg-white/20"
+    >
       {children}
     </button>
   );
