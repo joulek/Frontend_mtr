@@ -2,30 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname } from "next/navigation";
 
+/* -------------------- Config -------------------- */
 const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
-
-/* -------------------- cookies / token -------------------- */
-function getCookie(name) {
-  if (typeof document === "undefined") return "";
-  const v = document.cookie.split("; ").find((c) => c.startsWith(name + "="));
-  return v ? decodeURIComponent(v.split("=")[1]) : "";
-}
-function pickAuthToken() {
-  const fromCookie = getCookie("token") || getCookie("authToken") || getCookie("access_token") || "";
-  if (fromCookie) return fromCookie;
-  try {
-    return (
-      localStorage.getItem("token") ||
-      localStorage.getItem("authToken") ||
-      localStorage.getItem("access_token") ||
-      ""
-    );
-  } catch {
-    return "";
-  }
-}
 
 /* -------------------- Helpers dates -------------------- */
 const pad = (n) => String(n).padStart(2, "0");
@@ -89,8 +68,7 @@ function Input({ label, name, required, type = "text", min, placeholder, value, 
     <div className="space-y-1">
       {label && (
         <label className="block text-sm font-medium text-[#002147]">
-          {label}
-          {required && <RequiredMark />}
+          {label}{required && <RequiredMark />}
         </label>
       )}
       <input
@@ -112,8 +90,7 @@ function SelectBase({ label, name, value, onChange, options = [], required, plac
     <div className="space-y-1 w-full">
       {label && (
         <label className="block text-sm font-medium text-[#002147]">
-          {label}
-          {required && <RequiredMark />}
+          {label}{required && <RequiredMark />}
         </label>
       )}
       <select
@@ -160,7 +137,8 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
 
   const selected = fromISO(value);
   const [month, setMonth] = useState(
-    () => (selected ? new Date(selected.getFullYear(), selected.getMonth(), 1) : new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+    () => (selected ? new Date(selected.getFullYear(), selected.getMonth(), 1)
+                    : new Date(new Date().getFullYear(), new Date().getMonth(), 1))
   );
   const wrapRef = useRef(null);
 
@@ -170,12 +148,12 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const daysShort = t.raw("datepicker.daysShort") || ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+  const daysShort = t.raw("datepicker.daysShort") || ["Mo","Tu","We","Th","Fr","Sa","Su"];
   const monthLabel = month.toLocaleDateString(locale || "fr-FR", { month: "long", year: "numeric" });
 
   const start = (() => {
     const d = new Date(month);
-    const wd = (d.getDay() + 6) % 7; // lundi=0
+    const wd = (d.getDay() + 6) % 7; // Monday=0
     d.setDate(d.getDate() - wd);
     return d;
   })();
@@ -299,38 +277,21 @@ function PrettyDatePicker({ label, value, onChange, name, required, maxDate, t }
   );
 }
 
-/* ===================== Page ===================== */
+/* ===================== Page (sans cookies / auth) ===================== */
 export default function ReclamationClient() {
   const t = useTranslations("auth.client.reclamationForm");
   const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
 
-  /* -------- Session -------- */
-  const [session, setSession] = useState(null);
-  const [loadingSession, setLoadingSession] = useState(true);
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = pickAuthToken();
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch("/api/session", { cache: "no-store", credentials: "include", headers });
-        const data = res.ok ? await res.json() : null;
-        setSession(data || null);
-      } catch {
-        setSession(null);
-      } finally {
-        setLoadingSession(false);
-      }
-    })();
-  }, []);
-  const isAuthenticated = !!session?.authenticated;
-  const isClient = session?.role === "client";
-
-  /* -------- State UI -------- */
+  /* -------- UI state -------- */
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const alertRef = useRef(null);
+
+  useEffect(() => {
+    if (alertRef.current && message) {
+      alertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [message]);
 
   // auto-hide succès
   useEffect(() => {
@@ -339,14 +300,7 @@ export default function ReclamationClient() {
     return () => clearTimeout(id);
   }, [message]);
 
-  // scroll vers alerte
-  useEffect(() => {
-    if (alertRef.current && message) {
-      alertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [message]);
-
-  // options i18n
+  /* -------- options i18n -------- */
   const typeDocOptions = t.raw("typeDocOptions") || [
     { value: "devis", label: "Devis" },
     { value: "bon_commande", label: "Bon de commande" },
@@ -368,7 +322,7 @@ export default function ReclamationClient() {
     { value: "autre", label: "Autre" },
   ];
 
-  /* -------- Form -------- */
+  /* -------- form -------- */
   const [form, setForm] = useState({
     typeDoc: "devis",
     numero: "",
@@ -387,7 +341,7 @@ export default function ReclamationClient() {
     else setField(name, value);
   };
 
-  /* -------- Files (même esprit que AutreArticleForm) -------- */
+  /* -------- files -------- */
   const MAX_FILES = 4;
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -398,10 +352,7 @@ export default function ReclamationClient() {
     const out = [];
     for (const f of arr) {
       const sig = `${f.name}|${f.size}|${f.lastModified || 0}`;
-      if (!seen.has(sig)) {
-        seen.add(sig);
-        out.push(f);
-      }
+      if (!seen.has(sig)) { seen.add(sig); out.push(f); }
     }
     return out;
   }
@@ -428,17 +379,12 @@ export default function ReclamationClient() {
     if (e.dataTransfer?.files?.length) handleFileList(e.dataTransfer.files, { append: true });
   }
 
-  /* -------- Submit -------- */
+  /* -------- submit (AUCUN check d'auth) -------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
 
-    if (!isAuthenticated) {
-      const next = encodeURIComponent(pathname || `/${locale}/client/reclamations`);
-      router.push(`/${locale}/login?next=${next}`);
-      return;
-    }
-    if (!isClient) return setMessage(`❌ ${t("errors.clientOnly")}`);
+    // vérifs de base du formulaire (sans auth)
     if (!form.numero.trim()) return setMessage(`⚠️ ${t("errors.documentNumberRequired")}`);
     if (form.nature === "autre" && !form.natureAutre.trim()) return setMessage(`⚠️ ${t("errors.natureOtherRequired")}`);
     if (form.attente === "autre" && !form.attenteAutre.trim()) return setMessage(`⚠️ ${t("errors.attenteOtherRequired")}`);
@@ -463,10 +409,8 @@ export default function ReclamationClient() {
       if (form.attente === "autre") parts.push(`${t("fields.attenteOther")}: ${form.attenteAutre.trim()}`);
       const description = parts.length ? parts.join(" | ") : undefined;
 
-      const localId = typeof window !== "undefined" ? localStorage.getItem("id") : null;
-
       const payload = {
-        user: localId || null,
+        user: null, // plus d’auth ici
         commande: {
           typeDoc: form.typeDoc,
           numero: form.numero.trim(),
@@ -480,12 +424,9 @@ export default function ReclamationClient() {
         piecesJointes,
       };
 
-      const token = pickAuthToken();
-      const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-
       const res = await fetch(`${BACKEND}/api/reclamations`, {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" }, // NO auth header
         credentials: "include",
         body: JSON.stringify(payload),
       });
@@ -493,8 +434,7 @@ export default function ReclamationClient() {
       if (!json?.success) throw new Error(json?.message || `HTTP ${res.status}`);
 
       setMessage(`✅ ${t("success.submitted")}`);
-
-      // reset propre (comme l’autre form)
+      // reset
       setForm({
         typeDoc: "devis",
         numero: "",
@@ -515,21 +455,14 @@ export default function ReclamationClient() {
     }
   };
 
-  const disabled = loadingSession || submitting || !isAuthenticated || !isClient;
-  const submitLabel = submitting
-    ? t("button.sending")
-    : !isAuthenticated
-    ? t("button.loginToSend")
-    : !isClient
-    ? t("button.clientOnly")
-    : t("button.send");
-
   /* -------------------- Render -------------------- */
   return (
     <section className="mx-auto max-w-5xl px-3 sm:px-6 lg:px-8 py-6">
       {/* Titre */}
       <div className="text-center mb-5">
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#002147]">{t("title")}</h1>
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#002147]">
+          {t("title")}
+        </h1>
         <p className="mt-1.5 text-sm text-gray-600">{t("subtitle")}</p>
       </div>
 
@@ -538,22 +471,90 @@ export default function ReclamationClient() {
         <form onSubmit={handleSubmit}>
           <SectionTitle>{t("sections.docInfo")}</SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-            <SelectBase name="typeDoc" value={form.typeDoc} onChange={onChange} label={t("fields.typeDoc")} required options={typeDocOptions} placeholder={t("selectPlaceholder")} />
-            <Input name="numero" label={t("fields.numero")} required placeholder={t("placeholders.numero")} value={form.numero} onChange={onChange} />
+            <SelectBase
+              name="typeDoc"
+              value={form.typeDoc}
+              onChange={onChange}
+              label={t("fields.typeDoc")}
+              required
+              options={typeDocOptions}
+              placeholder={t("selectPlaceholder")}
+            />
+            <Input
+              name="numero"
+              label={t("fields.numero")}
+              required
+              placeholder={t("placeholders.numero")}
+              value={form.numero}
+              onChange={onChange}
+            />
 
-            <PrettyDatePicker label={t("fields.dateLivraison")} name="dateLivraison" value={form.dateLivraison} onChange={(val) => setField("dateLivraison", clampISOToToday(val))} maxDate={new Date()} t={t} />
+            <PrettyDatePicker
+              label={t("fields.dateLivraison")}
+              name="dateLivraison"
+              value={form.dateLivraison}
+              onChange={(val) => setField("dateLivraison", clampISOToToday(val))}
+              maxDate={new Date()}
+              t={t}
+            />
 
-            <Input name="referenceProduit" label={t("fields.referenceProduit")} placeholder={t("placeholders.referenceProduit")} value={form.referenceProduit} onChange={onChange} />
-            <Input type="number" min="0" name="quantite" label={t("fields.quantite")} placeholder={t("placeholders.quantite")} value={form.quantite} onChange={onChange} />
+            <Input
+              name="referenceProduit"
+              label={t("fields.referenceProduit")}
+              placeholder={t("placeholders.referenceProduit")}
+              value={form.referenceProduit}
+              onChange={onChange}
+            />
+            <Input
+              type="number"
+              min="0"
+              name="quantite"
+              label={t("fields.quantite")}
+              placeholder={t("placeholders.quantite")}
+              value={form.quantite}
+              onChange={onChange}
+            />
           </div>
 
           <SectionTitle>{t("sections.claim")}</SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-            <SelectBase name="nature" value={form.nature} onChange={onChange} label={t("fields.nature")} required options={natureOptions} placeholder={t("selectPlaceholder")} />
-            {form.nature === "autre" && <Input name="natureAutre" label={t("fields.natureOther")} required value={form.natureAutre} onChange={onChange} />}
+            <SelectBase
+              name="nature"
+              value={form.nature}
+              onChange={onChange}
+              label={t("fields.nature")}
+              required
+              options={natureOptions}
+              placeholder={t("selectPlaceholder")}
+            />
+            {form.nature === "autre" && (
+              <Input
+                name="natureAutre"
+                label={t("fields.natureOther")}
+                required
+                value={form.natureAutre}
+                onChange={onChange}
+              />
+            )}
 
-            <SelectBase name="attente" value={form.attente} onChange={onChange} label={t("fields.attente")} required options={attenteOptions} placeholder={t("selectPlaceholder")} />
-            {form.attente === "autre" && <Input name="attenteAutre" label={t("fields.attenteOther")} required value={form.attenteAutre} onChange={onChange} />}
+            <SelectBase
+              name="attente"
+              value={form.attente}
+              onChange={onChange}
+              label={t("fields.attente")}
+              required
+              options={attenteOptions}
+              placeholder={t("selectPlaceholder")}
+            />
+            {form.attente === "autre" && (
+              <Input
+                name="attenteAutre"
+                label={t("fields.attenteOther")}
+                required
+                value={form.attenteAutre}
+                onChange={onChange}
+              />
+            )}
           </div>
 
           <SectionTitle>{t("sections.attachments")}</SectionTitle>
@@ -564,7 +565,9 @@ export default function ReclamationClient() {
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={onDrop}
-            className={`flex flex-col items-center justify-center cursor-pointer rounded-2xl text-center transition min-h-[110px] md:min-h-[130px] p-5 bg-white border-2 border-dashed ${isDragging ? "border-yellow-500 ring-2 ring-yellow-300" : "border-yellow-500"}`}
+            className={`flex flex-col items-center justify-center cursor-pointer rounded-2xl text-center transition
+                        min-h-[110px] md:min-h-[130px] p-5 bg-white
+                        border-2 border-dashed ${isDragging ? "border-yellow-500 ring-2 ring-yellow-300" : "border-yellow-500"}`}
             aria-label={t("aria.dropzone")}
             title={t("aria.dropzone")}
           >
@@ -572,9 +575,15 @@ export default function ReclamationClient() {
               <p className="text-sm font-medium text-[#002147]">{t("files.drop")}</p>
             ) : (
               <div className="w-full text-center">
-                <p className="text-sm font-semibold text-[#002147] mb-1">{t("files.selected", { count: files.length })}</p>
-                <p className="mx-auto max-w-[900px] truncate text-[13px] text-[#002147]">{files.map((f) => f.name).join(", ")}</p>
-                <p className="text-[11px] text-[#002147]/70 mt-1">{t("files.total", { kb: (files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0) })}</p>
+                <p className="text-sm font-semibold text-[#002147] mb-1">
+                  {t("files.selected", { count: files.length })}
+                </p>
+                <p className="mx-auto max-w-[900px] truncate text-[13px] text-[#002147]">
+                  {files.map((f) => f.name).join(", ")}
+                </p>
+                <p className="text-[11px] text-[#002147]/70 mt-1">
+                  {t("files.total", { kb: (files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0) })}
+                </p>
               </div>
             )}
             <input
@@ -589,18 +598,26 @@ export default function ReclamationClient() {
           </label>
 
           <div ref={alertRef} aria-live="polite" className="mt-4">
-            {message && <Alert type={message.startsWith("✅") ? "success" : message.startsWith("⚠️") ? "info" : "error"} message={message} />}
+            {message && (
+              <Alert
+                type={message.startsWith("✅") ? "success" : message.startsWith("⚠️") ? "info" : "error"}
+                message={message}
+              />
+            )}
           </div>
 
           <div className="mt-6">
             <button
               type="submit"
-              disabled={disabled}
-              className={`w-full rounded-xl font-semibold py-3 transition-all ${disabled ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
+              disabled={submitting}
+              className={`w-full rounded-xl font-semibold py-3 transition-all
+                ${submitting
+                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#002147] to-[#01346b] text-white shadow-lg hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[0px]"}`}
               aria-label={t("aria.submit")}
-              title={!isAuthenticated ? t("tooltips.mustLogin") : !isClient ? t("tooltips.clientOnly") : t("aria.submit")}
+              title={t("aria.submit")}
             >
-              {submitLabel}
+              {submitting ? t("button.sending") : t("button.send")}
             </button>
           </div>
         </form>
