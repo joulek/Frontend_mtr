@@ -229,7 +229,8 @@
       "topbar": {
         "about": "À propos",
         "helpdesk": "Help Desk",
-        "contact": "Présentation"
+        "presentation": "Présentation",
+         "contact": "Contact"
       },
       "nav": {
         "home": "Accueil",
