@@ -128,7 +128,6 @@ export default function AdminLayout({ children }) {
           >
             <FaBars />
           </button>
-          <h1 className="text-[#002147] font-semibold">{t("title")}</h1>
           <button
             onClick={handleLogout}
             className="rounded-lg px-3 py-2 text-sm font-semibold bg-yellow-400 hover:bg-yellow-300 text-[#002147] transition"
