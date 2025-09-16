@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Facebook, Linkedin, MoreVertical, User, LogOut } from "lucide-react";
+import { Facebook, MoreVertical, User, LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 /* ---------------------------- API backend ---------------------------- */
@@ -412,8 +412,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               {t("topbar.helpdesk")}
             </Link>
             <span className="opacity-40">|</span>
-            <button type="button" onClick={() => goToSection("contact")} className="opacity-90 transition hover:text-[#F5B301]" role="link">
-              {t("topbar.contact")}
+            <button type="button" onClick={() => goToSection("presentation")} className="opacity-90 transition hover:text-[#F5B301]" role="link">
+              {t("topbar.presentation")}
             </button>
           </nav>
 
