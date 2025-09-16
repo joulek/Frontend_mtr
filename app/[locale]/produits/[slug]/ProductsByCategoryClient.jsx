@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 /* -------------------- Consts -------------------- */
@@ -22,43 +21,74 @@ function slugify(s = "") {
 function humanizeTitle(s = "") {
   return String(s)
     .replace(/-/g, " ")
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .split(" ").filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 }
 function pickName(item, locale = "fr") {
   return (locale?.startsWith("en") ? item?.name_en : item?.name_fr) || item?.name_fr || item?.name_en || "";
 }
 
-/** URL image sûre (accepte string/objet) */
+/** ✅ يحوّل أي قيمة صورة (string أو object) إلى URL صالح https على الدومين backend */
 function toUrlSafe(input = "") {
   try {
     let src = input;
     if (!src) return "/placeholder.png";
-    if (typeof src === "object") src = src?.url || src?.src || src?.path || src?.filename || src?.fileName || src?.name || "";
+    if (typeof src === "object") {
+      src = src?.url || src?.src || src?.path || src?.filename || src?.fileName || src?.name || "";
+    }
     if (!src) return "/placeholder.png";
 
     let s = String(src).trim().replace(/\\/g, "/");
-    if (/^(data|blob):/i.test(s)) return s;
-    if (s.startsWith("/placeholder") || s.startsWith("/images")) return s;
 
+    // data: / blob:
+    if (/^(data|blob):/i.test(s)) return s;
+
+    // public assets
+    if (s.startsWith("/placeholder") || s.startsWith("/images") || s.startsWith("/icons") || s.startsWith("/logo") || s.startsWith("/_next/")) {
+      return s;
+    }
+
+    // Absolute URL
     if (/^https?:\/\//i.test(s)) {
       const u = new URL(s);
+
+      // localhost/127 → remap domain + https + remove port + ensure /uploads
       if (/(^|\.)(localhost|127\.0\.0\.1)$/i.test(u.hostname)) {
-        u.protocol = "https:"; u.hostname = BACKEND_HOST; u.port = "";
-        if (!u.pathname.startsWith("/uploads/")) u.pathname = `/uploads/${u.pathname.replace(/^\/+/, "")}`;
+        u.protocol = "https:";
+        u.hostname = BACKEND_HOST;
+        u.port = "";
+        if (!u.pathname.startsWith("/uploads/")) {
+          u.pathname = `/uploads/${u.pathname.replace(/^\/+/, "")}`;
+        }
         return u.toString();
       }
-      if (u.hostname === BACKEND_HOST && u.protocol !== "https:") { u.protocol = "https:"; u.port = ""; return u.toString(); }
+
+      // same backend host but http → upgrade
+      if (u.hostname === BACKEND_HOST && u.protocol !== "https:") {
+        u.protocol = "https:";
+        u.port = "";
+        return u.toString();
+      }
+
+      // page https & image http (other host) → try https
+      if (typeof window !== "undefined" && window.location.protocol === "https:" && u.protocol === "http:") {
+        u.protocol = "https:";
+        return u.toString();
+      }
+
       return u.toString();
     }
+
+    // relative/filename → /uploads + backend host
     const path = s.startsWith("/uploads/") ? s : `/uploads/${s.replace(/^\/+/, "")}`;
     return `https://${BACKEND_HOST}${path}`;
-  } catch { return "/placeholder.png"; }
+  } catch {
+    return "/placeholder.png";
+  }
 }
 
-/* Forcer liste */
+/* Forcer l’affichage liste (pas d’auto-open) pour certains slugs */
 const FORCE_LIST_SLUGS = new Set(["ressorts"]);
 
 /* Anim */
@@ -111,17 +141,35 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
   const next = () => scrollTo(index + 1);
   const prev = () => scrollTo(index - 1);
 
-  useEffect(() => {
+  const startAuto = useCallback(() => {
     if (autoplayRef.current) clearInterval(autoplayRef.current);
     if (items.length <= 1) return;
     autoplayRef.current = setInterval(() => {
       if (!isHoverRef.current) next();
     }, AUTOPLAY_MS);
-    return () => autoplayRef.current && clearInterval(autoplayRef.current);
   }, [items.length]);
 
   useEffect(() => {
-    const handler = (e) => { if (e.key === "ArrowRight") next(); if (e.key === "ArrowLeft") prev(); };
+    startAuto();
+    return () => autoplayRef.current && clearInterval(autoplayRef.current);
+  }, [startAuto]);
+
+  useEffect(() => {
+    const onBlur = () => autoplayRef.current && clearInterval(autoplayRef.current);
+    const onFocus = () => startAuto();
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [startAuto]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [index, slideW]);
@@ -136,11 +184,15 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
         className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none]"
         style={{ scrollBehavior: "smooth" }}
         onMouseEnter={() => { isHoverRef.current = true; }}
-        onMouseLeave={() => { isHoverRef.current = false; }}
+        onMouseLeave={() => { isHoverRef.current = false; startAuto(); }}
       >
         <style jsx>{`div::-webkit-scrollbar{display:none;}`}</style>
         {items.map((it, i) => (
-          <div key={i} ref={i === 0 ? slideRef : undefined} className="snap-start shrink-0 w-[88%] sm:w-[62%] lg:w-[46%] xl:w-[40%]">
+          <div
+            key={i}
+            ref={i === 0 ? slideRef : undefined}
+            className="snap-start shrink-0 w-[88%] sm:w-[62%] lg:w-[46%] xl:w-[40%]"
+          >
             {renderItem(it, i)}
           </div>
         ))}
@@ -148,18 +200,32 @@ function Carousel({ items, ariaLabel = "Carrousel", renderItem }) {
 
       {items.length > 1 && (
         <>
-          <button aria-label="Précédent" onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-[200] grid place-items-center h-11 w-11 rounded-full bg-white/90 shadow">‹</button>
-          <button aria-label="Suivant" onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-[200] grid place-items-center h-11 w-11 rounded-full bg-white/90 shadow">›</button>
+          <button
+            aria-label="Précédent"
+            onClick={prev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid place-items-center h-11 w-11 rounded-full bg-white/90 shadow ring-1 ring-slate-200 hover:bg-white"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="#0B2239" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          <button
+            aria-label="Suivant"
+            onClick={next}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid place-items-center h-11 w-11 rounded-full bg-white/90 shadow ring-1 ring-slate-200 hover:bg-white"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#0B2239" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
         </>
       )}
 
       {items.length > 1 && (
         <div className="mt-5 flex items-center justify-center gap-2">
           {items.map((_, i) => (
-            <button key={i} aria-label={`Aller à l’élément ${i + 1}`} onClick={() => scrollTo(i)}
-              className={`h-2.5 rounded-full transition-all ${i === index ? "w-6 bg-[#0B2239]" : "w-2.5 bg-slate-300"}`} />
+            <button
+              key={i}
+              aria-label={`Aller à l’élément ${i + 1}`}
+              onClick={() => scrollTo(i)}
+              className={`h-2.5 rounded-full transition-all ${i === index ? "w-6 bg-[#0B2239]" : "w-2.5 bg-slate-300 hover:bg-slate-400"}`}
+            />
           ))}
         </div>
       )}
@@ -179,13 +245,14 @@ export default function ProductsByCategoryPage() {
   const [error, setError] = useState("");
   const [didAutoOpen, setDidAutoOpen] = useState(false);
 
-  /* fetch categories */
   useEffect(() => {
     let alive = true;
     const controller = new AbortController();
     (async () => {
       try {
+        setLoadingCats(true);
         const res = await fetch(`${API}/categories`, { cache: "no-store", signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (alive) setCategories(Array.isArray(data?.categories) ? data.categories : []);
       } catch {
@@ -199,21 +266,24 @@ export default function ProductsByCategoryPage() {
 
   const currentCategory = useMemo(() => {
     if (!categories?.length || !slug) return null;
-    return categories.find((c) => {
-      const title = (c?.translations?.[locale] || c?.translations?.fr || c?.translations?.en || c?.label || "").trim();
-      const s = c?.slug ? String(c.slug) : slugify(title);
-      return s === slug;
-    }) || null;
+    return (
+      categories.find((c) => {
+        const title = (c?.translations?.[locale] || c?.translations?.fr || c?.translations?.en || c?.label || "").trim();
+        const s = c?.slug ? String(c.slug) : slugify(title);
+        return s === slug;
+      }) || null
+    );
   }, [categories, slug, locale]);
 
-  /* fetch products */
   useEffect(() => {
     if (!currentCategory?._id) return;
     let alive = true;
     const controller = new AbortController();
     (async () => {
       try {
+        setLoadingProds(true); setError("");
         const res = await fetch(`${API}/produits/by-category/${currentCategory._id}`, { cache: "no-store", signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (alive) setProducts(Array.isArray(data) ? data : []);
       } catch {
@@ -232,7 +302,6 @@ export default function ProductsByCategoryPage() {
     currentCategory?.label ||
     humanizeTitle(String(slug || ""));
 
-  /* auto open (si 1 seul produit et slug non forcé) */
   useEffect(() => {
     const forceList = FORCE_LIST_SLUGS.has(String(slug));
     if (!loadingProds && !loadingCats && !error) {
@@ -243,7 +312,7 @@ export default function ProductsByCategoryPage() {
     }
   }, [loadingProds, loadingCats, error, products, slug, locale, router]);
 
-  /* header anim */
+  /* Micro-parallax header */
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [0, -24]);
@@ -256,9 +325,23 @@ export default function ProductsByCategoryPage() {
         {/* Hero */}
         <motion.section ref={heroRef} style={{ y, scale }} className="relative overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 pt-10">
+            <motion.nav {...fadeUp(0.05)} className="text-sm text-slate-500">
+              <button onClick={() => router.push(`/${locale}`)} className="hover:underline">Accueil</button>
+              <span className="mx-2">/</span>
+              <span className="text-slate-700 font-semibold">{pageTitle}</span>
+            </motion.nav>
+
             <motion.h1 {...fadeUp(0.1)} className="mt-3 text-3xl md:text-4xl font-extrabold text-[#0B2239] tracking-tight">
               {pageTitle}
             </motion.h1>
+
+            <motion.div {...fadeUp(0.18)} className="mt-4 h-[6px] w-36 rounded-full bg-gradient-to-r from-[#F5B301] via-[#F5B301] to-transparent" />
+          </div>
+
+          {/* décor */}
+          <div className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute -top-16 -right-24 h-56 w-56 rounded-full bg-[#F5B301]/20 blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[#0B2239]/10 blur-3xl" />
           </div>
         </motion.section>
 
@@ -277,55 +360,58 @@ export default function ProductsByCategoryPage() {
             <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
           )}
 
-          {/* ===== CONTENU ===== */}
           {!loadingCats && !loadingProds && !error && !didAutoOpen && products.length > 0 && (
-            <>
-              {/* MOBILE: liste verticale (1 carte/ligne) avec lien plein-cadre */}
-              <div className="sm:hidden space-y-6">
-                {products.map((p) => {
+            <motion.div {...fadeUp(0.06)}>
+              <Carousel
+                items={products}
+                ariaLabel={`Produits de la catégorie ${pageTitle}`}
+                renderItem={(p) => {
                   const title = pickName(p, locale);
-                  const img = toUrlSafe(p.images?.[0]);
+                  // ✅ استعمل resolver الآمن (يقبل string أو object)
+                  const first = Array.isArray(p.images) && p.images[0] ? p.images[0] : "/placeholder.png";
+                  const img = toUrlSafe(first);
                   const href = `/${locale}/produits/${slug}/${p._id}`;
+
                   return (
-                    <article key={p._id} className="group relative h-64 overflow-hidden rounded-3xl shadow-lg ring-1 ring-slate-200">
-                      <Image src={img} alt={title} fill sizes="100vw" className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-110" />
-                      <div className="absolute left-3 bottom-3 z-10">
+                    <article className="group relative h-64 sm:h-72 lg:h-80 overflow-hidden rounded-3xl shadow-lg ring-1 ring-slate-200">
+                      <Image
+                        src={img}
+                        alt={title}
+                        fill
+                        sizes="(max-width:640px) 88vw, (max-width:1024px) 62vw, 40vw"
+                        className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-110"
+                        // unoptimized // فعّل مؤقتًا إذا ما زلت ما ضفت remotePatterns
+                      />
+
+                      <div className="absolute left-3 bottom-3 z-20 transition-opacity duration-300 group-hover:opacity-0">
                         <span className="inline-flex items-center rounded-lg bg-black/60 px-3 py-1.5 text-[12px] font-semibold text-white shadow backdrop-blur-sm">
                           {title}
                         </span>
                       </div>
-                      {/* ➜ redirection (pas de lightbox) */}
-                      <a href={href} className="absolute inset-0 z-20" aria-label={`Voir détail: ${title}`} />
+
+                      <div className="absolute inset-0 z-10 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                        <div className="relative w-[86%] max-w-[520px]">
+                          <div className="rounded-xl bg-white px-8 py-6 text-center shadow-2xl ring-1 ring-black/5">
+                            <div className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#F5B301]">MTR</div>
+                            <h3 className="mt-2 text-2xl font-extrabold leading-snug text-slate-900">{title}</h3>
+                          </div>
+                          <div className="-mt-3 flex justify-center">
+                            <span className="pointer-events-none inline-flex min-w-[280px] items-center justify-center rounded-xl bg-[#F5B301] px-6 py-4 shadow-xl">
+                              <span className="text-sm font-extrabold uppercase tracking-wide text-[#0B2239] underline underline-offset-4">
+                                Voir détail →
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <a href={href} className="absolute inset-0 z-30" aria-label={`Voir détail: ${title}`} />
                     </article>
                   );
-                })}
-              </div>
-
-              {/* DESKTOP: carrousel conservé, avec lien plein-cadre */}
-              <motion.div {...fadeUp(0.06)} className="hidden sm:block mt-6">
-                <Carousel
-                  items={products}
-                  ariaLabel={`Produits de la catégorie ${pageTitle}`}
-                  renderItem={(p) => {
-                    const title = pickName(p, locale);
-                    const img = toUrlSafe(p.images?.[0]);
-                    const href = `/${locale}/produits/${slug}/${p._id}`;
-                    return (
-                      <article className="group relative h-72 lg:h-80 overflow-hidden rounded-3xl shadow-lg ring-1 ring-slate-200">
-                        <Image src={img} alt={title} fill sizes="(max-width:1024px) 62vw, 40vw" className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-110" />
-                        <div className="absolute left-3 bottom-3 z-10">
-                          <span className="inline-flex items-center rounded-lg bg-black/60 px-3 py-1.5 text-[12px] font-semibold text-white shadow backdrop-blur-sm">
-                            {title}
-                          </span>
-                        </div>
-                        {/* ➜ redirection (pas de lightbox) */}
-                        <a href={href} className="absolute inset-0 z-20" aria-label={`Voir détail: ${title}`} />
-                      </article>
-                    );
-                  }}
-                />
-              </motion.div>
-            </>
+                }}
+              />
+            </motion.div>
           )}
 
           {!loadingCats && !loadingProds && !error && !didAutoOpen && products.length === 0 && (
@@ -336,8 +422,6 @@ export default function ProductsByCategoryPage() {
           )}
         </section>
       </main>
-
-      <SiteFooter />
     </>
   );
 }
