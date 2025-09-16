@@ -412,8 +412,8 @@ export default function SiteHeader({ mode = "public", onLogout }) {
               {t("topbar.helpdesk")}
             </Link>
             <span className="opacity-40">|</span>
-            <button type="button" onClick={() => goToSection("presentation")} className="opacity-90 transition hover:text-[#F5B301]" role="link">
-              {t("topbar.presentation")}
+            <button type="button" onClick={() => goToSection("contact")} className="opacity-90 transition hover:text-[#F5B301]" role="link">
+              {t("topbar.contact")}
             </button>
           </nav>
 
