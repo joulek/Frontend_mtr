@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Facebook, MoreVertical, User, LogOut } from "lucide-react";
+import { Facebook, Linkedin, MoreVertical, User, LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 /* ---------------------------- API backend ---------------------------- */
@@ -421,6 +421,7 @@ export default function SiteHeader({ mode = "public", onLogout }) {
             <a href="https://www.facebook.com/profile.php?id=100076355199317&locale=fr_FR" target="_blank" rel="noreferrer" className="rounded-full bg-white/10 p-1.5 hover:bg-white/20" aria-label={t("aria.facebook")} title="Facebook">
               <Facebook className="h-4 w-4" />
             </a>
+           
             <div className="flex items-center gap-2 ml-2">
               <button onClick={() => switchLang("fr")} className={`${locale === "fr" ? "ring-2 ring-[#F5B301] rounded-full" : ""} px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`} title={t("aria.langFR")} aria-pressed={locale === "fr"}>FR</button>
               <button onClick={() => switchLang("en")} className={`${locale === "en" ? "ring-2 ring-[#F5B301] rounded-full" : ""} px-2 py-1 bg-transparent border-0 text-[14px] font-semibold`} title={t("aria.langEN")} aria-pressed={locale === "en"}>EN</button>
