@@ -34,12 +34,12 @@ export default function AdminLayout({ children }) {
     try {
       localStorage.removeItem("token");
       sessionStorage.clear();
-    } catch {}
+    } catch { }
     const url = "/api/logout";
     if (navigator.sendBeacon) {
       navigator.sendBeacon(url, new Blob([], { type: "application/json" }));
     } else {
-      fetch(url, { method: "POST", credentials: "include", keepalive: true }).catch(() => {});
+      fetch(url, { method: "POST", credentials: "include", keepalive: true }).catch(() => { });
     }
     router.replace(`/${locale}/login`);
   }, [router, locale]);
@@ -124,12 +124,7 @@ export default function AdminLayout({ children }) {
           >
             <FaBars />
           </button>
-          <button
-            onClick={handleLogout}
-            className="rounded-lg px-3 py-2 text-sm font-semibold bg-yellow-400 hover:bg-yellow-300 text-[#002147] transition"
-          >
-            {t("logout")}
-          </button>
+
         </div>
       </header>
 
@@ -198,13 +193,7 @@ export default function AdminLayout({ children }) {
               <div className="flex-1 overflow-y-auto">
                 <div className="p-4 flex items-center justify-between border-b border-yellow-400">
                   <h2 className="text-xl font-bold text-yellow-400">{t("title")}</h2>
-                  <button
-                    onClick={() => setOpen(false)}
-                    aria-label="Fermer le menu"
-                    className="h-10 w-10 inline-flex items-center justify-center rounded-md border border-white/20"
-                  >
-                    <FaTimes />
-                  </button>
+
                 </div>
 
                 <nav className="mt-3 space-y-1 pb-2">
