@@ -35,17 +35,13 @@ export default function AdminLayout({ children }) {
       localStorage.removeItem("token");
       sessionStorage.clear();
     } catch {}
-
     const url = "/api/logout";
     if (navigator.sendBeacon) {
       navigator.sendBeacon(url, new Blob([], { type: "application/json" }));
     } else {
       fetch(url, { method: "POST", credentials: "include", keepalive: true }).catch(() => {});
     }
-
     router.replace(`/${locale}/login`);
-    // Optionnel : forcer un nettoyage total
-    // setTimeout(() => window.location.reload(), 50);
   }, [router, locale]);
 
   const switchLocale = useCallback(
@@ -128,6 +124,7 @@ export default function AdminLayout({ children }) {
           >
             <FaBars />
           </button>
+          <h1 className="text-[#002147] font-semibold">{t("title")}</h1>
           <button
             onClick={handleLogout}
             className="rounded-lg px-3 py-2 text-sm font-semibold bg-yellow-400 hover:bg-yellow-300 text-[#002147] transition"
@@ -137,9 +134,8 @@ export default function AdminLayout({ children }) {
         </div>
       </header>
 
-      {/* ---------- Layout wrapper ---------- */}
       <div className="relative flex">
-        {/* Sidebar (desktop) — FIXE */}
+        {/* Sidebar desktop (fixe) */}
         <aside
           className="
             hidden lg:flex
@@ -153,9 +149,7 @@ export default function AdminLayout({ children }) {
               {t("title")}
             </h2>
             <nav className="mt-3 pb-3">
-              <NavItem href={`${rootAdmin}`} icon={FaTachometerAlt}>
-                {t("dashboard")}
-              </NavItem>
+              <NavItem href={`${rootAdmin}`} icon={FaTachometerAlt}>{t("dashboard")}</NavItem>
               <NavItem href={`${rootAdmin}/categories`} icon={FaTags}>
                 {t.has("categories") ? t("categories") : "Catégories"}
               </NavItem>
@@ -165,23 +159,14 @@ export default function AdminLayout({ children }) {
               <NavItem href={`${rootAdmin}/articles`} icon={FaNewspaper}>
                 {t.has("articles") ? t("articles") : "Articles"}
               </NavItem>
-
-              {/* ✅ NOUVELLE ENTRÉE : /admin/devis/list */}
               <NavItem href={`${rootAdmin}/devis/list`} icon={FaFileAlt}>
                 {t.has("quotesList") ? t("quotesList") : "Devis — Liste"}
               </NavItem>
-
-              {/* (optionnel) entrée existante pour “devis” (traction) */}
               <NavItem href={`${rootAdmin}/devis`} icon={FaFileAlt}>
                 {t.has("tractionOrders") ? t("tractionOrders") : `${t("orders")} – Traction`}
               </NavItem>
-
-              <NavItem href={`${rootAdmin}/users`} icon={FaUsers}>
-                {t("users")}
-              </NavItem>
-              <NavItem href={`/${locale}/admin/reclamations`} icon={FaExclamationCircle}>
-                Réclamations
-              </NavItem>
+              <NavItem href={`${rootAdmin}/users`} icon={FaUsers}>{t("users")}</NavItem>
+              <NavItem href={`/${locale}/admin/reclamations`} icon={FaExclamationCircle}>Réclamations</NavItem>
             </nav>
           </div>
 
@@ -196,7 +181,7 @@ export default function AdminLayout({ children }) {
           </div>
         </aside>
 
-        {/* Drawer (mobile) */}
+        {/* Drawer mobile (langue en bas) */}
         {open && (
           <>
             <div
@@ -205,12 +190,13 @@ export default function AdminLayout({ children }) {
               aria-hidden="true"
             />
             <aside
-              className="fixed z-50 inset-y-0 left-0 w-72 bg-[#002147] text-white flex flex-col justify-between shadow-2xl
-                         animate-in slide-in-from-left duration-200 lg:hidden overflow-y-auto"
               role="dialog"
               aria-modal="true"
+              className="fixed z-50 inset-y-0 left-0 w-72 bg-[#002147] text-white
+                         flex flex-col shadow-2xl animate-in slide-in-from-left duration-200 lg:hidden"
             >
-              <div>
+              {/* Contenu scrollable */}
+              <div className="flex-1 overflow-y-auto">
                 <div className="p-4 flex items-center justify-between border-b border-yellow-400">
                   <h2 className="text-xl font-bold text-yellow-400">{t("title")}</h2>
                   <button
@@ -221,10 +207,9 @@ export default function AdminLayout({ children }) {
                     <FaTimes />
                   </button>
                 </div>
+
                 <nav className="mt-3 space-y-1 pb-2">
-                  <NavItem href={`${rootAdmin}`} icon={FaTachometerAlt}>
-                    {t("dashboard")}
-                  </NavItem>
+                  <NavItem href={`${rootAdmin}`} icon={FaTachometerAlt}>{t("dashboard")}</NavItem>
                   <NavItem href={`${rootAdmin}/categories`} icon={FaTags}>
                     {t.has("categories") ? t("categories") : "Catégories"}
                   </NavItem>
@@ -234,31 +219,20 @@ export default function AdminLayout({ children }) {
                   <NavItem href={`${rootAdmin}/articles`} icon={FaNewspaper}>
                     {t.has("articles") ? t("articles") : "Articles"}
                   </NavItem>
-
-                  {/* ✅ NOUVELLE ENTRÉE : /admin/devis/list */}
                   <NavItem href={`${rootAdmin}/devis/list`} icon={FaFileAlt}>
                     {t.has("quotesList") ? t("quotesList") : "Devis — Liste"}
                   </NavItem>
-
-                  {/* (optionnel) entrée existante “devis” (traction) */}
                   <NavItem href={`${rootAdmin}/devis`} icon={FaFileAlt}>
                     {t.has("tractionOrders") ? t("tractionOrders") : `${t("orders")} – Traction`}
                   </NavItem>
-
-                  <NavItem href={`${rootAdmin}/users`} icon={FaUsers}>
-                    {t("users")}
-                  </NavItem>
-                  <NavItem href={`/${locale}/admin/reclamations`} icon={FaExclamationCircle}>
-                    Réclamations
-                  </NavItem>
+                  <NavItem href={`${rootAdmin}/users`} icon={FaUsers}>{t("users")}</NavItem>
+                  <NavItem href={`/${locale}/admin/reclamations`} icon={FaExclamationCircle}>Réclamations</NavItem>
                 </nav>
-
-                <div className="px-4 pb-3">
-                  <LangPills />
-                </div>
               </div>
 
-              <div className="p-4 border-t border-yellow-400">
+              {/* Footer fixé en bas */}
+              <div className="p-4 border-t border-yellow-400 space-y-3">
+                <LangPills />
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center justify-center gap-2 rounded-md bg-yellow-400 hover:bg-yellow-300 text-[#002147] px-4 py-2 font-semibold transition"
@@ -270,15 +244,9 @@ export default function AdminLayout({ children }) {
           </>
         )}
 
-        {/* Main content */}
+        {/* Contenu principal */}
         <main
-          className="
-            flex-1 w-full
-            lg:ml-64
-            p-6 lg:p-8
-            min-h-screen
-            overflow-y-auto
-          "
+          className="flex-1 w-full lg:ml-64 p-6 lg:p-8 min-h-screen overflow-y-auto"
         >
           {children}
         </main>

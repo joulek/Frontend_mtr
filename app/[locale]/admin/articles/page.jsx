@@ -14,7 +14,7 @@ import { useTranslations } from "next-intl";
 import Pagination from "@/components/Pagination";
 
 /* ---------------------------- API backend ---------------------------- */
-const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com").replace(/\/$/, "");
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
 const API = `${BACKEND}/api`;
 
 const CARD_WRAPPER = "mx-auto w-full max-w-6xl px-3 sm:px-6";
@@ -42,7 +42,7 @@ export default function AdminArticlesPage() {
     type: "",
   };
   const [form, setForm] = useState(emptyForm);
-  const isEditing = !!form?._id;
+  const isEditing = !!(form && form._id);
 
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -132,7 +132,6 @@ export default function AdminArticlesPage() {
 
   const openEdit = (it) => {
     if (it.isArchived || it.archived) return;
-
     setForm({
       _id: it._id,
       reference: it.reference ?? "",
@@ -262,10 +261,9 @@ export default function AdminArticlesPage() {
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
-  // ref, design, type, HT, TTC, actions (➡ actions élargie)
+  // ref, design, type, HT, TTC, actions
   const colWidths = ["w-[16%]", "w-[32%]", "w-[20%]", "w-[12%]", "w-[12%]", "w-[12%]"];
 
-  /* ======================= Helpers UI ======================= */
   const isArchived = (it) => !!(it.isArchived || it.archived);
 
   /* ======================= UI ======================= */
@@ -388,8 +386,7 @@ export default function AdminArticlesPage() {
                               <div className="flex items-center gap-3">
                                 <span className="h-2 w-2 rounded-full bg-[#F7C600]" />
                                 <span
-                                  className={`font-medium ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"
-                                    }`}
+                                  className={`font-medium ${archived ? "text-slate-400 italic" : "text-[#0B1E3A]"}`}
                                 >
                                   {it.reference}
                                 </span>
@@ -420,7 +417,7 @@ export default function AdminArticlesPage() {
                               {archived ? "—" : Number(it.prixTTC ?? it.prixHT * 1.2).toFixed(4)}
                             </td>
 
-                            {/* 👉 Actions sur la même ligne */}
+                            {/* Actions */}
                             <td className="p-3 align-middle text-right whitespace-nowrap">
                               <div className="inline-flex items-center gap-2">
                                 <button
@@ -441,7 +438,6 @@ export default function AdminArticlesPage() {
                                 >
                                   <FiTrash2 size={16} />
                                 </button>
-
                               </div>
                             </td>
                           </tr>
@@ -512,8 +508,7 @@ export default function AdminArticlesPage() {
                         <button
                           onClick={() => openEdit(it)}
                           disabled={archived}
-                          className={`inline-flex h-9 items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50 px-3 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition ${archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"
-                            }`}
+                          className={`inline-flex h-9 items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50 px-3 text-[13px] font-medium hover:bg-yellow-100 hover:shadow-sm transition ${archived ? "opacity-40 cursor-not-allowed text-yellow-800/70" : "text-yellow-800"}`}
                         >
                           <FiEdit2 size={16} />
                         </button>
@@ -547,160 +542,200 @@ export default function AdminArticlesPage() {
         </section>
       </div>
 
-      {/* Modale Ajouter/Éditer */}
+      {/* =================== Modale Ajouter/Éditer (avec pastille) =================== */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-edit-title"
+          onClick={() => setIsOpen(false)}
         >
-          <div className="relative w-full max-w-xl rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100">
-            <div className="px-6 pt-8 pb-4 border-b border-gray-100 text-center">
-              <h3 id="add-edit-title" className="text-xl font-semibold text-[#0B1E3A]">
-                {isEditing ? t("form.editTitle") : t("form.addTitle")}
-              </h3>
+          <div
+            className="relative w-full max-w-xl my-14 rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100 overflow-visible"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* pastille (jaune) */}
+            <div
+              className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 h-12 w-12 rounded-full shadow-lg ring-4 ring-white flex items-center justify-center text-[#0B1E3A]"
+              style={{ backgroundImage: "linear-gradient(to bottom right, #fde047, #f59e0b)" }}
+              aria-hidden
+            >
+              {isEditing ? <FiEdit2 size={18} /> : <FiPlus size={20} />}
             </div>
 
-            <form onSubmit={submitForm} className="px-6 py-6 space-y-5">
-              {isEditing && (
-                <label className="block">
-                  <span className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("labels.reference", { default: "Référence" })}
-                  </span>
-                  <input
-                    name="reference"
-                    value={form.reference}
-                    readOnly
-                    disabled
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[#0B1E3A] cursor-not-allowed"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    {t("help.referenceLocked", {
-                      default: "La référence est générée automatiquement et ne peut pas être modifiée.",
-                    })}
-                  </p>
-                </label>
-              )}
+            {/* clip des coins supérieurs */}
+            <div className="relative rounded-3xl overflow-hidden">
+              <div className="max-h-[85dvh] overflow-y-auto">
+                {/* header (laisse la place à la pastille) */}
+                <div className="px-6 pt-10 pb-4 border-b border-gray-100 text-center sticky top-0 bg-white z-10">
+                  <h3 id="add-edit-title" className="text-xl font-semibold text-[#0B1E3A]">
+                    {isEditing ? t("form.editTitle") : t("form.addTitle")}
+                  </h3>
+                </div>
 
-              {/* Type */}
-              <label className="block">
-                <span className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("labels.type")} <span className="text-red-500">*</span>
-                </span>
-                <select
-                  name="type"
-                  value={form.type}
-                  onChange={onTypeChange}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[#0B1E3A] focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
-                  disabled={loadingProducts}
-                >
-                  <option value="">{t("placeholders.selectType")}</option>
-                  {products.map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {p.name_fr || "—"}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                <form onSubmit={submitForm} className="px-6 py-6 space-y-5">
+                  {isEditing && (
+                    <label className="block">
+                      <span className="block text-sm font-medium text-gray-700 mb-1">
+                        {t("labels.reference", { default: "Référence" })}
+                      </span>
+                      <input
+                        name="reference"
+                        value={form.reference}
+                        readOnly
+                        disabled
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[#0B1E3A] cursor-not-allowed"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        {t("help.referenceLocked", {
+                          default: "La référence est générée automatiquement et ne peut pas être modifiée.",
+                        })}
+                      </p>
+                    </label>
+                  )}
 
-              {/* Désignation */}
-              <label className="block">
-                <span className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("labels.designation")} <span className="text-red-500">*</span>
-                </span>
-                <input
-                  name="designation"
-                  value={form.designation}
-                  onChange={onChange}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[#0B1E3A] focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
-                  placeholder={t("placeholders.designationExample")}
-                />
-              </label>
+                  {/* Type */}
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700 mb-1">
+                      {t("labels.type")} <span className="text-red-500">*</span>
+                    </span>
+                    <select
+                      name="type"
+                      value={form.type}
+                      onChange={onTypeChange}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[#0B1E3A] focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
+                      disabled={loadingProducts}
+                    >
+                      <option value="">{t("placeholders.selectType")}</option>
+                      {products.map((p) => (
+                        <option key={p._id} value={p._id}>
+                          {p.name_fr || "—"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-              {/* Prix HT */}
-              <label className="block">
-                <span className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("labels.priceHT")} <span className="text-red-500">*</span>
-                </span>
-                <input
-                  name="prixHT"
-                  value={form.prixHT}
-                  onChange={onChange}
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[#0B1E3A] focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
-                  placeholder={t("placeholders.priceExample")}
-                />
-              </label>
+                  {/* Désignation */}
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700 mb-1">
+                      {t("labels.designation")} <span className="text-red-500">*</span>
+                    </span>
+                    <input
+                      name="designation"
+                      value={form.designation}
+                      onChange={onChange}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[#0B1E3A] focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
+                      placeholder={t("placeholders.designationExample")}
+                    />
+                  </label>
 
-              <div className="pt-2 border-t border-gray-100 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
-                  disabled={submitting}
-                >
-                  <FiX /> {t("form.cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow"
-                >
-                  <FiCheck />
-                  {submitting
-                    ? isEditing
-                      ? t("form.updating")
-                      : t("form.creating")
-                    : isEditing
-                      ? t("form.update")
-                      : t("form.create")}
-                </button>
+                  {/* Prix HT */}
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700 mb-1">
+                      {t("labels.priceHT")} <span className="text-red-500">*</span>
+                    </span>
+                    <input
+                      name="prixHT"
+                      value={form.prixHT}
+                      onChange={onChange}
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[#0B1E3A] focus:border-[#F7C600] focus:ring-2 focus:ring-[#F7C600]/30 outline-none transition"
+                      placeholder={t("placeholders.priceExample")}
+                    />
+                  </label>
+
+                  {/* Pied */}
+                  <div className="pt-2 border-t border-gray-100 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
+                      disabled={submitting}
+                    >
+                      <FiX /> {t("form.cancel")}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow"
+                    >
+                      <FiCheck />
+                      {submitting
+                        ? isEditing
+                          ? t("form.updating")
+                          : t("form.creating")
+                        : isEditing
+                          ? t("form.update")
+                          : t("form.create")}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Modale Suppression */}
+      {/* =================== Modale Suppression (avec pastille) =================== */}
       {deleteOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-title"
+          onClick={() => setDeleteOpen(false)}
         >
-          <div className="relative w-full max-w-md rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100">
-            <div className="px-6 pt-8 pb-4 border-b border-gray-100 text-center">
-              <h3 id="delete-title" className="text-xl font-semibold text-[#0B1E3A]">
-                {t("delete.title")}
-              </h3>
+          <div
+            className="relative w-full max-w-md my-14 rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100 overflow-visible"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* pastille rouge */}
+            <div
+              className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 h-12 w-12 rounded-full shadow-lg ring-4 ring-white flex items-center justify-center text-white"
+              style={{ backgroundImage: "linear-gradient(to bottom right, #ef4444, #b91c1c)" }}
+              aria-hidden
+            >
+              <FiTrash2 size={18} />
             </div>
-            <div className="px-6 py-6 text-sm text-gray-700">
-              {t("delete.confirm")} <span className="font-semibold">{toDelete?.reference}</span> ?
-              <div className="mt-1 text-xs text-gray-500">
-                {t("delete.noteKeepRef", {
-                  default: "La ligne restera visible avec la seule référence.",
-                })}
+
+            {/* clip coins haut */}
+            <div className="relative rounded-3xl overflow-hidden">
+              <div className="max-h-[70dvh] overflow-y-auto">
+                <div className="px-6 pt-10 pb-4 border-b border-gray-100 text-center sticky top-0 bg-white z-10">
+                  <h3 id="delete-title" className="text-xl font-semibold text-[#0B1E3A]">
+                    {t("delete.title")}
+                  </h3>
+                </div>
+
+                <div className="px-6 py-6 text-sm text-gray-700">
+                  {t("delete.confirm")} <span className="font-semibold">{toDelete?.reference}</span> ?
+                  <div className="mt-1 text-xs text-gray-500">
+                    {t("delete.noteKeepRef", {
+                      default: "La ligne restera visible avec la seule référence.",
+                    })}
+                  </div>
+                </div>
+
+                <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+                  <button
+                    onClick={() => setDeleteOpen(false)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
+                    disabled={deleting}
+                  >
+                    <FiX /> {t("form.cancel")}
+                  </button>
+                  <button
+                    onClick={doDelete}
+                    disabled={deleting}
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition shadow"
+                  >
+                    <FiTrash2 /> {deleting ? t("delete.deleting") : t("delete.delete")}
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex items-center justify-end gap-2">
-              <button
-                onClick={() => setDeleteOpen(false)}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
-                disabled={deleting}
-              >
-                <FiX /> {t("form.cancel")}
-              </button>
-              <button
-                onClick={doDelete}
-                disabled={deleting}
-                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition shadow"
-              >
-                <FiTrash2 /> {deleting ? t("delete.deleting") : t("delete.delete")}
-              </button>
             </div>
           </div>
         </div>

@@ -6,9 +6,9 @@ import { useTranslations } from "next-intl";
 import { FiSearch, FiXCircle, FiUserPlus, FiUser, FiCheck, FiX } from "react-icons/fi";
 import Pagination from "@/components/Pagination";
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
-function fmtDate(d) {
+function fmtDate(d: any) {
   try {
     const dt = new Date(d);
     return `${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
@@ -20,12 +20,12 @@ function fmtDate(d) {
 export default function AdminUsersPage() {
   const t = useTranslations("auth.usersAdmin");
 
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [showInvite, setShowInvite] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<any | null>(null);
 
   // pagination
   const [page, setPage] = useState(1);
@@ -35,7 +35,7 @@ export default function AdminUsersPage() {
   const pathname = usePathname();
   const locale = (pathname.split("/")[1] || "fr") || "fr";
 
-  const roleLabel = (r) => (r === "admin" ? t("roles.admin") : t("roles.client"));
+  const roleLabel = (r: string) => (r === "admin" ? t("roles.admin") : t("roles.client"));
 
   async function load() {
     try {
@@ -54,7 +54,7 @@ export default function AdminUsersPage() {
       const users = Array.isArray(data) ? data : (data.users || data.data || []);
       setRows(Array.isArray(users) ? users : []);
       setPage(1);
-    } catch (e) {
+    } catch (e: any) {
       setErr(e?.message || t("errors.network"));
       setRows([]);
     } finally {
@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return rows;
-    const contains = (v) => String(v ?? "").toLowerCase().includes(needle);
+    const contains = (v: any) => String(v ?? "").toLowerCase().includes(needle);
     return rows.filter((u) => {
       const name = `${u?.prenom || ""} ${u?.nom || ""}`;
       return (
@@ -287,63 +287,93 @@ export default function AdminUsersPage() {
 
 /* -------------------- Modals -------------------- */
 
-/* ======= MODAL DÉTAILS ======= */
-function DetailsModal({ user, onClose }) {
+/* ======= MODAL DÉTAILS (icon + coins OK) ======= */
+function DetailsModal({ user, onClose }: { user: any; onClose: () => void }) {
   const t = useTranslations("auth.usersAdmin");
+
+  // Fermer avec ESC
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="details-title"
+      onClick={onClose}
     >
-      <div className="relative w-full max-w-3xl rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100">
-        {/* pastille jaune */}
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-14 w-14 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 shadow-lg ring-4 ring-white flex items-center justify-center text-[#0B1E3A]">
+      <div
+        className="relative w-full max-w-3xl my-8 rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100 max-h-[90dvh] overflow-visible"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* pastille jaune (ABSOLUTE) */}
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-20 h-14 w-14 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 shadow-lg ring-4 ring-white flex items-center justify-center text-[#0B1E3A]">
           <FiUser size={22} />
         </div>
 
-        {/* En-tête */}
-        <div className="px-6 pt-10 pb-4 border-b border-gray-100 text-center">
-          <h3 id="details-title" className="text-xl font-semibold text-[#0B1E3A]">
-            {t("details.title")}
-          </h3>
-        </div>
+        {/* bouton X */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-50 z-20"
+          aria-label={t("common.close")}
+        >
+          <FiX />
+        </button>
 
-        {/* Contenu */}
-        <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FieldCard label={t("fields.lastName")} value={user?.nom} />
-          <FieldCard label={t("fields.firstName")} value={user?.prenom} />
-          <FieldCard label={t("fields.email")} value={user?.email} copy />
-          <FieldCard label={t("fields.phone")} value={user?.numTel || "—"} />
-          <FieldCard label={t("fields.address")} value={user?.adresse || "—"} className="sm:col-span-2" />
-          <FieldCard label={t("fields.accountType")} value={user?.accountType || "—"} />
-          <FieldCard label={t("fields.role")} value={user?.role === "admin" ? t("roles.admin") : t("roles.client")} />
-          {user?.accountType === "personnel" && (
-            <>
-              <FieldCard label={t("fields.personal.cin")} value={user?.personal?.cin || "—"} />
-              <FieldCard label={t("fields.personal.currentPosition")} value={user?.personal?.posteActuel || "—"} />
-            </>
-          )}
-          {user?.accountType === "societe" && (
-            <>
-              <FieldCard label={t("fields.company.name")} value={user?.company?.nomSociete || "—"} />
-              <FieldCard label={t("fields.company.taxId")} value={user?.company?.matriculeFiscal || "—"} />
-              <FieldCard label={t("fields.company.currentPosition")} value={user?.company?.posteActuel || "—"} className="sm:col-span-2" />
-            </>
-          )}
-          <FieldCard label={t("fields.createdAt")} value={fmtDate(user?.createdAt)} className="sm:col-span-2" />
-        </div>
+        {/* CLIP coins haut du contenu */}
+        <div className="relative rounded-3xl overflow-hidden">
+          {/* wrapper scrollable */}
+          <div className="max-h-[90dvh] overflow-y-auto">
+            {/* En-tête (pt-10 لفسح مكان للدائرة) */}
+            <div className="px-6 pt-10 pb-4 border-b border-gray-100 text-center sticky top-0 bg-white z-10">
+              <h3 id="details-title" className="text-xl font-semibold text-[#0B1E3A]">
+                {t("details.title")}
+              </h3>
+            </div>
 
-        {/* Pied */}
-        <div className="px-6 pb-6 pt-2 border-t border-gray-100 flex items-center justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
-          >
-            <FiX /> {t("common.close")}
-          </button>
+            {/* Contenu */}
+            <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FieldCard label={t("fields.lastName")} value={user?.nom} />
+              <FieldCard label={t("fields.firstName")} value={user?.prenom} />
+              <FieldCard label={t("fields.email")} value={user?.email} copy />
+              <FieldCard label={t("fields.phone")} value={user?.numTel || "—"} />
+              <FieldCard label={t("fields.address")} value={user?.adresse || "—"} className="sm:col-span-2" />
+              <FieldCard label={t("fields.accountType")} value={user?.accountType || "—"} />
+              <FieldCard label={t("fields.role")} value={user?.role === "admin" ? t("roles.admin") : t("roles.client")} />
+              {user?.accountType === "personnel" && (
+                <>
+                  <FieldCard label={t("fields.personal.cin")} value={user?.personal?.cin || "—"} />
+                  <FieldCard label={t("fields.personal.currentPosition")} value={user?.personal?.posteActuel || "—"} />
+                </>
+              )}
+              {user?.accountType === "societe" && (
+                <>
+                  <FieldCard label={t("fields.company.name")} value={user?.company?.nomSociete || "—"} />
+                  <FieldCard label={t("fields.company.taxId")} value={user?.company?.matriculeFiscal || "—"} />
+                  <FieldCard label={t("fields.company.currentPosition")} value={user?.company?.posteActuel || "—"} className="sm:col-span-2" />
+                </>
+              )}
+              <FieldCard label={t("fields.createdAt")} value={fmtDate(user?.createdAt)} className="sm:col-span-2" />
+            </div>
+
+            {/* Pied */}
+            <div className="px-6 pb-6 pt-2 border-t border-gray-100 flex items-center justify-end sticky bottom-0 bg-white">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
+              >
+                <FiX /> {t("common.close")}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -351,7 +381,7 @@ function DetailsModal({ user, onClose }) {
 }
 
 /* Champ stylé (label + carte) */
-function FieldCard({ label, value, className = "", copy = false }) {
+function FieldCard({ label, value, className = "", copy = false }: { label: string; value: any; className?: string; copy?: boolean; }) {
   const t = useTranslations("auth.usersAdmin");
   return (
     <div className={className}>
@@ -373,20 +403,27 @@ function FieldCard({ label, value, className = "", copy = false }) {
   );
 }
 
-/* ======= MODAL D'AJOUT ======= */
-function InviteUserModal({ onClose, onCreated }) {
+/* ======= MODAL D'AJOUT (icon + coins OK) ======= */
+function InviteUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void; }) {
   const t = useTranslations("auth.usersAdmin");
-  const [type, setType] = useState("");
+  const [type, setType] = useState<"" | "personnel" | "societe">("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  async function submit(e) {
+  // Fermer avec ESC
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErr("");
     setLoading(true);
     const fd = new FormData(e.currentTarget);
 
-    const payload = {
+    const payload: any = {
       nom: String(fd.get("nom") || ""),
       prenom: String(fd.get("prenom") || ""),
       email: String(fd.get("email") || ""),
@@ -419,7 +456,7 @@ function InviteUserModal({ onClose, onCreated }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.success) throw new Error(data?.message || `HTTP ${res.status}`);
       onCreated();
-    } catch (e) {
+    } catch (e: any) {
       setErr(e?.message || t("errors.send"));
     } finally {
       setLoading(false);
@@ -428,94 +465,115 @@ function InviteUserModal({ onClose, onCreated }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="invite-title"
+      onClick={onClose}
     >
-      <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100">
-        {/* pastille jaune */}
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-14 w-14 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 shadow-lg ring-4 ring-white flex items-center justify-center text-[#0B1E3A]">
+      <div
+        className="relative w-full max-w-2xl my-8 rounded-3xl bg-white shadow-[0_25px_80px_rgba(0,0,0,.25)] ring-1 ring-gray-100 max-h=[90dvh] overflow-visible"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* pastille jaune ABSOLUTE */}
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-20 h-14 w-14 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-400 shadow-lg ring-4 ring-white flex items-center justify-center text-[#0B1E3A]">
           <FiUserPlus size={22} />
         </div>
 
-        {/* En-tête */}
-        <div className="px-6 pt-10 pb-4 border-b border-gray-100 text-center">
-          <h3 id="invite-title" className="text-xl font-semibold text-[#0B1E3A]">
-            {t("invite.title")}
-          </h3>
-        </div>
+        {/* bouton X */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-50 z-20"
+          aria-label={t("common.cancel")}
+          disabled={loading}
+        >
+          <FiX />
+        </button>
 
-        <form onSubmit={submit} className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          {err && <div className="sm:col-span-2 text-red-600">{err}</div>}
-
-          <Input name="nom" label={t("fields.lastName")} required />
-          <Input name="prenom" label={t("fields.firstName")} required />
-          <Input name="email" type="email" label={t("fields.email")} required />
-          <Input name="numTel" label={t("fields.phone")} />
-          <Input name="adresse" label={t("fields.address")} className="sm:col-span-2" />
-
-          <div className="sm:col-span-2">
-            <div className="text-gray-500 text-xs font-semibold mb-1">{t("invite.accountType")}</div>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input type="radio" name="accountType" onChange={() => setType("personnel")} className="accent-[#0B1E3A]" required />
-                {t("invite.personal")}
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="radio" name="accountType" onChange={() => setType("societe")} className="accent-[#0B1E3A]" required />
-                {t("invite.company")}
-              </label>
+        {/* CLIP coins haut du contenu */}
+        <div className="relative rounded-3xl overflow-hidden">
+          {/* contenu scrollable */}
+          <div className="max-h-[90dvh] overflow-y-auto">
+            {/* En-tête (pt-10) */}
+            <div className="px-6 pt-10 pb-4 border-b border-gray-100 text-center sticky top-0 bg-white z-10">
+              <h3 id="invite-title" className="text-xl font-semibold text-[#0B1E3A]">
+                {t("invite.title")}
+              </h3>
             </div>
-          </div>
 
-          {type === "personnel" && (
-            <>
-              <Input name="cin" label={t("fields.personal.cin")} />
-              <Input name="posteActuelPers" label={t("fields.personal.currentPosition")} />
-            </>
-          )}
-          {type === "societe" && (
-            <>
-              <Input name="nomSociete" label={t("fields.company.name")} />
-              <Input name="matriculeFiscal" label={t("fields.company.taxId")} />
-              <Input name="posteActuelSoc" label={t("fields.company.currentPosition")} className="sm:col-span-2" />
-            </>
-          )}
+            <form onSubmit={submit} className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              {err && <div className="sm:col-span-2 text-red-600">{err}</div>}
 
-          <div className="sm:col-span-2">
-            <div className="text-gray-500 text-xs font-semibold mb-1">{t("fields.role")}</div>
-            <select name="role" className="w-full rounded-xl border px-3 py-2">
-              <option value="client">{t("roles.client")}</option>
-              <option value="admin">{t("roles.admin")}</option>
-            </select>
-          </div>
+              <Input name="nom" label={t("fields.lastName")} required />
+              <Input name="prenom" label={t("fields.firstName")} required />
+              <Input name="email" type="email" label={t("fields.email")} required />
+              <Input name="numTel" label={t("fields.phone")} />
+              <Input name="adresse" label={t("fields.address")} className="sm:col-span-2" />
 
-          {/* Pied */}
-          <div className="sm:col-span-2 pt-2 border-t border-gray-100 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
-              disabled={loading}
-            >
-              <FiX /> {t("common.cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow"
-            >
-              <FiCheck /> {loading ? t("invite.sending") : t("invite.submit")}
-            </button>
+              <div className="sm:col-span-2">
+                <div className="text-gray-500 text-xs font-semibold mb-1">{t("invite.accountType")}</div>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="accountType" onChange={() => setType("personnel")} className="accent-[#0B1E3A]" required />
+                    {t("invite.personal")}
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="accountType" onChange={() => setType("societe")} className="accent-[#0B1E3A]" required />
+                    {t("invite.company")}
+                  </label>
+                </div>
+              </div>
+
+              {type === "personnel" && (
+                <>
+                  <Input name="cin" label={t("fields.personal.cin")} />
+                  <Input name="posteActuelPers" label={t("fields.personal.currentPosition")} />
+                </>
+              )}
+              {type === "societe" && (
+                <>
+                  <Input name="nomSociete" label={t("fields.company.name")} />
+                  <Input name="matriculeFiscal" label={t("fields.company.taxId")} />
+                  <Input name="posteActuelSoc" label={t("fields.company.currentPosition")} className="sm:col-span-2" />
+                </>
+              )}
+
+              <div className="sm:col-span-2">
+                <div className="text-gray-500 text-xs font-semibold mb-1">{t("fields.role")}</div>
+                <select name="role" className="w-full rounded-xl border px-3 py-2">
+                  <option value="client">{t("roles.client")}</option>
+                  <option value="admin">{t("roles.admin")}</option>
+                </select>
+              </div>
+
+              {/* Pied */}
+              <div className="sm:col-span-2 pt-2 border-t border-gray-100 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#0B1E3A] bg-white px-4 py-2 text-sm hover:bg-gray-50 transition text-[#0B1E3A]"
+                  disabled={loading}
+                >
+                  <FiX /> {t("common.cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow"
+                >
+                  <FiCheck /> {loading ? t("invite.sending") : t("invite.submit")}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
 }
 
-function Input({ label, className = "", ...props }) {
+function Input({ label, className = "", ...props }: any) {
   return (
     <label className={`flex flex-col ${className}`}>
       <span className="text-gray-500 text-xs font-semibold mb-1">{label}</span>
