@@ -1,4 +1,4 @@
-import createIntlmiddlewares from 'next-intl/middlewares';
+import createIntlmiddlewares from 'next-intl/middleware';
 import { routing } from './next-intl.config.ts';
 import { NextResponse } from 'next/server';
 
@@ -10,7 +10,7 @@ export function middlewares(req) {
   const pathname = url.pathname || '/';
 
   const maybeLocale = pathname.split('/')[1];
-  const locale = ['fr','en','ar'].includes(maybeLocale) ? maybeLocale : routing.defaultLocale;
+  const locale = ['fr','en'].includes(maybeLocale) ? maybeLocale : routing.defaultLocale;
 
   const role = req.cookies.get('role')?.value || null;
   const isAdminPath  = pathname.startsWith(`/${locale}/admin`);
@@ -27,5 +27,5 @@ export function middlewares(req) {
 }
 
 export const config = {
-  matcher: ['/', '/(fr|en|ar)/:path*', '/((?!fr|en|ar|api|_next|.*\\..*).*)']
+  matcher: ['/', '/(fr|en)/:path*', '/((?!fr|en|api|_next|.*\\..*).*)']
 };
