@@ -8,7 +8,7 @@ import Pagination from "@/components/Pagination";
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
 
 /* -------------------- helpers -------------------- */
-function getCookie(name) {
+function getCookie(name: string) {
   if (typeof document === "undefined") return "";
   const v = document.cookie.split("; ").find((c) => c.startsWith(name + "="));
   return v ? decodeURIComponent(v.split("=")[1]) : "";
@@ -17,20 +17,14 @@ function getCookie(name) {
 const ORDERED_KEY = "mtr:client:ordered";
 function readOrdered() {
   if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(localStorage.getItem(ORDERED_KEY) || "{}");
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem(ORDERED_KEY) || "{}"); } catch { return {}; }
 }
-function writeOrdered(map) {
-  try {
-    localStorage.setItem(ORDERED_KEY, JSON.stringify(map || {}));
-  } catch { }
+function writeOrdered(map: any) {
+  try { localStorage.setItem(ORDERED_KEY, JSON.stringify(map || {})); } catch {}
 }
 
 /* === Reclamation-style “Ouvrir” chip === */
-function OpenChipDoc({ onClick, label = "Ouvrir", tooltip, className = "" }) {
+function OpenChipDoc({ onClick, label = "Ouvrir", tooltip, className = "" }: any) {
   const title = tooltip || label;
   return (
     <button
@@ -38,8 +32,7 @@ function OpenChipDoc({ onClick, label = "Ouvrir", tooltip, className = "" }) {
       onClick={onClick}
       title={title}
       aria-label={title}
-      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A]"
-
+      className={`inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 text-[#0B1E3A] ${className}`}
     >
       <FiFileText size={16} />
       <span>{label}</span>
@@ -51,7 +44,7 @@ export default function MesDevisClient() {
   const t = useTranslations("auth.client.quotesPage");
   const locale = useLocale();
 
-  const [allItems, setAllItems] = useState([]);
+  const [allItems, setAllItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -60,15 +53,13 @@ export default function MesDevisClient() {
   const [pageSize, setPageSize] = useState(10);
 
   // { [demandeId]: { numero, pdf } }
-  const [devisMap, setDevisMap] = useState({});
-  const [ordered, setOrdered] = useState({});
-  const [placing, setPlacing] = useState({});
+  const [devisMap, setDevisMap] = useState<Record<string, { numero?: string; pdf?: string }>>({});
+  const [ordered, setOrdered] = useState<Record<string, boolean>>({});
+  const [placing, setPlacing] = useState<Record<string, boolean>>({});
 
-  const hasDevis = useCallback((id) => Boolean(devisMap?.[id]?.pdf), [devisMap]);
+  const hasDevis = useCallback((id: string) => Boolean(devisMap?.[id]?.pdf), [devisMap]);
 
-  useEffect(() => {
-    setOrdered(readOrdered());
-  }, []);
+  useEffect(() => { setOrdered(readOrdered()); }, []);
 
   /* --------- fetch --------- */
   const fetchAll = useCallback(async () => {
@@ -84,23 +75,18 @@ export default function MesDevisClient() {
       if (!res.ok) throw new Error(data?.message || "Fetch error");
 
       setAllItems(data.items || []);
-    } catch (e) {
+    } catch (e: any) {
       setError(e.message || t("errors.network"));
     } finally {
       setLoading(false);
     }
   }, [t]);
 
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   /* --------- DV par demande --------- */
   useEffect(() => {
-    if (!allItems.length) {
-      setDevisMap({});
-      return;
-    }
+    if (!allItems.length) { setDevisMap({}); return; }
     let cancelled = false;
 
     (async () => {
@@ -116,7 +102,7 @@ export default function MesDevisClient() {
             if (r.status === 403 || r.status === 404) return null;
             const j = await r.json().catch(() => null);
             if (j?.success && j?.exists && j?.pdf) {
-              return [demandeId, { numero: j.devis?.numero, pdf: j.pdf }];
+              return [demandeId, { numero: j.devis?.numero, pdf: j.pdf }] as const;
             }
             return null;
           } catch {
@@ -125,23 +111,17 @@ export default function MesDevisClient() {
         })
       );
       if (cancelled) return;
-      const map = {};
+      const map: Record<string, any> = {};
       for (const p of pairs) if (p) map[p[0]] = p[1];
       setDevisMap(map);
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [allItems]);
 
   /* --------- état commande confirmé --------- */
   useEffect(() => {
-    if (!allItems.length) {
-      setOrdered({});
-      writeOrdered({});
-      return;
-    }
+    if (!allItems.length) { setOrdered({}); writeOrdered({}); return; }
 
     const controller = new AbortController();
 
@@ -151,18 +131,17 @@ export default function MesDevisClient() {
         (localStorage.getItem("token") || localStorage.getItem("authToken"))) ||
       "";
 
-    const headers = {};
+    const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
 
     const ids = Array.from(new Set(allItems.map((it) => it?._id).filter(Boolean)));
-
     const CHUNK = 80;
-    const chunks = [];
+    const chunks: string[][] = [];
     for (let i = 0; i < ids.length; i += CHUNK) chunks.push(ids.slice(i, i + CHUNK));
 
     (async () => {
       try {
-        const merged = {};
+        const merged: Record<string, boolean> = {};
         for (const group of chunks) {
           const qs = group.map(encodeURIComponent).join(",");
           const res = await fetch(`${BACKEND}/api/order/client/status?ids=${qs}`, {
@@ -174,13 +153,11 @@ export default function MesDevisClient() {
           const j = await res.json().catch(() => null);
           if (j?.success && j?.map) Object.assign(merged, j.map);
         }
-
         if (!controller.signal.aborted) {
           const fromStorage = readOrdered();
-          const next = {};
+          const next: Record<string, boolean> = {};
           const idSet = new Set(ids);
           for (const id of idSet) next[id] = merged[id] ?? fromStorage[id] ?? false;
-
           setOrdered(next);
           writeOrdered(next);
         }
@@ -193,7 +170,7 @@ export default function MesDevisClient() {
   }, [allItems]);
 
   /* --------- helpers UI --------- */
-  const prettyDate = (iso) => {
+  const prettyDate = (iso: string) => {
     try {
       const d = new Date(iso);
       return d.toLocaleString(locale, {
@@ -202,14 +179,21 @@ export default function MesDevisClient() {
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-      });
+      } as any);
     } catch {
       return iso || "-";
     }
   };
 
-  const openUrlInNewTab = async (url) => {
+  // ✅ Ouvrir URL (Cloudinary direct si absolue, sinon fallback fetch→blob pour routes backend)
+  const openUrlInNewTab = async (url: string) => {
     try {
+      if (/^https?:\/\//i.test(url)) {
+        // Lien public (ex: Cloudinary)
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+      // Route backend → on récupère le blob (pour gérer cookies/cred)
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) {
         setError(t("errors.fileNotFound"));
@@ -224,18 +208,21 @@ export default function MesDevisClient() {
     }
   };
 
-  const openDdvPdf = (it) => {
+  const openDdvPdf = (it: any) => {
+    // ✅ Priorité à l’URL Cloudinary si fournie par l’API
+    if (it.pdfUrl) return openUrlInNewTab(it.pdfUrl);
     const slug = String(it.type || "").toLowerCase();
-    const url = it.pdfUrl || `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
+    const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
     openUrlInNewTab(url);
   };
 
-  const openDevisPdf = (demandeId) => {
+  const openDevisPdf = (demandeId: string) => {
     const info = devisMap[demandeId];
     if (info?.pdf) openUrlInNewTab(info.pdf);
   };
 
-  const openDoc = (it, file, index) => {
+  const openDoc = (it: any, file: any, index: number) => {
+    // ✅ Si le backend renvoie file.url (Cloudinary), on ouvre direct
     if (file?.url) return openUrlInNewTab(file.url);
     const slug = String(it.type || "").toLowerCase();
     const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/document/${index}`;
@@ -243,7 +230,7 @@ export default function MesDevisClient() {
   };
 
   /* --------- ENVOI COMMANDE --------- */
-  const placeOrder = async (it) => {
+  const placeOrder = async (it: any) => {
     const info = devisMap[it._id];
     if (!info?.pdf) return;
 
@@ -256,7 +243,7 @@ export default function MesDevisClient() {
           (localStorage.getItem("token") || localStorage.getItem("authToken"))) ||
         "";
 
-      const headers = { "Content-Type": "application/json" };
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers.Authorization = `Bearer ${token}`;
 
       const res = await fetch(`${BACKEND}/api/order/client/commander`, {
@@ -266,24 +253,16 @@ export default function MesDevisClient() {
         body: JSON.stringify({
           demandeId: it._id,
           devisNumero: info.numero || null,
-          devisPdf: info.pdf || null,
+          devisPdf: info.pdf || null,           // ✅ passe l’URL Cloudinary
           demandeNumero: it.ref || it.numero || null,
         }),
       });
 
-      if (res.status === 401) {
-        setError(t("errors.notAuthenticated"));
-        return;
-      }
-      if (res.status === 403) {
-        setError(t("errors.forbidden"));
-        return;
-      }
+      if (res.status === 401) { setError(t("errors.notAuthenticated")); return; }
+      if (res.status === 403) { setError(t("errors.forbidden")); return; }
 
       const j = await res.json().catch(() => null);
-      if (!res.ok || !j?.success) {
-        throw new Error(j?.message || t("errors.cannotPlace"));
-      }
+      if (!res.ok || !j?.success) throw new Error(j?.message || t("errors.cannotPlace"));
 
       setOrdered((prev) => {
         const next = { ...prev, [it._id]: true };
@@ -291,14 +270,14 @@ export default function MesDevisClient() {
         return next;
       });
       setError("");
-    } catch (e) {
+    } catch (e: any) {
       setError(e.message || t("errors.cannotPlace"));
     } finally {
       setPlacing((s) => ({ ...s, [it._id]: false }));
     }
   };
 
-  const norm = (s) =>
+  const norm = (s: string) =>
     (s || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
   /* --------- filtre --------- */
@@ -310,16 +289,14 @@ export default function MesDevisClient() {
       const number = `${it.ref || it.numero || ""}`;
       const type = `${it.typeLabel || it.type || ""}`;
       const files = Array.isArray(it.files) ? it.files : [];
-      const fileNames = files.map((f) => f?.name || "").join(" ");
+      const fileNames = files.map((f: any) => f?.name || "").join(" ");
       const dateText = prettyDate(it.createdAt);
       const haystack = norm([number, type, fileNames, dateText].join(" "));
       return haystack.includes(nq);
     });
   }, [allItems, q]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [q]);
+  useEffect(() => { setPage(1); }, [q]);
 
   /* --------- pagination --------- */
   const total = filtered.length;
@@ -327,12 +304,12 @@ export default function MesDevisClient() {
   const pageItems = filtered.slice(pageStart, pageStart + pageSize);
 
   /* --------- UI cellules --------- */
-  const FilesCell = ({ it }) => {
+  const FilesCell = ({ it }: { it: any }) => {
     const files = Array.isArray(it.files) ? it.files : [];
     if (!files.length) return <span className="text-slate-400">—</span>;
     return (
       <div className="flex flex-wrap gap-2">
-        {files.map((f, i) => (
+        {files.map((f: any, i: number) => (
           <OpenChipDoc
             key={f._id || f.name || i}
             onClick={() => openDoc(it, f, f.index ?? i)}
@@ -344,7 +321,7 @@ export default function MesDevisClient() {
     );
   };
 
-  const Card = ({ it }) => {
+  const Card = ({ it }: { it: any }) => {
     const existeDevis = hasDevis(it._id);
     const dejaCommande = !!ordered[it._id];
     return (
@@ -374,7 +351,7 @@ export default function MesDevisClient() {
               onClick={() => openDevisPdf(it._id)}
               tooltip={
                 devisMap[it._id]?.numero
-                  ? t("aria.quoteNumber", { number: devisMap[it._id].numero })
+                  ? t("aria.quoteNumber", { number: devisMap[it._id].numero ?? "" })
                   : t("actions.open")
               }
             />
@@ -391,7 +368,6 @@ export default function MesDevisClient() {
         <div className="text-xs text-slate-500">{t("table.createdAt")}</div>
         <div>{prettyDate(it.createdAt)}</div>
 
-        {/* Action (remplace le statut) */}
         <div className="pt-1">
           {dejaCommande ? (
             <span className="inline-block rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs">
@@ -415,7 +391,6 @@ export default function MesDevisClient() {
     );
   };
 
-  /* --------- render --------- */
   return (
     <div className="mx-auto w-full max-w-6xl px-3 sm:px-6 py-6 space-y-6 sm:space-y-8">
       <header className="text-center space-y-2">
@@ -429,11 +404,7 @@ export default function MesDevisClient() {
       {/* recherche */}
       <div className="w-full mt-1">
         <div className="relative mx-auto w-full max-w-2xl">
-          <FiSearch
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={18}
-            aria-hidden="true"
-          />
+          <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} aria-hidden="true" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -480,92 +451,47 @@ export default function MesDevisClient() {
             <table className="w-full table-auto">
               <thead>
                 <tr className="bg-white">
-                  <th className="p-3 text-left">
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
-                      {t("table.number")}
-                    </div>
-                  </th>
-                  <th className="p-3 text-left">
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
-                      {t("table.type")}
-                    </div>
-                  </th>
-                  <th className="p-3 text-left">
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
-                      {t("labels.ddv")}
-                    </div>
-                  </th>
-                  <th className="p-3 text-left">
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
-                      {t("table.files")}
-                    </div>
-                  </th>
-                  <th className="p-3 text-left">
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
-                      {t("labels.devis")}
-                    </div>
-                  </th>
-                  <th className="p-3 text-right whitespace-nowrap">
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
-                      {t("table.order")}
-                    </div>
-                  </th>
+                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.number")}</div></th>
+                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.type")}</div></th>
+                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("labels.ddv")}</div></th>
+                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.files")}</div></th>
+                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("labels.devis")}</div></th>
+                  <th className="p-3 text-right whitespace-nowrap"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.order")}</div></th>
                 </tr>
-                <tr>
-                  <td colSpan={7}>
-                    <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-                  </td>
-                </tr>
+                <tr><td colSpan={7}><div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" /></td></tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {pageItems.map((it) => {
                   const existeDevis = hasDevis(it._id);
                   const dejaCommande = !!ordered[it._id];
                   return (
-                    <tr
-                      key={`${it.type}-${it._id}`}
-                      className="bg-white hover:bg-[#0B1E3A]/[0.03] transition-colors"
-                    >
+                    <tr key={`${it.type}-${it._id}`} className="bg-white hover:bg-[#0B1E3A]/[0.03] transition-colors">
                       <td className="p-3 align-top">
                         <span className="inline-flex items-center gap-2 text-[#0B1E3A] font-medium">
                           <span className="h-2 w-2 rounded-full bg-[#F7C600] shrink-0" />
                           <span>{it.ref || it.numero || "—"}</span>
                         </span>
                       </td>
-                      <td className="p-3 align-top text-[#0B1E3A]">
-                        {it.typeLabel || it.type || "-"}
-                      </td>
+                      <td className="p-3 align-top text-[#0B1E3A]">{it.typeLabel || it.type || "-"}</td>
                       <td className="p-3 align-top">
                         {(it.hasPdf || it.pdfUrl) ? (
                           <OpenChipDoc onClick={() => openDdvPdf(it)} tooltip={t("aria.openPdf")} />
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
+                        ) : <span className="text-slate-400">—</span>}
                       </td>
-                      <td className="p-3 align-top">
-                        <FilesCell it={it} />
-                      </td>
+                      <td className="p-3 align-top"><FilesCell it={it} /></td>
                       <td className="p-3 align-top">
                         {existeDevis ? (
                           <OpenChipDoc
                             onClick={() => openDevisPdf(it._id)}
-                            tooltip={
-                              devisMap[it._id]?.numero
-                                ? t("aria.quoteNumber", { number: devisMap[it._id].numero })
-                                : t("actions.open")
-                            }
+                            tooltip={devisMap[it._id]?.numero ? t("aria.quoteNumber", { number: devisMap[it._id].numero ?? "" }) : t("actions.open")}
                           />
                         ) : (
-                          <span className="inline-block rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">
-                            {t("notYet")}
-                          </span>
+                          <span className="inline-block rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">{t("notYet")}</span>
                         )}
                       </td>
                       <td className="p-3 align-top text-right whitespace-nowrap">
                         {dejaCommande ? (
-                          <span className="inline-block rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-sm">
-                            {t("status.ordered")}
-                          </span>
+                          <span className="inline-block rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-sm">{t("status.ordered")}</span>
                         ) : existeDevis ? (
                           <button
                             onClick={() => placeOrder(it)}
@@ -575,9 +501,7 @@ export default function MesDevisClient() {
                             {placing[it._id] ? t("actions.sending") : t("actions.order")}
                           </button>
                         ) : (
-                          <span className="inline-block rounded-full bg-rose-50 text-rose-700 px-2 py-0.5 text-sm font-medium">
-                            {t("status.notOrdered")}
-                          </span>
+                          <span className="inline-block rounded-full bg-rose-50 text-rose-700 px-2 py-0.5 text-sm font-medium">{t("status.notOrdered")}</span>
                         )}
                       </td>
                     </tr>
