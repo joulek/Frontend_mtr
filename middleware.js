@@ -1,10 +1,10 @@
-import createIntlmiddlewares from 'next-intl/middleware';
+import createIntlmiddleware from 'next-intl/middleware';
 import { routing } from './next-intl.config.ts';
 import { NextResponse } from 'next/server';
 
-const handleI18n = createIntlmiddlewares(routing);
+const handleI18n = createIntlmiddleware(routing);
 
-export function middlewares(req) {
+export function middleware(req) {
   const res = handleI18n(req);
   const url = res?.nextUrl ?? req.nextUrl;
   const pathname = url.pathname || '/';
