@@ -5,7 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { FiSearch, FiXCircle, FiFileText } from "react-icons/fi";
 import Pagination from "@/components/Pagination";
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
+const BACKEND =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "https://backend-mtr.onrender.com";
 
 /* -------------------- helpers -------------------- */
 function getCookie(name: string) {
@@ -17,14 +18,45 @@ function getCookie(name: string) {
 const ORDERED_KEY = "mtr:client:ordered";
 function readOrdered() {
   if (typeof window === "undefined") return {};
-  try { return JSON.parse(localStorage.getItem(ORDERED_KEY) || "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(ORDERED_KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
 function writeOrdered(map: any) {
-  try { localStorage.setItem(ORDERED_KEY, JSON.stringify(map || {})); } catch {}
+  try {
+    localStorage.setItem(ORDERED_KEY, JSON.stringify(map || {}));
+  } catch {}
 }
 
-/* === Reclamation-style “Ouvrir” chip === */
-function OpenChipDoc({ onClick, label = "Ouvrir", tooltip, className = "" }: any) {
+/** ✅ Téléchargement forcé (marche avec URLs Cloudinary + routes backend) */
+const downloadUrl = async (url: string, filename = "document") => {
+  try {
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) throw new Error("Download failed");
+    const blob = await res.blob();
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
+  } catch (e) {
+    console.error(e);
+    // ⚠️ tu peux afficher une erreur via setError si nécessaire
+  }
+};
+
+/* === Chip bouton “Ouvrir” (télécharge maintenant) === */
+function OpenChipDoc({
+  onClick,
+  label = "Ouvrir",
+  tooltip,
+  className = "",
+}: any) {
   const title = tooltip || label;
   return (
     <button
@@ -53,15 +85,22 @@ export default function MesDevisClient() {
   const [pageSize, setPageSize] = useState(10);
 
   // { [demandeId]: { numero, pdf } }
-  const [devisMap, setDevisMap] = useState<Record<string, { numero?: string; pdf?: string }>>({});
+  const [devisMap, setDevisMap] = useState<
+    Record<string, { numero?: string; pdf?: string }>
+  >({});
   const [ordered, setOrdered] = useState<Record<string, boolean>>({});
   const [placing, setPlacing] = useState<Record<string, boolean>>({});
 
-  const hasDevis = useCallback((id: string) => Boolean(devisMap?.[id]?.pdf), [devisMap]);
+  const hasDevis = useCallback(
+    (id: string) => Boolean(devisMap?.[id]?.pdf),
+    [devisMap]
+  );
 
-  useEffect(() => { setOrdered(readOrdered()); }, []);
+  useEffect(() => {
+    setOrdered(readOrdered());
+  }, []);
 
-  /* --------- fetch --------- */
+  /* --------- fetch liste --------- */
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
@@ -82,11 +121,16 @@ export default function MesDevisClient() {
     }
   }, [t]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   /* --------- DV par demande --------- */
   useEffect(() => {
-    if (!allItems.length) { setDevisMap({}); return; }
+    if (!allItems.length) {
+      setDevisMap({});
+      return;
+    }
     let cancelled = false;
 
     (async () => {
@@ -116,12 +160,18 @@ export default function MesDevisClient() {
       setDevisMap(map);
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [allItems]);
 
-  /* --------- état commande confirmé --------- */
+  /* --------- état commande confirmée --------- */
   useEffect(() => {
-    if (!allItems.length) { setOrdered({}); writeOrdered({}); return; }
+    if (!allItems.length) {
+      setOrdered({});
+      writeOrdered({});
+      return;
+    }
 
     const controller = new AbortController();
 
@@ -185,48 +235,35 @@ export default function MesDevisClient() {
     }
   };
 
-  // ✅ Ouvrir URL (Cloudinary direct si absolue, sinon fallback fetch→blob pour routes backend)
-  const openUrlInNewTab = async (url: string) => {
-    try {
-      if (/^https?:\/\//i.test(url)) {
-        // Lien public (ex: Cloudinary)
-        window.open(url, "_blank", "noopener,noreferrer");
-        return;
-      }
-      // Route backend → on récupère le blob (pour gérer cookies/cred)
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) {
-        setError(t("errors.fileNotFound"));
-        return;
-      }
-      const blob = await res.blob();
-      const obj = URL.createObjectURL(blob);
-      window.open(obj, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(obj), 60000);
-    } catch {
-      setError(t("errors.cannotOpen"));
-    }
-  };
-
+  /* --------- Ouvrir (=> Télécharger) --------- */
+  // Demande de devis (DDV) PDF
   const openDdvPdf = (it: any) => {
-    // ✅ Priorité à l’URL Cloudinary si fournie par l’API
-    if (it.pdfUrl) return openUrlInNewTab(it.pdfUrl);
     const slug = String(it.type || "").toLowerCase();
-    const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
-    openUrlInNewTab(url);
+    const url = it.pdfUrl || `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
+    const name = `demande-${slug}-${(it.ref || it.numero || it._id || "")
+      .toString()
+      .replace(/[\/\\]/g, "_")}.pdf`;
+    downloadUrl(url, name);
   };
 
+  // Devis commercial PDF
   const openDevisPdf = (demandeId: string) => {
     const info = devisMap[demandeId];
-    if (info?.pdf) openUrlInNewTab(info.pdf);
+    if (!info?.pdf) return;
+    const name = `devis-${(info.numero || demandeId).replace(/[\/\\]/g, "_")}.pdf`;
+    downloadUrl(info.pdf, name);
   };
 
+  // Pièces jointes
   const openDoc = (it: any, file: any, index: number) => {
-    // ✅ Si le backend renvoie file.url (Cloudinary), on ouvre direct
-    if (file?.url) return openUrlInNewTab(file.url);
+    const safeName = (file?.name || `document-${index + 1}`).replace(/[\/\\]/g, "_");
+    if (file?.url) {
+      // URL public Cloudinary
+      return downloadUrl(file.url, safeName);
+    }
     const slug = String(it.type || "").toLowerCase();
     const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/document/${index}`;
-    openUrlInNewTab(url);
+    downloadUrl(url, safeName);
   };
 
   /* --------- ENVOI COMMANDE --------- */
@@ -253,13 +290,19 @@ export default function MesDevisClient() {
         body: JSON.stringify({
           demandeId: it._id,
           devisNumero: info.numero || null,
-          devisPdf: info.pdf || null,           // ✅ passe l’URL Cloudinary
+          devisPdf: info.pdf || null, // URL Cloudinary
           demandeNumero: it.ref || it.numero || null,
         }),
       });
 
-      if (res.status === 401) { setError(t("errors.notAuthenticated")); return; }
-      if (res.status === 403) { setError(t("errors.forbidden")); return; }
+      if (res.status === 401) {
+        setError(t("errors.notAuthenticated"));
+        return;
+      }
+      if (res.status === 403) {
+        setError(t("errors.forbidden"));
+        return;
+      }
 
       const j = await res.json().catch(() => null);
       if (!res.ok || !j?.success) throw new Error(j?.message || t("errors.cannotPlace"));
@@ -296,7 +339,9 @@ export default function MesDevisClient() {
     });
   }, [allItems, q]);
 
-  useEffect(() => { setPage(1); }, [q]);
+  useEffect(() => {
+    setPage(1);
+  }, [q]);
 
   /* --------- pagination --------- */
   const total = filtered.length;
@@ -391,6 +436,7 @@ export default function MesDevisClient() {
     );
   };
 
+  /* --------- render --------- */
   return (
     <div className="mx-auto w-full max-w-6xl px-3 sm:px-6 py-6 space-y-6 sm:space-y-8">
       <header className="text-center space-y-2">
@@ -404,7 +450,11 @@ export default function MesDevisClient() {
       {/* recherche */}
       <div className="w-full mt-1">
         <div className="relative mx-auto w-full max-w-2xl">
-          <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} aria-hidden="true" />
+          <FiSearch
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+            aria-hidden="true"
+          />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -451,47 +501,97 @@ export default function MesDevisClient() {
             <table className="w-full table-auto">
               <thead>
                 <tr className="bg-white">
-                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.number")}</div></th>
-                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.type")}</div></th>
-                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("labels.ddv")}</div></th>
-                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.files")}</div></th>
-                  <th className="p-3 text-left"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("labels.devis")}</div></th>
-                  <th className="p-3 text-right whitespace-nowrap"><div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">{t("table.order")}</div></th>
+                  <th className="p-3 text-left">
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+                      {t("table.number")}
+                    </div>
+                  </th>
+                  <th className="p-3 text-left">
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+                      {t("table.type")}
+                    </div>
+                  </th>
+                  <th className="p-3 text-left">
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+                      {t("labels.ddv")}
+                    </div>
+                  </th>
+                  <th className="p-3 text-left">
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+                      {t("table.files")}
+                    </div>
+                  </th>
+                  <th className="p-3 text-left">
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+                      {t("labels.devis")}
+                    </div>
+                  </th>
+                  <th className="p-3 text-right whitespace-nowrap">
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+                      {t("table.order")}
+                    </div>
+                  </th>
                 </tr>
-                <tr><td colSpan={7}><div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" /></td></tr>
+                <tr>
+                  <td colSpan={7}>
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+                  </td>
+                </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {pageItems.map((it) => {
                   const existeDevis = hasDevis(it._id);
                   const dejaCommande = !!ordered[it._id];
                   return (
-                    <tr key={`${it.type}-${it._id}`} className="bg-white hover:bg-[#0B1E3A]/[0.03] transition-colors">
+                    <tr
+                      key={`${it.type}-${it._id}`}
+                      className="bg-white hover:bg-[#0B1E3A]/[0.03] transition-colors"
+                    >
                       <td className="p-3 align-top">
                         <span className="inline-flex items-center gap-2 text-[#0B1E3A] font-medium">
                           <span className="h-2 w-2 rounded-full bg-[#F7C600] shrink-0" />
                           <span>{it.ref || it.numero || "—"}</span>
                         </span>
                       </td>
-                      <td className="p-3 align-top text-[#0B1E3A]">{it.typeLabel || it.type || "-"}</td>
-                      <td className="p-3 align-top">
-                        {(it.hasPdf || it.pdfUrl) ? (
-                          <OpenChipDoc onClick={() => openDdvPdf(it)} tooltip={t("aria.openPdf")} />
-                        ) : <span className="text-slate-400">—</span>}
+                      <td className="p-3 align-top text-[#0B1E3A]">
+                        {it.typeLabel || it.type || "-"}
                       </td>
-                      <td className="p-3 align-top"><FilesCell it={it} /></td>
+                      <td className="p-3 align-top">
+                        {it.hasPdf || it.pdfUrl ? (
+                          <OpenChipDoc
+                            onClick={() => openDdvPdf(it)}
+                            tooltip={t("aria.openPdf")}
+                          />
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="p-3 align-top">
+                        <FilesCell it={it} />
+                      </td>
                       <td className="p-3 align-top">
                         {existeDevis ? (
                           <OpenChipDoc
                             onClick={() => openDevisPdf(it._id)}
-                            tooltip={devisMap[it._id]?.numero ? t("aria.quoteNumber", { number: devisMap[it._id].numero ?? "" }) : t("actions.open")}
+                            tooltip={
+                              devisMap[it._id]?.numero
+                                ? t("aria.quoteNumber", {
+                                    number: devisMap[it._id].numero ?? "",
+                                  })
+                                : t("actions.open")
+                            }
                           />
                         ) : (
-                          <span className="inline-block rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">{t("notYet")}</span>
+                          <span className="inline-block rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">
+                            {t("notYet")}
+                          </span>
                         )}
                       </td>
                       <td className="p-3 align-top text-right whitespace-nowrap">
                         {dejaCommande ? (
-                          <span className="inline-block rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-sm">{t("status.ordered")}</span>
+                          <span className="inline-block rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-sm">
+                            {t("status.ordered")}
+                          </span>
                         ) : existeDevis ? (
                           <button
                             onClick={() => placeOrder(it)}
@@ -501,7 +601,9 @@ export default function MesDevisClient() {
                             {placing[it._id] ? t("actions.sending") : t("actions.order")}
                           </button>
                         ) : (
-                          <span className="inline-block rounded-full bg-rose-50 text-rose-700 px-2 py-0.5 text-sm font-medium">{t("status.notOrdered")}</span>
+                          <span className="inline-block rounded-full bg-rose-50 text-rose-700 px-2 py-0.5 text-sm font-medium">
+                            {t("status.notOrdered")}
+                          </span>
                         )}
                       </td>
                     </tr>
