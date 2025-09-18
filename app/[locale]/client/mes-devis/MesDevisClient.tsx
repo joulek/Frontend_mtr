@@ -30,44 +30,18 @@ function writeOrdered(map: any) {
   } catch {}
 }
 
-/* ===== Téléchargement ===== */
+/* ===== Téléchargement (toujours via backend) ===== */
 
-/** Téléchargement via un <a> (idéal pour URL absolue/CDN) */
-function anchorDownload(url: string, filename?: string) {
+/** Déclenche un téléchargement en ouvrant simplement l’URL backend. */
+function anchorDownload(url: string) {
   const a = document.createElement("a");
   a.href = url;
-  if (filename) a.download = filename;
   a.rel = "noopener noreferrer";
   a.target = "_blank";
   document.body.appendChild(a);
   a.click();
   a.remove();
 }
-
-/** Téléchargement depuis le backend (avec cookies) */
-async function backendBlobDownload(url: string, filename = "document") {
-  const res = await fetch(url, { credentials: "include" });
-  if (!res.ok) throw new Error(`Download failed (${res.status})`);
-  const blob = await res.blob();
-  const href = URL.createObjectURL(blob);
-  anchorDownload(href, filename);
-  setTimeout(() => URL.revokeObjectURL(href), 60_000);
-}
-
-/** URL signée (si tes assets Cloudinary sont “authenticated”) */
-async function getSignedUrl(publicId: string, filename: string, rt: "raw" | "image" = "raw") {
-  const u = new URL(`${BACKEND}/api/files/signed`);
-  u.searchParams.set("public_id", publicId);
-  u.searchParams.set("rt", rt);
-  u.searchParams.set("filename", filename);
-  const r = await fetch(u.toString(), { credentials: "include" });
-  if (!r.ok) throw new Error("Signature échouée");
-  const j = await r.json();
-  return j.url as string;
-}
-
-/** Détermine si une URL est absolue (http/https) */
-const isAbsolute = (u: string) => /^https?:\/\//i.test(u);
 
 /* === Chip “Ouvrir” === */
 function OpenChipDoc({
@@ -93,8 +67,12 @@ function OpenChipDoc({
 
 type DevisInfo = {
   numero?: string;
-  pdf?: string;           // URL Cloudinary ou backend
-  public_id?: string;     // Cloudinary public_id (si accès protégé)
+  /** chemin backend prêt à l’emploi (recommandé) ex: /api/files/download?... */
+  downloadPath?: string | null;
+  /** public_id si ton backend génère l’URL de download à la volée */
+  public_id?: string | null;
+  /** éventuel path backend legacy (pas Cloudinary direct) */
+  pdf?: string | null;
 };
 
 export default function MesDevisClient() {
@@ -109,12 +87,20 @@ export default function MesDevisClient() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // { [demandeId]: { numero, pdf, public_id? } }
+  // { [demandeId]: { numero, downloadPath?, public_id?, pdf? } }
   const [devisMap, setDevisMap] = useState<Record<string, DevisInfo>>({});
   const [ordered, setOrdered] = useState<Record<string, boolean>>({});
   const [placing, setPlacing] = useState<Record<string, boolean>>({});
 
-  const hasDevis = useCallback((id: string) => Boolean(devisMap?.[id]?.pdf), [devisMap]);
+  const hasDevis = useCallback(
+    (id: string) =>
+      Boolean(
+        devisMap?.[id]?.downloadPath ||
+          devisMap?.[id]?.public_id ||
+          devisMap?.[id]?.pdf
+      ),
+    [devisMap]
+  );
 
   useEffect(() => {
     setOrdered(readOrdered());
@@ -145,7 +131,7 @@ export default function MesDevisClient() {
     fetchAll();
   }, [fetchAll]);
 
-  /* --------- DV par demande --------- */
+  /* --------- DV par demande (num devis + chemin download backend) --------- */
   useEffect(() => {
     if (!allItems.length) {
       setDevisMap({});
@@ -165,9 +151,18 @@ export default function MesDevisClient() {
             );
             if (r.status === 403 || r.status === 404) return null;
             const j = await r.json().catch(() => null);
-            // ⚠️ Assure-toi que cette route renvoie aussi public_id si l’asset est protégé
-            if (j?.success && j?.exists && (j?.pdf || j?.public_id)) {
-              return [demandeId, { numero: j.devis?.numero, pdf: j.pdf, public_id: j.public_id }] as const;
+
+            // ⚠️ le backend devrait renvoyer au moins l’un de: downloadPath | public_id | pdf (path backend)
+            if (j?.success && j?.exists) {
+              return [
+                demandeId,
+                {
+                  numero: j.devis?.numero ?? null,
+                  downloadPath: j.downloadPath ?? null,
+                  public_id: j.public_id ?? null,
+                  pdf: j.pdf ?? null,
+                } as DevisInfo,
+              ] as const;
             }
             return null;
           } catch {
@@ -256,88 +251,74 @@ export default function MesDevisClient() {
     }
   };
 
-  /* --------- Ouverture / Téléchargement --------- */
+  /* --------- Ouverture / Téléchargement (backend only) --------- */
 
-  // Demande de devis (DDV) PDF
-  const openDdvPdf = async (it: any) => {
+  // Demande de devis (DDV) PDF via backend
+  const openDdvPdf = (it: any) => {
     const slug = String(it.type || "").toLowerCase();
-    const baseName = `demande-${slug}-${(it.ref || it.numero || it._id || "")
-      .toString()
-      .replace(/[\/\\]/g, "_")}.pdf`;
-
-    // Si ton backend a déjà rendu le PDF accessible (public) :
-    const url = it.pdfUrl || `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
-    if (isAbsolute(url)) {
-      anchorDownload(url, baseName);
-    } else {
-      await backendBlobDownload(url, baseName);
-    }
+    const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
+    anchorDownload(url);
   };
 
   // Devis commercial PDF
-  const openDevisPdf = async (demandeId: string) => {
+  const openDevisPdf = (demandeId: string) => {
     const info = devisMap[demandeId];
     if (!info) return;
-    const filename = `devis-${(info.numero || demandeId).replace(/[\/\\]/g, "_")}.pdf`;
 
-    // 1) Si l'API renvoie public_id (assets protégés) → URL signée
-    if (info.public_id) {
-      try {
-        const signed = await getSignedUrl(info.public_id, filename, "raw");
-        anchorDownload(signed, filename);
-        return;
-      } catch (e) {
-        console.error(e);
-        setError(t("errors.cannotOpen"));
-        return;
-      }
+    // 1) chemin prêt depuis /by-demande (idéal)
+    if (info.downloadPath) {
+      anchorDownload(`${BACKEND}${info.downloadPath}`);
+      return;
     }
 
-    // 2) Sinon on tente l’URL telle quelle
+    // 2) sinon، backend expose un proxy /api/files/download à partir de public_id
+    if (info.public_id) {
+      const filename = `devis-${(info.numero || demandeId).replace(/[\/\\]/g, "_")}.pdf`;
+      const u = new URL(`${BACKEND}/api/files/download`);
+      u.searchParams.set("public_id", info.public_id);
+      u.searchParams.set("rt", "raw");
+      u.searchParams.set("filename", filename);
+      anchorDownload(u.toString());
+      return;
+    }
+
+    // 3) fallback: path backend brut renvoyé en pdf (mais jamais URL Cloudinary)
     if (info.pdf) {
-      if (isAbsolute(info.pdf)) {
-        anchorDownload(info.pdf, filename);
-      } else {
-        await backendBlobDownload(info.pdf, filename);
-      }
+      const path = info.pdf.startsWith("/") ? info.pdf : `/${info.pdf}`;
+      anchorDownload(`${BACKEND}${path}`);
     }
   };
 
   // Pièces jointes
-  const openDoc = async (it: any, file: any, index: number) => {
-    const safeName = (file?.name || `document-${index + 1}`).replace(/[\/\\]/g, "_");
-
-    // a) Asset Cloudinary protégé → URL signée si public_id dispo
-    if (file?.public_id) {
-      try {
-        const rt: "raw" | "image" = (file?.mimetype || "").startsWith("image/") ? "image" : "raw";
-        const signed = await getSignedUrl(file.public_id, safeName, rt);
-        anchorDownload(signed, safeName);
-        return;
-      } catch (e) {
-        console.error(e);
-        setError(t("errors.cannotOpen"));
-        return;
-      }
-    }
-
-    // b) URL publique Cloudinary
-    if (file?.url && isAbsolute(file.url)) {
-      anchorDownload(file.url, safeName);
+  const openDoc = (it: any, file: any, index: number) => {
+    // a) chemin backend prêt
+    if (file?.downloadPath) {
+      anchorDownload(`${BACKEND}${file.downloadPath}`);
       return;
     }
-
-    // c) Fallback backend par id
+    // b) public_id → proxy download
+    if (file?.public_id) {
+      const name = (file?.name || `document-${index + 1}`).replace(/[\/\\]/g, "_");
+      const rt: "raw" | "image" =
+        (file?.mimetype || "").startsWith("image/") ? "image" : "raw";
+      const u = new URL(`${BACKEND}/api/files/download`);
+      u.searchParams.set("public_id", file.public_id);
+      u.searchParams.set("rt", rt);
+      u.searchParams.set("filename", name);
+      anchorDownload(u.toString());
+      return;
+    }
+    // c) fallback: route doc/:docId
     const slug = String(it.type || "").toLowerCase();
-    const docId = file?._id ?? index; // _id attendu par /doc/:docId
+    const docId = file?._id ?? index;
     const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/doc/${docId}`;
-    await backendBlobDownload(url, safeName);
+    anchorDownload(url);
   };
 
   /* --------- ENVOI COMMANDE --------- */
   const placeOrder = async (it: any) => {
     const info = devisMap[it._id];
-    if (!info?.pdf) return;
+    if (!info || !(info.downloadPath || info.public_id || info.pdf)) return;
 
     try {
       setPlacing((s) => ({ ...s, [it._id]: true }));
@@ -358,7 +339,7 @@ export default function MesDevisClient() {
         body: JSON.stringify({
           demandeId: it._id,
           devisNumero: info.numero || null,
-          devisPdf: info.pdf || null, // URL Cloudinary ou backend
+          devisPdf: info.downloadPath || info.pdf || null, // (optionnel côté backend)
           demandeNumero: it.ref || it.numero || null,
         }),
       });
@@ -414,7 +395,6 @@ export default function MesDevisClient() {
   /* --------- pagination --------- */
   const total = filtered.length;
   const pageStart = (page - 1) * pageSize;
-  // @ts-ignore – pageItems est dérivé, on le calcule juste après
   const pageItems = filtered.slice(pageStart, pageStart + pageSize);
 
   /* --------- UI cellules --------- */
@@ -506,8 +486,6 @@ export default function MesDevisClient() {
   };
 
   /* --------- render --------- */
-
-
   return (
     <div className="mx-auto w-full max-w-6xl px-3 sm:px-6 py-6 space-y-6 sm:space-y-8">
       <header className="text-center space-y-2">
