@@ -30,27 +30,46 @@ function writeOrdered(map: any) {
   } catch {}
 }
 
-/** ✅ Téléchargement forcé (marche avec URLs Cloudinary + routes backend) */
-const downloadUrl = async (url: string, filename = "document") => {
-  try {
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) throw new Error("Download failed");
-    const blob = await res.blob();
-    const href = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = href;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(href);
-  } catch (e) {
-    console.error(e);
-    // ⚠️ tu peux afficher une erreur via setError si nécessaire
-  }
-};
+/* ===== Téléchargement ===== */
 
-/* === Chip bouton “Ouvrir” (télécharge maintenant) === */
+/** Téléchargement via un <a> (idéal pour URL absolue/CDN) */
+function anchorDownload(url: string, filename?: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  if (filename) a.download = filename;
+  a.rel = "noopener noreferrer";
+  a.target = "_blank";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/** Téléchargement depuis le backend (avec cookies) */
+async function backendBlobDownload(url: string, filename = "document") {
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  const blob = await res.blob();
+  const href = URL.createObjectURL(blob);
+  anchorDownload(href, filename);
+  setTimeout(() => URL.revokeObjectURL(href), 60_000);
+}
+
+/** URL signée (si tes assets Cloudinary sont “authenticated”) */
+async function getSignedUrl(publicId: string, filename: string, rt: "raw" | "image" = "raw") {
+  const u = new URL(`${BACKEND}/api/files/signed`);
+  u.searchParams.set("public_id", publicId);
+  u.searchParams.set("rt", rt);
+  u.searchParams.set("filename", filename);
+  const r = await fetch(u.toString(), { credentials: "include" });
+  if (!r.ok) throw new Error("Signature échouée");
+  const j = await r.json();
+  return j.url as string;
+}
+
+/** Détermine si une URL est absolue (http/https) */
+const isAbsolute = (u: string) => /^https?:\/\//i.test(u);
+
+/* === Chip “Ouvrir” === */
 function OpenChipDoc({
   onClick,
   label = "Ouvrir",
@@ -72,6 +91,12 @@ function OpenChipDoc({
   );
 }
 
+type DevisInfo = {
+  numero?: string;
+  pdf?: string;           // URL Cloudinary ou backend
+  public_id?: string;     // Cloudinary public_id (si accès protégé)
+};
+
 export default function MesDevisClient() {
   const t = useTranslations("auth.client.quotesPage");
   const locale = useLocale();
@@ -84,17 +109,12 @@ export default function MesDevisClient() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // { [demandeId]: { numero, pdf } }
-  const [devisMap, setDevisMap] = useState<
-    Record<string, { numero?: string; pdf?: string }>
-  >({});
+  // { [demandeId]: { numero, pdf, public_id? } }
+  const [devisMap, setDevisMap] = useState<Record<string, DevisInfo>>({});
   const [ordered, setOrdered] = useState<Record<string, boolean>>({});
   const [placing, setPlacing] = useState<Record<string, boolean>>({});
 
-  const hasDevis = useCallback(
-    (id: string) => Boolean(devisMap?.[id]?.pdf),
-    [devisMap]
-  );
+  const hasDevis = useCallback((id: string) => Boolean(devisMap?.[id]?.pdf), [devisMap]);
 
   useEffect(() => {
     setOrdered(readOrdered());
@@ -145,8 +165,9 @@ export default function MesDevisClient() {
             );
             if (r.status === 403 || r.status === 404) return null;
             const j = await r.json().catch(() => null);
-            if (j?.success && j?.exists && j?.pdf) {
-              return [demandeId, { numero: j.devis?.numero, pdf: j.pdf }] as const;
+            // ⚠️ Assure-toi que cette route renvoie aussi public_id si l’asset est protégé
+            if (j?.success && j?.exists && (j?.pdf || j?.public_id)) {
+              return [demandeId, { numero: j.devis?.numero, pdf: j.pdf, public_id: j.public_id }] as const;
             }
             return null;
           } catch {
@@ -155,7 +176,7 @@ export default function MesDevisClient() {
         })
       );
       if (cancelled) return;
-      const map: Record<string, any> = {};
+      const map: Record<string, DevisInfo> = {};
       for (const p of pairs) if (p) map[p[0]] = p[1];
       setDevisMap(map);
     })();
@@ -235,90 +256,83 @@ export default function MesDevisClient() {
     }
   };
 
-  /* --------- Ouvrir (=> Télécharger) --------- */
+  /* --------- Ouverture / Téléchargement --------- */
+
   // Demande de devis (DDV) PDF
-  const openDdvPdf = (it: any) => {
+  const openDdvPdf = async (it: any) => {
     const slug = String(it.type || "").toLowerCase();
-    const url = it.pdfUrl || `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
-    const name = `demande-${slug}-${(it.ref || it.numero || it._id || "")
+    const baseName = `demande-${slug}-${(it.ref || it.numero || it._id || "")
       .toString()
       .replace(/[\/\\]/g, "_")}.pdf`;
-    downloadUrl(url, name);
+
+    // Si ton backend a déjà rendu le PDF accessible (public) :
+    const url = it.pdfUrl || `${BACKEND}/api/mes-devis/${slug}/${it._id}/pdf`;
+    if (isAbsolute(url)) {
+      anchorDownload(url, baseName);
+    } else {
+      await backendBlobDownload(url, baseName);
+    }
   };
 
   // Devis commercial PDF
-  const openDevisPdf = (demandeId: string) => {
+  const openDevisPdf = async (demandeId: string) => {
     const info = devisMap[demandeId];
-    if (!info?.pdf) return;
-    const name = `devis-${(info.numero || demandeId).replace(/[\/\\]/g, "_")}.pdf`;
-    downloadUrl(info.pdf, name);
+    if (!info) return;
+    const filename = `devis-${(info.numero || demandeId).replace(/[\/\\]/g, "_")}.pdf`;
+
+    // 1) Si l'API renvoie public_id (assets protégés) → URL signée
+    if (info.public_id) {
+      try {
+        const signed = await getSignedUrl(info.public_id, filename, "raw");
+        anchorDownload(signed, filename);
+        return;
+      } catch (e) {
+        console.error(e);
+        setError(t("errors.cannotOpen"));
+        return;
+      }
+    }
+
+    // 2) Sinon on tente l’URL telle quelle
+    if (info.pdf) {
+      if (isAbsolute(info.pdf)) {
+        anchorDownload(info.pdf, filename);
+      } else {
+        await backendBlobDownload(info.pdf, filename);
+      }
+    }
   };
-  // -- helpers pour détecter une URL absolue / Cloudinary
-const isAbsolute = (u: string) => /^https?:\/\//i.test(u);
-const isCloudinary = (u: string) => /(^https?:\/\/)?res\.cloudinary\.com\//i.test(u);
 
-function directDownload(url: string, filename?: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  if (filename) a.download = filename;        // hint (surtout même-origin)
-  a.rel = "noopener";
-  a.target = "_blank";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
+  // Pièces jointes
+  const openDoc = async (it: any, file: any, index: number) => {
+    const safeName = (file?.name || `document-${index + 1}`).replace(/[\/\\]/g, "_");
 
-/** ✅ Téléchargement universel (Cloudinary/CDN → direct ; Backend → fetch+blob) */
-/** Téléchargement universel: direct pour Cloudinary, fetch pour backend */
-const downloadUrl = async (url: string, filename = "document") => {
-  try {
-    // 1) URL absolue (ex: Cloudinary) => pas de fetch, pas de credentials
-    if (/^https?:\/\//i.test(url)) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename; // sera ignoré si le serveur force "inline", mais OK pour la plupart des cas
-      a.rel = "noopener noreferrer";
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+    // a) Asset Cloudinary protégé → URL signée si public_id dispo
+    if (file?.public_id) {
+      try {
+        const rt: "raw" | "image" = (file?.mimetype || "").startsWith("image/") ? "image" : "raw";
+        const signed = await getSignedUrl(file.public_id, safeName, rt);
+        anchorDownload(signed, safeName);
+        return;
+      } catch (e) {
+        console.error(e);
+        setError(t("errors.cannotOpen"));
+        return;
+      }
+    }
+
+    // b) URL publique Cloudinary
+    if (file?.url && isAbsolute(file.url)) {
+      anchorDownload(file.url, safeName);
       return;
     }
 
-    // 2) URL backend (relative) => fetch + blob (cookies autorisés)
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) throw new Error(`Download failed (${res.status})`);
-    const blob = await res.blob();
-    const href = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = href;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(href);
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-
-  // Pièces jointes
-const openDoc = (it: any, file: any, index: number) => {
-  const safeName = (file?.name || `document-${index + 1}`).replace(/[\/\\]/g, "_");
-
-  if (file?.url) {
-    // URL Cloudinary publique fournie par l’API
-    return downloadUrl(file.url, safeName);
-  }
-
-  // Fallback backend : préfère l'ID du document si dispo
-  const slug = String(it.type || "").toLowerCase();
-  const docId = file?._id ?? index; // _id attendu par /doc/:docId
-  const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/doc/${docId}`;
-  downloadUrl(url, safeName);
-};
-
+    // c) Fallback backend par id
+    const slug = String(it.type || "").toLowerCase();
+    const docId = file?._id ?? index; // _id attendu par /doc/:docId
+    const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/doc/${docId}`;
+    await backendBlobDownload(url, safeName);
+  };
 
   /* --------- ENVOI COMMANDE --------- */
   const placeOrder = async (it: any) => {
@@ -344,7 +358,7 @@ const openDoc = (it: any, file: any, index: number) => {
         body: JSON.stringify({
           demandeId: it._id,
           devisNumero: info.numero || null,
-          devisPdf: info.pdf || null, // URL Cloudinary
+          devisPdf: info.pdf || null, // URL Cloudinary ou backend
           demandeNumero: it.ref || it.numero || null,
         }),
       });
@@ -400,6 +414,7 @@ const openDoc = (it: any, file: any, index: number) => {
   /* --------- pagination --------- */
   const total = filtered.length;
   const pageStart = (page - 1) * pageSize;
+  // @ts-ignore – pageItems est dérivé, on le calcule juste après
   const pageItems = filtered.slice(pageStart, pageStart + pageSize);
 
   /* --------- UI cellules --------- */
@@ -491,6 +506,8 @@ const openDoc = (it: any, file: any, index: number) => {
   };
 
   /* --------- render --------- */
+
+
   return (
     <div className="mx-auto w-full max-w-6xl px-3 sm:px-6 py-6 space-y-6 sm:space-y-8">
       <header className="text-center space-y-2">
@@ -612,10 +629,7 @@ const openDoc = (it: any, file: any, index: number) => {
                       </td>
                       <td className="p-3 align-top">
                         {it.hasPdf || it.pdfUrl ? (
-                          <OpenChipDoc
-                            onClick={() => openDdvPdf(it)}
-                            tooltip={t("aria.openPdf")}
-                          />
+                          <OpenChipDoc onClick={() => openDdvPdf(it)} tooltip={t("aria.openPdf")} />
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
