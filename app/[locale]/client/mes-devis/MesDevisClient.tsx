@@ -127,7 +127,7 @@ export default function MesDevisClient() {
       setError("");
       const params = new URLSearchParams({ page: "1", pageSize: "1000" });
 
-      const res = await fetch(`${BACKEND}/api/mes-devis?` + params.toString(), {
+      const res = await fetch(`${BACKEND}/api/mesdevis/mes-devis?` + params.toString(), {
         credentials: "include",
       });
       const data = await res.json().catch(() => null);
