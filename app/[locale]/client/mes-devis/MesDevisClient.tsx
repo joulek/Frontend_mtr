@@ -253,18 +253,63 @@ export default function MesDevisClient() {
     const name = `devis-${(info.numero || demandeId).replace(/[\/\\]/g, "_")}.pdf`;
     downloadUrl(info.pdf, name);
   };
+  // -- helpers pour détecter une URL absolue / Cloudinary
+const isAbsolute = (u: string) => /^https?:\/\//i.test(u);
+const isCloudinary = (u: string) => /(^https?:\/\/)?res\.cloudinary\.com\//i.test(u);
+
+function directDownload(url: string, filename?: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  if (filename) a.download = filename;        // hint (surtout même-origin)
+  a.rel = "noopener";
+  a.target = "_blank";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/** ✅ Téléchargement universel (Cloudinary/CDN → direct ; Backend → fetch+blob) */
+const downloadUrl = async (url: string, filename = "document") => {
+  try {
+    if (isAbsolute(url)) {
+      // ➜ CDN/Cloudinary : PAS de fetch (sinon CORS). On ajoute fl_attachment pour forcer download
+      const finalUrl = isCloudinary(url)
+        ? `${url}${url.includes("?") ? "&" : "?"}fl_attachment=${encodeURIComponent(filename)}`
+        : url;
+      directDownload(finalUrl, filename);
+      return;
+    }
+
+    // ➜ Route backend (même origin) : fetch pour joindre les cookies
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) throw new Error("Download failed");
+    const blob = await res.blob();
+    const href = URL.createObjectURL(blob);
+    directDownload(href, filename);
+    setTimeout(() => URL.revokeObjectURL(href), 60_000);
+  } catch (e) {
+    console.error(e);
+    // setError("Téléchargement impossible"); // si tu veux afficher un message
+  }
+};
+
 
   // Pièces jointes
-  const openDoc = (it: any, file: any, index: number) => {
-    const safeName = (file?.name || `document-${index + 1}`).replace(/[\/\\]/g, "_");
-    if (file?.url) {
-      // URL public Cloudinary
-      return downloadUrl(file.url, safeName);
-    }
-    const slug = String(it.type || "").toLowerCase();
-    const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/document/${index}`;
-    downloadUrl(url, safeName);
-  };
+const openDoc = (it: any, file: any, index: number) => {
+  const safeName = (file?.name || `document-${index + 1}`).replace(/[\/\\]/g, "_");
+
+  if (file?.url) {
+    // URL Cloudinary publique fournie par l’API
+    return downloadUrl(file.url, safeName);
+  }
+
+  // Fallback backend : préfère l'ID du document si dispo
+  const slug = String(it.type || "").toLowerCase();
+  const docId = file?._id ?? index; // _id attendu par /doc/:docId
+  const url = `${BACKEND}/api/mes-devis/${slug}/${it._id}/doc/${docId}`;
+  downloadUrl(url, safeName);
+};
+
 
   /* --------- ENVOI COMMANDE --------- */
   const placeOrder = async (it: any) => {
