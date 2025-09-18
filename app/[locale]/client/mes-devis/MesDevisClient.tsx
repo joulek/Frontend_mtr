@@ -269,27 +269,36 @@ function directDownload(url: string, filename?: string) {
 }
 
 /** ✅ Téléchargement universel (Cloudinary/CDN → direct ; Backend → fetch+blob) */
+/** Téléchargement universel: direct pour Cloudinary, fetch pour backend */
 const downloadUrl = async (url: string, filename = "document") => {
   try {
-    if (isAbsolute(url)) {
-      // ➜ CDN/Cloudinary : PAS de fetch (sinon CORS). On ajoute fl_attachment pour forcer download
-      const finalUrl = isCloudinary(url)
-        ? `${url}${url.includes("?") ? "&" : "?"}fl_attachment=${encodeURIComponent(filename)}`
-        : url;
-      directDownload(finalUrl, filename);
+    // 1) URL absolue (ex: Cloudinary) => pas de fetch, pas de credentials
+    if (/^https?:\/\//i.test(url)) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename; // sera ignoré si le serveur force "inline", mais OK pour la plupart des cas
+      a.rel = "noopener noreferrer";
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       return;
     }
 
-    // ➜ Route backend (même origin) : fetch pour joindre les cookies
+    // 2) URL backend (relative) => fetch + blob (cookies autorisés)
     const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) throw new Error("Download failed");
+    if (!res.ok) throw new Error(`Download failed (${res.status})`);
     const blob = await res.blob();
     const href = URL.createObjectURL(blob);
-    directDownload(href, filename);
-    setTimeout(() => URL.revokeObjectURL(href), 60_000);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
   } catch (e) {
     console.error(e);
-    // setError("Téléchargement impossible"); // si tu veux afficher un message
   }
 };
 
